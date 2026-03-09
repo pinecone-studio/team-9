@@ -79,6 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
+      contents: read # actions/checkout-д репо унших эрх хэрэгтэй
       pull-requests: write # PR дээр comment бичихэд хэрэгтэй
 
     env:

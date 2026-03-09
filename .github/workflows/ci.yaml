@@ -1,4 +1,4 @@
-name: CI — Lint, Build & Preview
+name: CI — Workspace Checks
 
 on:
   pull_request:
@@ -7,39 +7,9 @@ on:
       - develop
 
 jobs:
-  # ─────────────────────────────────────────────
-  # JOB 1: Lint
-  # ─────────────────────────────────────────────
-  lint:
-    name: 🔍 Lint
+  web:
+    name: Web — Lint, Typecheck, Build
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Run TypeScript check
-        run: npm run type-check
-        # package.json дотор: "type-check": "tsc --noEmit"
-
-  # ─────────────────────────────────────────────
-  # JOB 2: Build
-  # ─────────────────────────────────────────────
-  build:
-    name: 🏗️ Build
-    runs-on: ubuntu-latest
-    needs: lint
 
     steps:
       - name: Checkout code
@@ -52,31 +22,58 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci
+
+      - name: Run frontend ESLint
+        run: npm run lint:web
+
+      - name: Run frontend TypeScript check
+        run: npm run type-check:web
 
       - name: Build Next.js app
-        run: npm run build
+        run: npm run build:web
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-build
-          path: .next/
+          name: web-static-build
+          path: apps/web/out/
           retention-days: 1
 
-  # ─────────────────────────────────────────────
-  # JOB 3: Cloudflare Pages Preview Deploy
-  # ─────────────────────────────────────────────
-  preview:
-    name: 🚀 Preview Deploy (Cloudflare Pages)
+  api:
+    name: API — Typecheck, Test
     runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read # actions/checkout-д репо унших эрх хэрэгтэй
-      pull-requests: write # PR дээр comment бичихэд хэрэгтэй
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run backend TypeScript check
+        run: npm run type-check:api
+
+      - name: Run backend tests
+        run: npm run test:api
+
+  preview:
+    name: Preview Deploy (Cloudflare Pages)
+    if: github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    needs:
+      - web
+      - api
+    permissions:
+      contents: read
+      pull-requests: write
     env:
-      # Use repository name as the single source of truth.
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}
 
     steps:
@@ -90,11 +87,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Build for Cloudflare Pages
         run: npm run build:pages
-        # package.json: "build:pages": "npx @cloudflare/next-on-pages"
 
       - name: Resolve deploy target
         run: |
@@ -187,8 +183,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=${{ env.DEPLOY_PROJECT_NAME }} --branch=${{ github.head_ref }} --commit-dirty=true
-          # @cloudflare/next-on-pages ашиглавал: out/ эсвэл .vercel/output/static
+          command: pages deploy apps/web/out --project-name=${{ env.DEPLOY_PROJECT_NAME }} --branch=${{ github.head_ref }} --commit-dirty=true
 
       - name: Comment Preview URL on PR
         uses: actions/github-script@v7
@@ -203,14 +198,12 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: [
-                "## 🚀 Cloudflare Pages Preview",
+                "## Preview Deployment",
                 "",
                 `| | |`,
                 `|---|---|`,
-                `| **Preview URL** | ${deployUrl} |`,
-                `| **Branch** | \`${branch}\` |`,
-                `| **Commit** | \`${sha}\` |`,
-                "",
-                "> Preview автоматаар байршуулагдлаа ✅"
+                `| URL | ${deployUrl} |`,
+                `| Branch | \`${branch}\` |`,
+                `| Commit | \`${sha}\` |`
               ].join("\n")
             });

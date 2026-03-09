@@ -37,18 +37,43 @@ jobs:
         run: npm run build:pages
         # package.json: "build:pages": "npx @cloudflare/next-on-pages"
 
+      - name: Resolve deploy target
+        run: |
+          set -euo pipefail
+
+          normalize() {
+            local v="$1"
+            v="$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')"
+            v="$(printf '%s' "$v" | sed -E 's/[^a-z0-9-]+/-/g; s/-+/-/g; s/^-+//; s/-+$//')"
+            v="${v:0:58}"
+            v="$(printf '%s' "$v" | sed -E 's/^-+//; s/-+$//')"
+            printf '%s' "$v"
+          }
+
+          is_valid() {
+            [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,56}[a-z0-9])?$ ]]
+          }
+
+          raw="${CF_PAGES_PROJECT_NAME:-}"
+          candidate="$(normalize "$raw")"
+
+          if ! is_valid "$candidate"; then
+            echo "::warning::Invalid CLOUDFLARE_PAGES_PROJECT_NAME; falling back to repository name."
+            candidate="$(normalize "${GITHUB_REPOSITORY##*/}")"
+          fi
+
+          if ! is_valid "$candidate"; then
+            echo "::error::Failed to derive a valid Cloudflare Pages project name."
+            exit 1
+          fi
+
+          echo "DEPLOY_PROJECT_NAME=${candidate}" >> "$GITHUB_ENV"
+
       - name: Show deploy target
         run: |
           echo "Cloudflare account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
-          echo "Cloudflare Pages project: ${{ env.CF_PAGES_PROJECT_NAME }}"
+          echo "Cloudflare Pages project: ${{ env.DEPLOY_PROJECT_NAME }}"
           echo "Production branch: main"
-
-      - name: Validate deploy target
-        run: |
-          if [ -z "${{ env.CF_PAGES_PROJECT_NAME }}" ]; then
-            echo "::error::Cloudflare Pages project name is empty. Set CLOUDFLARE_PAGES_PROJECT_NAME in Secrets or Variables."
-            exit 1
-          fi
 
       - name: Ensure Cloudflare Pages project exists
         env:
@@ -56,7 +81,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          PROJECT="${CF_PAGES_PROJECT_NAME}"
+          PROJECT="${DEPLOY_PROJECT_NAME}"
           API_BASE="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects"
 
           echo "Checking Cloudflare Pages project: ${PROJECT}"
@@ -88,7 +113,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=main --commit-dirty=true
+          command: pages deploy .vercel/output/static --project-name=${{ env.DEPLOY_PROJECT_NAME }} --branch=main --commit-dirty=true
 
       - name: Print Production URL
         run: |

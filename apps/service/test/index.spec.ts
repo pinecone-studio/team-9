@@ -13,13 +13,13 @@ describe('EBMS worker', () => {
 		await waitOnExecutionContext(ctx);
 
 		expect(response.status).toBe(200);
-		expect(await response.text()).toBe('EBMS backend running');
+		expect(await response.text()).toBe('EBMS service running');
 	});
 
 	it('responds on the root route (integration style)', async () => {
 		const response = await SELF.fetch('https://example.com');
 
 		expect(response.status).toBe(200);
-		expect(await response.text()).toBe('EBMS backend running');
+		expect(await response.text()).toBe('EBMS service running');
 	});
 });

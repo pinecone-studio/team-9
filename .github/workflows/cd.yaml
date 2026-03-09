@@ -1,0 +1,54 @@
+name: CD — Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1: Production Build & Deploy
+  # ─────────────────────────────────────────────
+  deploy-production:
+    name: 🌐 Deploy to Production (Cloudflare Pages)
+    runs-on: ubuntu-latest
+
+    env:
+      # Бүх secret-ийг GitHub → Settings → Secrets → Actions дотор нэмнэ
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint (production guard)
+        run: npm run lint
+
+      - name: Build for Cloudflare Pages
+        run: npm run build
+        # package.json: "build": "next build && npx @cloudflare/next-on-pages"
+
+      - name: Deploy to Cloudflare Pages (Production)
+        id: cloudflare-deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy .vercel/output/static --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }} --branch=main
+
+      - name: Print Production URL
+        run: |
+          echo "✅ Production deployed!"
+          echo "URL: ${{ steps.cloudflare-deploy.outputs.deployment-url }}"

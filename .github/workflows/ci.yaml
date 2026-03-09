@@ -1,0 +1,216 @@
+name: CI — Lint, Build & Preview
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1: Lint
+  # ─────────────────────────────────────────────
+  lint:
+    name: 🔍 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript check
+        run: npm run type-check
+        # package.json дотор: "type-check": "tsc --noEmit"
+
+  # ─────────────────────────────────────────────
+  # JOB 2: Build
+  # ─────────────────────────────────────────────
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+          retention-days: 1
+
+  # ─────────────────────────────────────────────
+  # JOB 3: Cloudflare Pages Preview Deploy
+  # ─────────────────────────────────────────────
+  preview:
+    name: 🚀 Preview Deploy (Cloudflare Pages)
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read # actions/checkout-д репо унших эрх хэрэгтэй
+      pull-requests: write # PR дээр comment бичихэд хэрэгтэй
+
+    env:
+      # Use repository name as the single source of truth.
+      CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build for Cloudflare Pages
+        run: npm run build:pages
+        # package.json: "build:pages": "npx @cloudflare/next-on-pages"
+
+      - name: Resolve deploy target
+        run: |
+          set -euo pipefail
+
+          normalize() {
+            local v="$1"
+            v="$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')"
+            v="$(printf '%s' "$v" | sed -E 's/[^a-z0-9-]+/-/g; s/-+/-/g; s/^-+//; s/-+$//')"
+            v="${v:0:58}"
+            v="$(printf '%s' "$v" | sed -E 's/^-+//; s/-+$//')"
+            printf '%s' "$v"
+          }
+
+          is_valid() {
+            [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,56}[a-z0-9])?$ ]]
+          }
+
+          raw="${CF_PAGES_PROJECT_NAME:-}"
+          candidate="$(normalize "$raw")"
+
+          if ! is_valid "$candidate"; then
+            echo "::warning::Invalid CLOUDFLARE_PAGES_PROJECT_NAME; falling back to repository name."
+            candidate="$(normalize "${GITHUB_REPOSITORY##*/}")"
+          fi
+
+          if ! is_valid "$candidate"; then
+            echo "::error::Failed to derive a valid Cloudflare Pages project name."
+            exit 1
+          fi
+
+          echo "DEPLOY_PROJECT_NAME=${candidate}" >> "$GITHUB_ENV"
+
+      - name: Show deploy target
+        run: |
+          echo "Cloudflare account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          echo "Cloudflare Pages project: ${{ env.DEPLOY_PROJECT_NAME }}"
+          echo "Preview branch: ${{ github.head_ref }}"
+
+      - name: Ensure Cloudflare Pages project exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          PROJECT="${DEPLOY_PROJECT_NAME}"
+          API_BASE="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects"
+          COMPAT_DATE="$(date -u +%F)"
+
+          echo "Checking Cloudflare Pages project: ${PROJECT}"
+          STATUS="$(curl -sS -o /tmp/cf-project-check.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "${API_BASE}/${PROJECT}")"
+
+          if [ "${STATUS}" = "200" ] && grep -Eq '"success"[[:space:]]*:[[:space:]]*true' /tmp/cf-project-check.json; then
+            echo "Project exists: ${PROJECT}"
+          else
+            echo "Project not found. Creating: ${PROJECT}"
+            CREATE_RESPONSE="$(curl -sS -X POST "${API_BASE}" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\",\"deployment_configs\":{\"preview\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]},\"production\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]}}}")"
+
+            if echo "${CREATE_RESPONSE}" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'; then
+              echo "Project created: ${PROJECT}"
+            else
+              echo "::error::Failed to create Pages project '${PROJECT}'."
+              echo "${CREATE_RESPONSE}"
+              exit 1
+            fi
+          fi
+
+          echo "Ensuring nodejs_compat is enabled for preview/production..."
+          PATCH_RESPONSE="$(curl -sS -X PATCH "${API_BASE}/${PROJECT}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"deployment_configs\":{\"preview\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]},\"production\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]}}}")"
+
+          if echo "${PATCH_RESPONSE}" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'; then
+            echo "Runtime config updated: nodejs_compat"
+          else
+            echo "::error::Failed to update runtime config (nodejs_compat) for '${PROJECT}'."
+            echo "${PATCH_RESPONSE}"
+            exit 1
+          fi
+
+      - name: Deploy to Cloudflare Pages (Preview)
+        id: cloudflare-deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy .vercel/output/static --project-name=${{ env.DEPLOY_PROJECT_NAME }} --branch=${{ github.head_ref }} --commit-dirty=true
+          # @cloudflare/next-on-pages ашиглавал: out/ эсвэл .vercel/output/static
+
+      - name: Comment Preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployUrl = "${{ steps.cloudflare-deploy.outputs.deployment-url }}";
+            const branch = "${{ github.head_ref }}";
+            const sha = "${{ github.sha }}".slice(0, 7);
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: [
+                "## 🚀 Cloudflare Pages Preview",
+                "",
+                `| | |`,
+                `|---|---|`,
+                `| **Preview URL** | ${deployUrl} |`,
+                `| **Branch** | \`${branch}\` |`,
+                `| **Commit** | \`${sha}\` |`,
+                "",
+                "> Preview автоматаар байршуулагдлаа ✅"
+              ].join("\n")
+            });

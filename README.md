@@ -37,4 +37,4 @@ npm run build
 ## Deploy
 
 - Frontend preview and production deployments use Cloudflare Pages.
-- Backend production deployments use Cloudflare Workers.
+- Backend preview and production deployments use Cloudflare Workers.

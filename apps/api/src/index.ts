@@ -27,7 +27,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.get('/', (c) => {
 	return c.text('EBMS backend running');
 });
-// hshddg
+
 app.get('/employees', async (c) => {
 	const { results } = await c.env.DB.prepare(`SELECT * FROM employees ORDER BY created_at DESC`).all();
 

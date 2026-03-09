@@ -84,8 +84,8 @@ jobs:
 
     env:
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-      # Use repository variable so the value is visible in logs and easy to verify.
-      CF_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+      # Prefer secret, then variable; fallback to repository name.
+      CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
 
     steps:
       - name: Checkout code
@@ -113,7 +113,7 @@ jobs:
       - name: Validate deploy target
         run: |
           if [ -z "${{ env.CF_PAGES_PROJECT_NAME }}" ]; then
-            echo "::error::Repository variable CLOUDFLARE_PAGES_PROJECT_NAME is empty. Set it in Settings -> Secrets and variables -> Actions -> Variables."
+            echo "::error::Cloudflare Pages project name is empty. Set CLOUDFLARE_PAGES_PROJECT_NAME in Secrets or Variables."
             exit 1
           fi
 

@@ -2,8 +2,8 @@
 
 This repository contains both applications:
 
-- `apps/dashboard`: Next.js frontend
-- `apps/service`: Cloudflare Workers + Hono backend
+- `apps/web`: Next.js frontend
+- `apps/api`: Cloudflare Workers + Hono backend
 
 ## Install
 
@@ -16,13 +16,13 @@ npm install
 Run the frontend:
 
 ```bash
-npm run dev:dashboard
+npm run dev:web
 ```
 
 Run the backend:
 
 ```bash
-npm run dev:service
+npm run dev:api
 ```
 
 ## Workspace Commands

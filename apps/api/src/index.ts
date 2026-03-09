@@ -25,7 +25,7 @@ type UpdateEmployeeBody = Partial<CreateEmployeeBody>;
 const app = new Hono<{ Bindings: Bindings }>();
 
 app.get('/', (c) => {
-	return c.text('EBMS service running');
+	return c.text('EBMS backend running');
 });
 
 app.get('/employees', async (c) => {

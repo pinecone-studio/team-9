@@ -19,8 +19,8 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-      # Prefer secret, then variable; fallback to repository name.
-      CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
+      # Use repository variable so the value is visible in logs and easy to verify.
+      CF_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
 
     steps:
       - name: Checkout code
@@ -48,13 +48,20 @@ jobs:
           echo "Cloudflare Pages project: ${{ env.CF_PAGES_PROJECT_NAME }}"
           echo "Production branch: main"
 
+      - name: Validate deploy target
+        run: |
+          if [ -z "${{ env.CF_PAGES_PROJECT_NAME }}" ]; then
+            echo "::error::Repository variable CLOUDFLARE_PAGES_PROJECT_NAME is empty. Set it in Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+
       - name: Deploy to Cloudflare Pages (Production)
         id: cloudflare-deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=main
+          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=main --commit-dirty=true
 
       - name: Print Production URL
         run: |

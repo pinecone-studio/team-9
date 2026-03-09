@@ -84,8 +84,8 @@ jobs:
 
     env:
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-      # Prefer secret, then variable; fallback to repository name.
-      CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
+      # Use repository variable so the value is visible in logs and easy to verify.
+      CF_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
 
     steps:
       - name: Checkout code
@@ -110,13 +110,20 @@ jobs:
           echo "Cloudflare Pages project: ${{ env.CF_PAGES_PROJECT_NAME }}"
           echo "Preview branch: ${{ github.head_ref }}"
 
+      - name: Validate deploy target
+        run: |
+          if [ -z "${{ env.CF_PAGES_PROJECT_NAME }}" ]; then
+            echo "::error::Repository variable CLOUDFLARE_PAGES_PROJECT_NAME is empty. Set it in Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+
       - name: Deploy to Cloudflare Pages (Preview)
         id: cloudflare-deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=${{ github.head_ref }}
+          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=${{ github.head_ref }} --commit-dirty=true
           # @cloudflare/next-on-pages ашиглавал: out/ эсвэл .vercel/output/static
 
       - name: Comment Preview URL on PR

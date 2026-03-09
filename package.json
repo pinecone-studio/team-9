@@ -7,20 +7,20 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev:dashboard",
-    "dev:dashboard": "npm run dev --workspace @ebms/dashboard",
-    "dev:service": "npm run dev --workspace @ebms/service",
-    "lint": "npm run lint:dashboard",
-    "lint:dashboard": "npm run lint --workspace @ebms/dashboard",
-    "type-check": "npm run type-check:dashboard && npm run type-check:service",
-    "type-check:dashboard": "npm run type-check --workspace @ebms/dashboard",
-    "type-check:service": "npm run type-check --workspace @ebms/service",
-    "test": "npm run test:service",
-    "test:service": "npm run test --workspace @ebms/service",
-    "build": "npm run build:dashboard && npm run build:service",
-    "build:dashboard": "npm run build --workspace @ebms/dashboard",
-    "build:service": "npm run build --workspace @ebms/service",
-    "build:pages": "npm run build:pages --workspace @ebms/dashboard",
-    "deploy:service": "npm run deploy --workspace @ebms/service"
+    "dev": "npm run dev:web",
+    "dev:web": "npm run dev --workspace @ebms/web",
+    "dev:api": "npm run dev --workspace @ebms/api",
+    "lint": "npm run lint:web",
+    "lint:web": "npm run lint --workspace @ebms/web",
+    "type-check": "npm run type-check:web && npm run type-check:api",
+    "type-check:web": "npm run type-check --workspace @ebms/web",
+    "type-check:api": "npm run type-check --workspace @ebms/api",
+    "test": "npm run test:api",
+    "test:api": "npm run test --workspace @ebms/api",
+    "build": "npm run build:web && npm run build:api",
+    "build:web": "npm run build --workspace @ebms/web",
+    "build:api": "npm run build --workspace @ebms/api",
+    "build:pages": "npm run build:pages --workspace @ebms/web",
+    "deploy:api": "npm run deploy --workspace @ebms/api"
   }
 }

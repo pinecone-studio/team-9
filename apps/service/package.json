@@ -1,5 +1,5 @@
 {
-	"name": "@ebms/api",
+	"name": "@ebms/service",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {

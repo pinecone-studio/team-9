@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Prefer secret, then variable; fallback to repository name.
-      CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
+      # Use repository name as the single source of truth.
+      CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}
 
     steps:
       - name: Checkout code
@@ -89,7 +89,7 @@ jobs:
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             "${API_BASE}/${PROJECT}")"
 
-          if [ "${STATUS}" = "200" ] && grep -q '"success":true' /tmp/cf-project-check.json; then
+          if [ "${STATUS}" = "200" ] && grep -Eq '"success"[[:space:]]*:[[:space:]]*true' /tmp/cf-project-check.json; then
             echo "Project exists: ${PROJECT}"
           else
             echo "Project not found. Creating: ${PROJECT}"
@@ -98,7 +98,7 @@ jobs:
               -H "Content-Type: application/json" \
               --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\"}")"
 
-            if echo "${CREATE_RESPONSE}" | grep -q '"success":true'; then
+            if echo "${CREATE_RESPONSE}" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'; then
               echo "Project created: ${PROJECT}"
             else
               echo "::error::Failed to create Pages project '${PROJECT}'."

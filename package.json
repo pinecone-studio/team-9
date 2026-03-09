@@ -1,11 +1,29 @@
-
 {
-  "name": "ebms",
+  "name": "frontend",
+  "version": "0.1.0",
   "private": true,
-  "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "npm run dev -w packages/frontend",
-    "build": "npm run build -w packages/frontend",
-    "lint": "npm run lint -w packages/frontend"
+    "dev": "next dev",
+    "build": "next build && npx @cloudflare/next-on-pages",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.2.35"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "@cloudflare/next-on-pages": "^1.13.12",
+    "wrangler": "^3.112.0"
   }
 }

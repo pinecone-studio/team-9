@@ -36,7 +36,14 @@ jobs:
         run: npm run lint
 
       - name: TypeScript check
-        run: npm run type-check
+        run: |
+          if npm run | grep -q "type-check"; then
+            npm run type-check
+          elif npm run | grep -q "typecheck"; then
+            npm run typecheck
+          else
+            echo "No TypeScript check script found (type-check/typecheck). Skipping."
+          fi
 
   build-and-preview:
     name: 🚀 Build & Preview Deploy

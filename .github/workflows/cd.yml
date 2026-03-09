@@ -1,0 +1,59 @@
+name: CD - Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: true
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_VERSION: '20'
+      PAGES_OUTPUT_DIR: ${{ vars.PAGES_OUTPUT_DIR || 'out' }}
+      CLOUDFLARE_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate build output directory
+        run: |
+          if [ ! -d "${PAGES_OUTPUT_DIR}" ]; then
+            echo "Build output directory '${PAGES_OUTPUT_DIR}' not found"
+            exit 1
+          fi
+
+      - name: Deploy production to Cloudflare Pages
+        run: |
+          set -euo pipefail
+          npx wrangler@4 pages deploy "${PAGES_OUTPUT_DIR}" \
+            --project-name "${CLOUDFLARE_PAGES_PROJECT_NAME}" \
+            --branch "main" \
+            --commit-hash "${{ github.sha }}" \
+            --commit-message "Production deploy: ${{ github.sha }}"

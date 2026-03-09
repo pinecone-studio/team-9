@@ -84,6 +84,8 @@ jobs:
 
     env:
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      # Prefer secret, then variable; fallback to repository name.
+      CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
 
     steps:
       - name: Checkout code
@@ -99,9 +101,14 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build for Cloudflare Pages
-        run: npm run build
-        # Cloudflare Pages + Next.js ашиглахад @cloudflare/next-on-pages хэрэгтэй
-        # package.json: "build": "next build && npx @cloudflare/next-on-pages"
+        run: npm run build:pages
+        # package.json: "build:pages": "npx @cloudflare/next-on-pages"
+
+      - name: Show deploy target
+        run: |
+          echo "Cloudflare account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          echo "Cloudflare Pages project: ${{ env.CF_PAGES_PROJECT_NAME }}"
+          echo "Preview branch: ${{ github.head_ref }}"
 
       - name: Deploy to Cloudflare Pages (Preview)
         id: cloudflare-deploy
@@ -109,7 +116,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }} --branch=${{ github.head_ref }}
+          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=${{ github.head_ref }}
           # @cloudflare/next-on-pages ашиглавал: out/ эсвэл .vercel/output/static
 
       - name: Comment Preview URL on PR

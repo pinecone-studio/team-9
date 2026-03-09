@@ -19,6 +19,8 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      # Prefer secret, then variable; fallback to repository name.
+      CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
 
     steps:
       - name: Checkout code
@@ -37,8 +39,14 @@ jobs:
         run: npm run lint
 
       - name: Build for Cloudflare Pages
-        run: npm run build
-        # package.json: "build": "next build && npx @cloudflare/next-on-pages"
+        run: npm run build:pages
+        # package.json: "build:pages": "npx @cloudflare/next-on-pages"
+
+      - name: Show deploy target
+        run: |
+          echo "Cloudflare account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          echo "Cloudflare Pages project: ${{ env.CF_PAGES_PROJECT_NAME }}"
+          echo "Production branch: main"
 
       - name: Deploy to Cloudflare Pages (Production)
         id: cloudflare-deploy
@@ -46,7 +54,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }} --branch=main
+          command: pages deploy .vercel/output/static --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=main
 
       - name: Print Production URL
         run: |

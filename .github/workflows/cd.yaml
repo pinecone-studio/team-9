@@ -14,11 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Бүх secret-ийг GitHub → Settings → Secrets → Actions дотор нэмнэ
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
       # Prefer secret, then variable; fallback to repository name.
       CF_PAGES_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME != '' && secrets.CLOUDFLARE_PAGES_PROJECT_NAME || vars.CLOUDFLARE_PAGES_PROJECT_NAME != '' && vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
 

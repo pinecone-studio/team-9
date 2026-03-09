@@ -24,8 +24,9 @@ type UpdateEmployeeBody = Partial<CreateEmployeeBody>;
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// Health check endpoint for quick smoke tests and uptime checks.
 app.get('/', (c) => {
-	return c.text('EBMS backend running test');
+	return c.text('EBMS backend running');
 });
 
 app.get('/employees', async (c) => {

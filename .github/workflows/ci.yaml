@@ -142,6 +142,7 @@ jobs:
           set -euo pipefail
           PROJECT="${DEPLOY_PROJECT_NAME}"
           API_BASE="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects"
+          COMPAT_DATE="$(date -u +%F)"
 
           echo "Checking Cloudflare Pages project: ${PROJECT}"
           STATUS="$(curl -sS -o /tmp/cf-project-check.json -w "%{http_code}" \
@@ -155,7 +156,7 @@ jobs:
             CREATE_RESPONSE="$(curl -sS -X POST "${API_BASE}" \
               -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\"}")"
+              --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\",\"deployment_configs\":{\"preview\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]},\"production\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]}}}")"
 
             if echo "${CREATE_RESPONSE}" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'; then
               echo "Project created: ${PROJECT}"
@@ -164,6 +165,20 @@ jobs:
               echo "${CREATE_RESPONSE}"
               exit 1
             fi
+          fi
+
+          echo "Ensuring nodejs_compat is enabled for preview/production..."
+          PATCH_RESPONSE="$(curl -sS -X PATCH "${API_BASE}/${PROJECT}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"deployment_configs\":{\"preview\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]},\"production\":{\"compatibility_date\":\"${COMPAT_DATE}\",\"compatibility_flags\":[\"nodejs_compat\"]}}}")"
+
+          if echo "${PATCH_RESPONSE}" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'; then
+            echo "Runtime config updated: nodejs_compat"
+          else
+            echo "::error::Failed to update runtime config (nodejs_compat) for '${PROJECT}'."
+            echo "${PATCH_RESPONSE}"
+            exit 1
           fi
 
       - name: Deploy to Cloudflare Pages (Preview)

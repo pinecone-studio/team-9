@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { getBenefitStats } from "@/lib/rule-engine";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,8 @@ import {
 } from "lucide-react";
 import { Employee, benefits } from "@/lib/data";
 import { evaluateBenefitEligibility } from "@/lib/rule-engine";
+
+const NOW_TIMESTAMP = Date.now();
 
 export function HREmployees() {
   const { employees, updateEmployee, addAuditLog, currentUser } = useAppStore();
@@ -129,7 +131,7 @@ export function HREmployees() {
           const stats = getBenefitStats(employee);
           const hireDate = new Date(employee.hire_date);
           const tenureMonths = Math.floor(
-            (Date.now() - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+            (NOW_TIMESTAMP - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
           );
 
           return (

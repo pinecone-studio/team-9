@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 const categoryOrder = ["Wellness", "Equipment", "Financial", "Career Development", "Flexibility"];
+const NOW_TIMESTAMP = Date.now();
 
 export function EmployeeDashboard() {
   const { currentUser, setSelectedBenefitId } = useAppStore();
@@ -41,7 +42,7 @@ export function EmployeeDashboard() {
 
   const hireDate = new Date(currentUser.hire_date);
   const tenureMonths = Math.floor(
-    (Date.now() - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+    (NOW_TIMESTAMP - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
   );
   const tenureYears = Math.floor(tenureMonths / 12);
   const remainingMonths = tenureMonths % 12;

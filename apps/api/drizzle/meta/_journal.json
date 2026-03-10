@@ -15,6 +15,20 @@
       "when": 1773120034181,
       "tag": "0001_lethal_mister_fear",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773130620615,
+      "tag": "0002_amused_redwing",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1773131001215,
+      "tag": "0003_organic_thanos",
+      "breakpoints": true
     }
   ]
 }

@@ -5,7 +5,7 @@ import { employees } from "./employees";
 
 export const benefitRequests = sqliteTable("benefit_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id")
+  employeeId: text("employee_id")
     .notNull()
     .references(() => employees.id),
   benefitId: integer("benefit_id")

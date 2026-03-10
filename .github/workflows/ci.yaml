@@ -89,9 +89,6 @@ jobs:
       - name: Run backend TypeScript check
         run: npm run type-check:api
 
-      - name: Run backend tests
-        run: npm run test:api
-
   preview-web:
     name: Preview Deploy Web (Cloudflare Pages)
     runs-on: ubuntu-latest

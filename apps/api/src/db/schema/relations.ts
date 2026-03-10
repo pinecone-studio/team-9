@@ -8,19 +8,19 @@ import { eligibilityRules } from "./eligibility-rules";
 import { employees } from "./employees";
 
 export const employeesRelations = relations(employees, ({ many }) => ({
-  contracts: many(contracts),
   benefitEligibility: many(benefitEligibility),
   benefitRequests: many(benefitRequests),
 }));
 
 export const contractsRelations = relations(contracts, ({ one }) => ({
-  employee: one(employees, {
-    fields: [contracts.employeeId],
-    references: [employees.id],
+  benefit: one(benefits, {
+    fields: [contracts.benefitId],
+    references: [benefits.id],
   }),
 }));
 
 export const benefitsRelations = relations(benefits, ({ many }) => ({
+  contracts: many(contracts),
   eligibilityRules: many(eligibilityRules),
   benefitEligibility: many(benefitEligibility),
   benefitRequests: many(benefitRequests),

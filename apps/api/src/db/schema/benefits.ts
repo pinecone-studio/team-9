@@ -1,5 +1,4 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { contracts } from "./contracts";
 
 export const benefits = sqliteTable("benefits", {
   id: text("id").primaryKey(),
@@ -10,6 +9,6 @@ export const benefits = sqliteTable("benefits", {
   requiresContract: integer("requires_contract", { mode: "boolean" })
     .notNull()
     .default(false),
-  activeContractId: integer("active_contract_id").references(() => contracts.id),
+  activeContractId: text("active_contract_id"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
 });

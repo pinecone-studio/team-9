@@ -1,15 +1,16 @@
 {
-	"name": "ebms-backend",
-	"main": "src/index.ts",
-	"compatibility_date": "2026-03-09",
-	"observability": {
-		"enabled": true,
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "team9_pinequest",
-			"database_id": "b3068a97-ff45-4348-b020-0380017a04d8",
-		},
-	],
+  "name": "ebms-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-09",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "team9_pinequest",
+      "database_id": "b3068a97-ff45-4348-b020-0380017a04d8",
+      "migrations_dir": "drizzle"
+    }
+  ]
 }

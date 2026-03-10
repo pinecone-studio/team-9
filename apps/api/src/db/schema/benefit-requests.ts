@@ -1,19 +1,22 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { benefits } from "./benefits";
 import { employees } from "./employees";
 
+export const benefitRequestStatuses = ["pending", "approved", "rejected", "cancelled"] as const;
+
 export const benefitRequests = sqliteTable("benefit_requests", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: text("id").primaryKey(),
   employeeId: text("employee_id")
     .notNull()
     .references(() => employees.id),
-  benefitId: integer("benefit_id")
+  benefitId: text("benefit_id")
     .notNull()
     .references(() => benefits.id),
-  status: text("status").notNull().default("pending"),
-  requestedAt: integer("requested_at", { mode: "timestamp" }).notNull(),
-  reviewedBy: integer("reviewed_by"),
-  reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
-  comment: text("comment"),
+  status: text("status", { enum: benefitRequestStatuses }).notNull().default("pending"),
+  contractVersionAccepted: text("contract_version_accepted"),
+  contractAcceptedAt: text("contract_accepted_at"),
+  reviewedBy: text("reviewed_by").references(() => employees.id),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
 });

@@ -29,6 +29,27 @@
       "when": 1773132282600,
       "tag": "0003_wide_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1773133062941,
+      "tag": "0004_eager_wolf_cub",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1773134017613,
+      "tag": "0005_nifty_menace",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1773134362531,
+      "tag": "0006_wooden_barracuda",
+      "breakpoints": true
     }
   ]
 }

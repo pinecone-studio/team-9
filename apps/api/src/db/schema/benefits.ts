@@ -1,12 +1,15 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { contracts } from "./contracts";
 
 export const benefits = sqliteTable("benefits", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  code: text("code").notNull().unique(),
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
-  description: text("description"),
-  category: text("category"),
+  category: text("category").notNull(),
+  subsidyPercent: integer("subsidy_percent").notNull(),
+  vendorName: text("vendor_name"),
+  requiresContract: integer("requires_contract", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  activeContractId: integer("active_contract_id").references(() => contracts.id),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

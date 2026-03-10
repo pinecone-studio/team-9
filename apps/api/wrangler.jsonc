@@ -12,5 +12,11 @@
       "database_id": "b3068a97-ff45-4348-b020-0380017a04d8",
       "migrations_dir": "drizzle"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ASSETS",
+      "bucket_name": "team9-assets"
+    }
   ]
 }

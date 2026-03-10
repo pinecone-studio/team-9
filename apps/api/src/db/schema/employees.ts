@@ -1,15 +1,18 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const employees = sqliteTable("employees", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeCode: text("employee_code").notNull().unique(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
+  id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
-  department: text("department"),
-  position: text("position"),
+  name: text("name").notNull(),
+  nameEng: text("name_eng").notNull(),
+  role: text("role").notNull(),
+  department: text("department").notNull(),
+  responsibilityLevel: integer("responsibility_level").notNull(),
   employmentStatus: text("employment_status").notNull().default("active"),
-  hiredAt: integer("hired_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  hireDate: text("hire_date").notNull(),
+  okrSubmitted: integer("okr_submitted", { mode: "boolean" }).notNull().default(false),
+  lateArrivalCount: integer("late_arrival_count").notNull().default(0),
+  lateArrivalUpdatedAt: text("late_arrival_updated_at"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
 });

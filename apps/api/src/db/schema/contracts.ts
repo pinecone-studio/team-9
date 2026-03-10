@@ -4,7 +4,7 @@ import { employees } from "./employees";
 
 export const contracts = sqliteTable("contracts", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id")
+  employeeId: text("employee_id")
     .notNull()
     .references(() => employees.id),
   contractType: text("contract_type").notNull(),

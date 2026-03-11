@@ -10,10 +10,14 @@ export async function listEmployees(DB: D1Database): Promise<EmployeeModel[]> {
 
 	const rows = await db
 		.select({
+			department: employees.department,
 			id: employees.id,
 			name: employees.name,
 			email: employees.email,
+			employmentStatus: employees.employmentStatus,
+			hireDate: employees.hireDate,
 			role: employees.role,
+			responsibilityLevel: employees.responsibilityLevel,
 		})
 		.from(employees)
 		.orderBy(asc(employees.name));

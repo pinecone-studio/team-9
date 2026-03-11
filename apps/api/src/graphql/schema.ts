@@ -4,6 +4,10 @@ export const typeDefs = `
 		name: String!
 		position: String!
 		email: String!
+		department: String!
+		employmentStatus: String!
+		hireDate: String!
+		responsibilityLevel: Int!
 		benefits: [Benefit]
 	}
 

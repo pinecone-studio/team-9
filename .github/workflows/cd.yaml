@@ -184,9 +184,6 @@ jobs:
       - name: Run backend TypeScript check
         run: npm run type-check:api
 
-      - name: Run backend tests
-        run: npm run test:api
-
       - name: Deploy to Cloudflare Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

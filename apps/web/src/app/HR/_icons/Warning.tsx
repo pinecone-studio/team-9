@@ -1,5 +1,5 @@
 import * as React from "react";
-import { JSX } from "react/jsx-runtime";
+import type { JSX } from "react/jsx-runtime";
 const WarningIcon = (
   props: JSX.IntrinsicAttributes & React.SVGProps<SVGSVGElement>,
 ) => (

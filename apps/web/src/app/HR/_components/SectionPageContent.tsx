@@ -53,7 +53,7 @@ export default function SectionPageContent({
         </article>
       ))}
 
-      <article className="rounded-[22px] border border-[#e7e1e1] bg-white p-5 shadow-[0_10px_24px_rgba(15,23,42,0.03)] sm:p-6 xl:w-[360px] xl:justify-self-end">
+      <article className="rounded-[22px] border border-[#e7e1e1] bg-white p-5 shadow-[0_10px_24px_rgba(15,23,42,0.03)] sm:p-6 xl:w-90 xl:justify-self-end">
         <h2 className="text-[18px] font-semibold text-slate-950">
           {sidebarTitle}
         </h2>
@@ -62,7 +62,7 @@ export default function SectionPageContent({
           {sidebarItems.map(({ detail, title }) => (
             <div
               key={title}
-              className="rounded-[16px] border border-[#ece8e8] bg-[#fbfbfb] px-4 py-4"
+              className="rounded-2xl border border-[#ece8e8] bg-[#fbfbfb] px-4 py-4"
             >
               <p className="text-[15px] font-medium text-slate-950">{title}</p>
               <p className="mt-2 text-[14px] leading-6 text-slate-500">

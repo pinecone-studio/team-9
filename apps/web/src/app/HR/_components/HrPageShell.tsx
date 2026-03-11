@@ -17,7 +17,7 @@ export default function HrPageShell({
 }: HrPageShellProps) {
   return (
     <main className="min-h-screen bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-[1300px] flex-col items-center">
+      <div className="mx-auto flex max-w-325 flex-col items-center">
         <TopNaviBar activeKey={activeKey} />
 
         <section className="mt-8 text-center sm:mt-10">

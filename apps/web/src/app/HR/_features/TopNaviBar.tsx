@@ -76,7 +76,7 @@ type TopNaviBarProps = {
 
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
   return (
-    <div className="w-full max-w-[918px] rounded-[16px] border border-[#e6e1e1] bg-white px-6 py-4 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+    <div className="w-full max-w-229.5 rounded-2xl border border-[#e6e1e1] bg-white px-6 py-4 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
       <div className="flex items-center gap-6">
         <nav
           aria-label="HR sections"
@@ -90,7 +90,7 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
                 <li key={key} className="shrink-0">
                   <Link
                     aria-current={isActive ? "page" : undefined}
-                    className={`group flex flex-col items-center gap-2 rounded-[12px] py-1.5 text-[13px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
+                    className={`group flex flex-col items-center gap-2 rounded-xl py-1.5 text-[13px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
                       isActive
                         ? "text-slate-950"
                         : "text-slate-500 hover:text-slate-700"

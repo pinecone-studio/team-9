@@ -26,9 +26,13 @@ export async function createEmployeeRecord(DB: D1Database, args: CreateEmployeeA
 	});
 
 	return {
+		department: 'Unassigned',
 		id,
 		name: args.name,
 		email: args.email,
+		employmentStatus: 'active',
+		hireDate: now,
 		position: args.position,
+		responsibilityLevel: 1,
 	};
 }

@@ -10,10 +10,14 @@ export async function getEmployeeById(DB: D1Database, id: string): Promise<Emplo
 
 	const result = await db
 		.select({
+			department: employees.department,
 			id: employees.id,
 			name: employees.name,
 			email: employees.email,
+			employmentStatus: employees.employmentStatus,
+			hireDate: employees.hireDate,
 			role: employees.role,
+			responsibilityLevel: employees.responsibilityLevel,
 		})
 		.from(employees)
 		.where(eq(employees.id, id))

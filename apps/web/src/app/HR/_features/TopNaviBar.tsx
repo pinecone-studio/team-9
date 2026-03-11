@@ -22,7 +22,6 @@ type NavigationItem = {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   key: HrNavKey;
   label: string;
-  width: number;
 };
 
 const navigationItems = [
@@ -31,42 +30,36 @@ const navigationItems = [
     icon: DashboardIcon,
     key: "dashboard",
     label: "Dashboard",
-    width: 100,
   },
   {
     href: "/benefits-catalog",
     icon: BenefitsCatalogIcon,
     key: "benefits-catalog",
     label: "Benefits catalog",
-    width: 111,
   },
   {
     href: "/employees",
     icon: EmployeesIcon,
     key: "employees",
     label: "Employees",
-    width: 100,
   },
   {
     href: "/requests",
     icon: RequestsIcon,
     key: "requests",
     label: "Requests",
-    width: 100,
   },
   {
     href: "/eligibility-rules",
     icon: EligibilityRulesIcon,
     key: "eligibility-rules",
     label: "Eligibility rules",
-    width: 100,
   },
   {
     href: "/audit-logs",
     icon: AuditLogsIcon,
     key: "audit-logs",
     label: "Audit Logs",
-    width: 100,
   },
 ] satisfies NavigationItem[];
 
@@ -76,34 +69,33 @@ type TopNaviBarProps = {
 
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
   return (
-    <div className="w-full max-w-229.5 rounded-2xl border border-[#e6e1e1] bg-white px-6 py-4 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-      <div className="flex items-center gap-6">
+    <div className="h-[78px] w-[860px] rounded-2xl border border-[#e6e1e1] bg-white px-6 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <div className="flex h-full items-center gap-6">
         <nav
           aria-label="HR sections"
           className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <ul className="flex min-w-max items-start gap-5">
-            {navigationItems.map(({ href, icon: Icon, key, label, width }) => {
+          <ul className="flex min-w-max items-start gap-4">
+            {navigationItems.map(({ href, icon: Icon, key, label }) => {
               const isActive = activeKey === key;
 
               return (
-                <li key={key} className="shrink-0">
+                <li key={key} className="flex h-[54px] shrink-0 items-center">
                   <Link
                     aria-current={isActive ? "page" : undefined}
-                    className={`group flex flex-col items-center gap-2 rounded-xl py-1.5 text-[13px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
+                    className={`group flex w-[100px] flex-col items-center justify-center gap-2 rounded-xl text-[13px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
                       isActive
-                        ? "text-slate-950"
-                        : "text-slate-500 hover:text-slate-700"
+                        ? "h-[54px] text-slate-950"
+                        : "h-[44px] text-slate-500 hover:text-slate-700"
                     }`}
                     href={href}
-                    style={{ width }}
                   >
                     <span className="flex h-7 items-center justify-center">
                       <Icon
-                        className={`h-6 w-6 transition-colors ${
+                        className={`transition-colors ${
                           isActive
-                            ? "text-slate-950"
-                            : "text-slate-500 group-hover:text-slate-700"
+                            ? "h-[34px] w-[34px] text-slate-950"
+                            : "h-6 w-6 text-slate-500 group-hover:text-slate-700"
                         }`}
                       />
                     </span>
@@ -117,7 +109,9 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
           </ul>
         </nav>
 
-        <div className="h-11 w-px shrink-0 bg-[#e6e1e1]" />
+        <div className="flex h-full w-8 shrink-0 items-center justify-center">
+          <div className="h-11 w-px bg-[#e6e1e1]" />
+        </div>
 
         <button
           aria-label="Profile"

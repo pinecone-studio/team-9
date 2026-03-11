@@ -1,30 +1,35 @@
-export const typeDefs = /* GraphQL */ `
-  type Employee {
-    id: ID!
-    name: String!
-    position: String!
-    email: String!
-    benefits: [Benefit]
-  }
+export const typeDefs = `
+	type Employee {
+		id: ID!
+		name: String!
+		position: String!
+		email: String!
+		benefits: [Benefit]
+	}
 
-  type Benefit {
-    id: ID!
-    title: String!
-    description: String!
-    category: String! # Жишээ нь: Эрүүл мэнд, Хоол, Даатгал
-  }
+	type Benefit {
+		id: ID!
+		title: String!
+		description: String!
+		category: String!
+	}
 
-  type Query {
-    # Бүх ажилчдыг авах
-    employees: [Employee]
-    # Нэг ажилтны мэдээллийг ID-аар авах
-    employee(id: ID!): Employee
-    # Бүх боломжит хөнгөлөлтүүдийг харах
-    allBenefits: [Benefit]
-  }
+	type BenefitEligibility {
+		benefit: Benefit!
+		status: String!
+		ruleEvaluationJson: String!
+		computedAt: String!
+	}
 
-  type Mutation {
-    # Шинэ ажилтан нэмэх
-    addEmployee(name: String!, email: String!, position: String!): Employee
-  }
+	type Query {
+		employees: [Employee]
+		employee(id: ID!): Employee
+		allBenefits: [Benefit]
+		employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+	}
+
+	type Mutation {
+		createEmployee(name: String!, email: String!, position: String!): Employee
+		recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+	}
 `;

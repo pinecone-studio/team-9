@@ -12,7 +12,7 @@ const MISSING_ENDPOINT_ERROR =
   "Missing NEXT_PUBLIC_GRAPHQL_ENDPOINT for this deployment. Add it to the Cloudflare Pages environment variables and redeploy.";
 
 function getConfiguredEndpoint() {
-  const configuredEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT?.trim();
+  const configuredEndpoint = process.env.GRAPHQL_ENDPOINT?.trim();
   return configuredEndpoint ? configuredEndpoint : null;
 }
 
@@ -23,7 +23,7 @@ function isLocalEnvironment() {
 
   return LOCAL_HOSTNAMES.has(window.location.hostname);
 }
-
+ 
 function createMissingEndpointLink() {
   return new ApolloLink(
     () =>

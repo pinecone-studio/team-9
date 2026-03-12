@@ -67,6 +67,6 @@ Set the GraphQL endpoint at build time:
 NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://ebms-backend.<your-subdomain>.workers.dev/graphql
 ```
 
-For local frontend development, you can copy `apps/web/.env.example` to `apps/web/.env.local` and update the value.
+For local frontend development, copy `apps/web/.env.example` to `apps/web/.env.local` and update the value.
 
-For Cloudflare Pages, add `NEXT_PUBLIC_GRAPHQL_ENDPOINT` in the Pages project environment variables, then redeploy the frontend.
+For Cloudflare Pages, add `NEXT_PUBLIC_GRAPHQL_ENDPOINT` in the Pages project environment variables for both Preview and Production, then redeploy the frontend.

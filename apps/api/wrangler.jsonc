@@ -5,6 +5,9 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "CORS_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://ebms-backend.b94889340.workers.dev,https://team-9-dhh.pages.dev"
+  },
   "d1_databases": [
     {
       "binding": "DB",

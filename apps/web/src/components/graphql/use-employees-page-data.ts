@@ -3,21 +3,19 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useDeferredValue, useEffect, useState } from "react";
 import {
-  EMPLOYEES_QUERY,
-  EMPLOYEE_ELIGIBILITY_QUERY,
-  RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
-  type Employee,
-  type EmployeeEligibilityQueryData,
-  type EmployeesQueryData,
-  type RecalculateEligibilityMutationData,
-  type RecalculateEligibilityMutationVars,
-} from "@/lib/apollo/employees";
+  EmployeesPageDocument,
+  EmployeeEligibilityDocument,
+  RecalculateEmployeeEligibilityDocument,
+  type EmployeesPageQuery,
+} from "@/lib/apollo/__generated__/graphql";
 import {
   buildEligibilitySummary,
   type EligibilitySummary,
 } from "@/components/graphql/employees-page-utils";
 
 export type StatusFilter = "all" | "active" | "probation" | "terminated";
+
+type Employee = EmployeesPageQuery["employees"][number];
 
 export function useEmployeesPageData() {
   const client = useApolloClient();
@@ -42,21 +40,20 @@ export function useEmployeesPageData() {
       setError(null);
 
       try {
-        const employeesResult = await client.query<EmployeesQueryData>({
+        const employeesResult = await client.query({
           fetchPolicy: "network-only",
-          query: EMPLOYEES_QUERY,
+          query: EmployeesPageDocument,
         });
 
         const loadedEmployees = employeesResult.data?.employees ?? [];
 
         const eligibilityEntries = await Promise.all(
           loadedEmployees.map(async (employee) => {
-            const eligibilityResult =
-              await client.query<EmployeeEligibilityQueryData>({
-                fetchPolicy: "network-only",
-                query: EMPLOYEE_ELIGIBILITY_QUERY,
-                variables: { employeeId: employee.id },
-              });
+            const eligibilityResult = await client.query({
+              fetchPolicy: "network-only",
+              query: EmployeeEligibilityDocument,
+              variables: { employeeId: employee.id },
+            });
 
             return [
               employee.id,
@@ -102,11 +99,8 @@ export function useEmployeesPageData() {
     setError(null);
 
     try {
-      const result = await client.mutate<
-        RecalculateEligibilityMutationData,
-        RecalculateEligibilityMutationVars
-      >({
-        mutation: RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
+      const result = await client.mutate({
+        mutation: RecalculateEmployeeEligibilityDocument,
         variables: { employeeId: employee.id },
       });
 

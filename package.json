@@ -10,6 +10,8 @@
     "dev": "npm run dev:web",
     "dev:web": "npm run dev --workspace @ebms/web",
     "dev:api": "npm run dev --workspace @ebms/api",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "lint": "npm run lint:web",
     "lint:web": "npm run lint --workspace @ebms/web",
     "type-check": "npm run type-check:web && npm run type-check:api",
@@ -22,5 +24,11 @@
     "build:api": "npm run build --workspace @ebms/api",
     "build:pages": "npm run build:pages --workspace @ebms/web",
     "deploy:api": "npm run deploy --workspace @ebms/api"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^6.0.0",
+    "@graphql-codegen/typed-document-node": "^6.0.0",
+    "@graphql-codegen/typescript": "^5.0.0",
+    "@graphql-codegen/typescript-operations": "^5.0.0"
   }
 }

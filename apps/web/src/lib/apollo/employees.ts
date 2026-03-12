@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-// Source operations for GraphQL Code Generator.
+// Source operations for GraphQL Code Generator
 export const EMPLOYEES_QUERY = gql`
   query EmployeesPage {
     employees {

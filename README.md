@@ -53,10 +53,10 @@ After deploy, note the public Worker URL. It will usually look like:
 https://ebms-backend.<your-subdomain>.workers.dev/graphql
 ```
 
-If the frontend is deployed on a public domain, add that domain to `apps/api/wrangler.jsonc` in `vars.CORS_ORIGINS` before deploying the API:
+If the frontend is deployed on a public domain, add that domain to `apps/api/wrangler.jsonc` in `vars.CORS_ORIGINS` before deploying the API. Wildcards are supported for preview URLs:
 
 ```text
-http://localhost:3000,http://127.0.0.1:3000,https://your-pages-domain.pages.dev
+http://localhost:3000,http://127.0.0.1:3000,https://your-pages-domain.pages.dev,https://*.your-pages-domain.pages.dev
 ```
 
 ### Frontend

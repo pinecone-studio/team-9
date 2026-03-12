@@ -1,5 +1,5 @@
-import { mutationResolvers } from './mutation';
-import { queryResolvers } from './query';
+import { mutationResolvers } from './mutations';
+import { queryResolvers } from './queries';
 
 export const resolvers = {
 	Query: queryResolvers,

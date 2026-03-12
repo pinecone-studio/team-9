@@ -1,0 +1,61 @@
+{
+  "name": "ebms-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/api",
+        "command": "bun run dev"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/api",
+        "command": "bun run build"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/api",
+        "command": "bun run type-check"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/api",
+        "command": "bun run type-check"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/api",
+        "command": "bun run test"
+      }
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx graphql-codegen --config apps/api/codegen.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/api",
+        "command": "bun run deploy"
+      }
+    }
+  },
+  "tags": ["type:app", "scope:api"]
+}

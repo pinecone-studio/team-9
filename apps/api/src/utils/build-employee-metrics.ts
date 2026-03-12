@@ -1,4 +1,4 @@
-import { EmployeeMetrics } from '../types';
+import type { EmployeeMetrics } from '../graphql/generated/resolvers-types';
 
 export type EmployeeRow = {
 	employment_status: string;

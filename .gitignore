@@ -37,7 +37,17 @@ yarn-error.log*
 
 # cloudflare
 .wrangler/
+.nx/
 
 # typescript
 *.tsbuildinfo
 **/next-env.d.ts
+
+# codegen
+**/generated/*.tsx
+**/generated/*.ts
+**/generated/**/*.tsx
+**/generated.ts
+**/generated.tsx
+generated.ts
+generated.tsx

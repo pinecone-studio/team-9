@@ -1,4 +1,4 @@
-export const typeDefs = `
+export const typeDefs = /* GraphQL */ `
 	type Employee {
 		id: ID!
 		name: String!
@@ -57,6 +57,49 @@ export const typeDefs = `
     expiryDate: String!
     fileBase64: String!
     fileName: String!
+  }
+
+  enum EmploymentStatus {
+    active
+    probation
+    leave
+    terminated
+  }
+
+  enum Operator {
+    eq
+    neq
+    gte
+    lte
+    gt
+    lt
+    in
+    not_in
+  }
+
+  enum RuleType {
+    employment_status
+    okr_submitted
+    attendance
+    responsibility_level
+    role
+    tenure_days
+  }
+
+  type EmployeeMetrics {
+    employment_status: EmploymentStatus!
+    okr_submitted: Boolean!
+    attendance: Int!
+    responsibility_level: Int!
+    role: String!
+    tenure_days: Int!
+  }
+
+  type EligibilityRule {
+    id: ID!
+    rule_type: RuleType!
+    operator: Operator!
+    value: String!
   }
 
   type Query {

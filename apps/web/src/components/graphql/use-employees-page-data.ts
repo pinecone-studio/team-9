@@ -17,6 +17,14 @@ export type StatusFilter = "all" | "active" | "probation" | "terminated";
 
 type Employee = EmployeesPageQuery["employees"][number];
 
+function getErrorMessage(caughtError: unknown, fallbackMessage: string) {
+  if (caughtError instanceof Error && caughtError.message.trim().length > 0) {
+    return caughtError.message;
+  }
+
+  return fallbackMessage;
+}
+
 export function useEmployeesPageData() {
   const client = useApolloClient();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -49,18 +57,36 @@ export function useEmployeesPageData() {
 
         const eligibilityEntries = await Promise.all(
           loadedEmployees.map(async (employee) => {
-            const eligibilityResult = await client.query({
-              fetchPolicy: "network-only",
-              query: EmployeeEligibilityDocument,
-              variables: { employeeId: employee.id },
-            });
+            try {
+              const eligibilityResult = await client.query({
+                errorPolicy: "all",
+                fetchPolicy: "network-only",
+                query: EmployeeEligibilityDocument,
+                variables: { employeeId: employee.id },
+              });
 
-            return [
-              employee.id,
-              buildEligibilitySummary(
-                eligibilityResult.data?.employeeEligibility ?? [],
-              ),
-            ] as const;
+              if (eligibilityResult.error) {
+                throw eligibilityResult.error;
+              }
+
+              return [
+                employee.id,
+                buildEligibilitySummary(
+                  eligibilityResult.data?.employeeEligibility ?? [],
+                ),
+                false,
+              ] as const;
+            } catch {
+              return [
+                employee.id,
+                {
+                  active: 0,
+                  eligible: 0,
+                  locked: 0,
+                },
+                true,
+              ] as const;
+            }
           }),
         );
 
@@ -69,17 +95,32 @@ export function useEmployeesPageData() {
         }
 
         setEmployees(loadedEmployees);
-        setEligibilityByEmployee(Object.fromEntries(eligibilityEntries));
+        setEligibilityByEmployee(
+          Object.fromEntries(
+            eligibilityEntries.map(([employeeId, summary]) => [
+              employeeId,
+              summary,
+            ]),
+          ),
+        );
+
+        const failedEligibilityCount = eligibilityEntries.filter(
+          ([, , failed]) => failed,
+        ).length;
+
+        if (failedEligibilityCount > 0) {
+          setError(
+            failedEligibilityCount === loadedEmployees.length
+              ? "Employee eligibility data could not be loaded. Check the employeeEligibility API or apply the latest API migrations."
+              : `Employee eligibility data could not be loaded for ${failedEligibilityCount} employee${failedEligibilityCount === 1 ? "" : "s"}.`,
+          );
+        }
       } catch (caughtError) {
         if (!isActive) {
           return;
         }
 
-        setError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to load employees.",
-        );
+        setError(getErrorMessage(caughtError, "Unable to load employees."));
       } finally {
         if (isActive) {
           setLoading(false);
@@ -112,9 +153,10 @@ export function useEmployeesPageData() {
       }));
     } catch (caughtError) {
       setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Unable to recalculate eligibility.",
+        getErrorMessage(
+          caughtError,
+          `Unable to recalculate eligibility for ${employee.name}.`,
+        ),
       );
     } finally {
       setRefreshingEmployeeId(null);

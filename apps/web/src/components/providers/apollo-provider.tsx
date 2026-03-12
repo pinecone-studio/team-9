@@ -5,9 +5,11 @@ import { type PropsWithChildren } from "react";
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 
 export function AppApolloProvider({ children }: PropsWithChildren) {
-  console.log("process.env.GRAPHQL_ENDPOINT", process.env.GRAPHQL_ENDPOINT);
+  const graphqlEndpoint =
+    process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || process.env.GRAPHQL_ENDPOINT;
+
   const httpLink = new HttpLink({
-    uri: process.env.GRAPHQL_ENDPOINT,
+    uri: graphqlEndpoint,
   });
 
   const client = new ApolloClient({

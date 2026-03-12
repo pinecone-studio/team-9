@@ -8,7 +8,9 @@
     "build:pages": "next build",
     "start": "next start",
     "lint": "eslint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "preview": "npm run build && wrangler pages deploy out",
+    "deploy": "npm run build && wrangler pages deploy out --branch=main"
   },
   "dependencies": {
     "@apollo/client": "^4.1.6",

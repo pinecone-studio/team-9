@@ -1,12 +1,10 @@
-import type { EmployeeEligibilityQuery } from "@/lib/apollo/__generated__/graphql";
+import type { BenefitEligibility } from "@/lib/apollo/employees";
 
 export type EligibilitySummary = {
   active: number;
   eligible: number;
   locked: number;
 };
-
-type BenefitEligibility = EmployeeEligibilityQuery["employeeEligibility"][number];
 
 export function buildEligibilitySummary(
   items: BenefitEligibility[],

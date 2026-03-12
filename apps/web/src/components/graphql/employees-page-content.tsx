@@ -1,7 +1,9 @@
 "use client";
 
 import EmployeeEligibilityCard from "@/components/graphql/employee-eligibility-card";
-import { useEmployeesPageData } from "@/components/graphql/use-employees-page-data";
+import {
+  useEmployeesPageData,
+} from "@/components/graphql/use-employees-page-data";
 
 export default function EmployeesPageContent() {
   const {

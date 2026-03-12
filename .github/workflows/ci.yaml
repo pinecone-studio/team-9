@@ -218,35 +218,21 @@ jobs:
             const deployUrl = "${{ steps.cloudflare-deploy.outputs.deployment-url }}";
             const branch = "${{ github.head_ref }}";
             const sha = "${{ github.sha }}".slice(0, 7);
-            const body = [
-              "## Web Preview Deployment",
-              "",
-              `| | |`,
-              `|---|---|`,
-              `| URL | ${deployUrl} |`,
-              `| Branch | \`${branch}\` |`,
-              `| Commit | \`${sha}\` |`
-            ].join("\n");
 
-            for (let attempt = 1; attempt <= 3; attempt += 1) {
-              try {
-                await github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body,
-                });
-                break;
-              } catch (error) {
-                const status = error?.status ?? 0;
-                const retryable = attempt < 3 && (status >= 500 || status === 0);
-                if (!retryable) {
-                  throw error;
-                }
-                core.warning(`Failed to comment on PR (attempt ${attempt}/3): ${error.message}`);
-                await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
-              }
-            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: [
+                "## Web Preview Deployment",
+                "",
+                `| | |`,
+                `|---|---|`,
+                `| URL | ${deployUrl} |`,
+                `| Branch | \`${branch}\` |`,
+                `| Commit | \`${sha}\` |`
+              ].join("\n")
+            });
 
   preview-api:
     name: Preview Deploy API (Cloudflare Workers)
@@ -319,33 +305,19 @@ jobs:
             const url = "${{ env.API_PREVIEW_URL }}";
             const branch = "${{ github.head_ref }}";
             const sha = "${{ github.sha }}".slice(0, 7);
-            const body = [
-              "## API Preview Deployment",
-              "",
-              `| | |`,
-              `|---|---|`,
-              `| URL | ${url} |`,
-              `| Worker | \`${worker}\` |`,
-              `| Branch | \`${branch}\` |`,
-              `| Commit | \`${sha}\` |`
-            ].join("\n");
 
-            for (let attempt = 1; attempt <= 3; attempt += 1) {
-              try {
-                await github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body,
-                });
-                break;
-              } catch (error) {
-                const status = error?.status ?? 0;
-                const retryable = attempt < 3 && (status >= 500 || status === 0);
-                if (!retryable) {
-                  throw error;
-                }
-                core.warning(`Failed to comment on PR (attempt ${attempt}/3): ${error.message}`);
-                await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
-              }
-            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: [
+                "## API Preview Deployment",
+                "",
+                `| | |`,
+                `|---|---|`,
+                `| URL | ${url} |`,
+                `| Worker | \`${worker}\` |`,
+                `| Branch | \`${branch}\` |`,
+                `| Commit | \`${sha}\` |`
+              ].join("\n")
+            });

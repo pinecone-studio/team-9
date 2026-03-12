@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
-import type { Env } from './db';
 import yoga from './graphql';
+
+type Bindings = {
+	DB: D1Database;
+};
 
 // type CreateEmployeeBody = {
 // 	id: string;
@@ -18,7 +21,7 @@ import yoga from './graphql';
 // 	employee_code?: string;
 // };
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Bindings }>();
 
 app.all('/graphql', (c) => {
 	return yoga.fetch(c.req.raw, c.env, c.executionCtx);

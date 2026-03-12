@@ -59,17 +59,11 @@ const eslintConfig = defineConfig([
       "no-shadow": "off",
 
       /* 9️⃣ Max line length */
-      "max-lines": ["error", { max: 200 }],
+      "max-lines": ["error", { max: 180 }],
     },
   },
 
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    "src/lib/apollo/__generated__/**",
-  ]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

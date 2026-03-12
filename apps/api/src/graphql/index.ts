@@ -1,24 +1,38 @@
-import { createSchema, createYoga } from 'graphql-yoga';
-import type { Env } from '../db';
-import { typeDefs } from './schema';
-import { resolvers } from './resolvers';
+import { createSchema, createYoga } from "graphql-yoga";
+import { typeDefs } from "./schema";
+import { resolvers } from "./resolvers";
 
-const schema = createSchema<Env>({ typeDefs, resolvers });
+type Env = {
+  DB?: unknown;
+  [key: string]: unknown;
+};
 
-const yoga = createYoga<Env>({
-	schema,
-	graphqlEndpoint: '/graphql',
-	graphiql: true,
+type Ctx = {
+  waitUntil?: (promise: Promise<unknown>) => void;
+  passThroughOnException?: () => void;
+};
 
-	cors: {
-		origin: '*',
-		methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
-		allowedHeaders: ['*'],
-	},
+const schema = createSchema({ typeDefs, resolvers });
+
+const yoga = createYoga({
+  schema,
+  graphqlEndpoint: "/graphql",
+  graphiql: true,
+  cors: {
+    origin: [
+      "https://studio.apollographql.com",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ],
+    credentials: false,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "OPTIONS"],
+  },
 });
 
 export default {
-	async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
-		return yoga.fetch(request, env);
-	},
+  async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
+    // Merge env and ctx into the Yoga context
+    return yoga.fetch(request, { ...env, ...ctx });
+  },
 };

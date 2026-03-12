@@ -1,14 +1,12 @@
 "use client";
 
+import type { Employee } from "@/lib/apollo/employees";
 import {
   getInitials,
   getStatusTone,
   getTenureMonths,
   type EligibilitySummary,
 } from "@/components/graphql/employees-page-utils";
-import type { EmployeesPageQuery } from "@/lib/apollo/__generated__/graphql";
-
-type Employee = EmployeesPageQuery["employees"][number];
 
 function EligibilityCount({
   label,

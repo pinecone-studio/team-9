@@ -23,7 +23,8 @@
     "build:web": "npm run build --workspace @ebms/web",
     "build:api": "npm run build --workspace @ebms/api",
     "build:pages": "npm run build:pages --workspace @ebms/web",
-    "deploy:api": "npm run deploy --workspace @ebms/api"
+    "deploy:api": "npm run deploy --workspace @ebms/api",
+    "deploy:web": "npm run deploy --workspace @ebms/web"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^6.0.0",

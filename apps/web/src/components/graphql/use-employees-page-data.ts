@@ -27,9 +27,9 @@ export function useEmployeesPageData() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [refreshingEmployeeId, setRefreshingEmployeeId] = useState<string | null>(
-    null,
-  );
+  const [refreshingEmployeeId, setRefreshingEmployeeId] = useState<
+    string | null
+  >(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
   useEffect(() => {

@@ -1,3 +1,5 @@
+import type { Env } from '../db';
+
 export type EmployeeRow = {
 	department: string;
 	id: string;
@@ -43,10 +45,7 @@ export type BenefitEligibilityModel = {
 	computedAt: string;
 };
 
-export type GraphQLContext = {
-	DB: D1Database;
-	CONTRACTS_BUCKET: R2Bucket;
-};
+export type GraphQLContext = Env;
 
 export type EmployeeIdentifierArgs = {
 	id: string;

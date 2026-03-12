@@ -15,5 +15,12 @@
       "database_id": "4cb7fad9-625c-4540-a076-a0a2ea44b572",
       "migrations_dir": "drizzle"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CONTRACTS_BUCKET",
+      "bucket_name": "company-ebms-contracts",
+      "preview_bucket_name": "company-ebms-contracts-preview"
+    }
   ]
 }

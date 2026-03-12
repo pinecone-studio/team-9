@@ -45,6 +45,7 @@ export type BenefitEligibilityModel = {
 
 export type GraphQLContext = {
 	DB: D1Database;
+	CONTRACTS_BUCKET: R2Bucket;
 };
 
 export type EmployeeIdentifierArgs = {

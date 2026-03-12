@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { Env, getDb } from '../../../db';
+import { type DbEnv, getDb } from '../../../db';
 
 import { employees } from '../../../db/schema/employees';
 import { benefits } from '../../../db/schema/benefits';
@@ -9,7 +9,7 @@ import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
 import { buildEmployeeMetrics } from '../../../utils/build-employee-metrics';
 import { evaluateBenefit } from '../../../utils/eveluate-benefit';
 
-export const computeEmployeeEligibility = async (env: Env, employeeId: string): Promise<void> => {
+export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string): Promise<void> => {
 	try {
 		const db = getDb(env);
 

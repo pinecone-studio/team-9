@@ -1,35 +1,67 @@
 export const typeDefs = `
-	type Employee {
-		id: ID!
-		name: String!
-		position: String!
-		email: String!
-		benefits: [Benefit]
-	}
+  type Employee {
+    id: ID!
+    name: String!
+    position: String!
+    email: String!
+    benefits: [Benefit]
+  }
 
-	type Benefit {
-		id: ID!
-		title: String!
-		description: String!
-		category: String!
-	}
+  type Benefit {
+    id: ID!
+    title: String!
+    description: String!
+    category: String!
+  }
 
-	type BenefitEligibility {
-		benefit: Benefit!
-		status: String!
-		ruleEvaluationJson: String!
-		computedAt: String!
-	}
+  type BenefitEligibility {
+    benefit: Benefit!
+    status: String!
+    ruleEvaluationJson: String!
+    computedAt: String!
+  }
 
-	type Query {
-		employees: [Employee]
-		employee(id: ID!): Employee
-		allBenefits: [Benefit]
-		employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
-	}
+  type Contract {
+    id: ID!
+    benefitId: String!
+    vendorName: String!
+    version: String!
+    r2ObjectKey: String!
+    sha256Hash: String!
+    effectiveDate: String!
+    expiryDate: String!
+    isActive: Boolean!
+  }
 
-	type Mutation {
-		createEmployee(name: String!, email: String!, position: String!): Employee
-		recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!
-	}
+  type ContractSignedUrl {
+    contractId: ID!
+    signedUrl: String!
+    expiresAt: String!
+  }
+
+  input ContractInput {
+    benefitId: String!
+    vendorName: String!
+    version: String!
+    effectiveDate: String!
+    expiryDate: String!
+    fileBase64: String!
+    fileName: String!
+  }
+
+  type Query {
+    employees: [Employee]
+    employee(id: ID!): Employee
+    benefitCatalog: [Benefit]
+    allBenefits: [Benefit]
+    employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
+    employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+    contractSignedUrl(contractId: ID!): ContractSignedUrl!
+  }
+
+  type Mutation {
+    createEmployee(name: String!, email: String!, position: String!): Employee
+    recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+    uploadContract(input: ContractInput!): Contract!
+  }
 `;

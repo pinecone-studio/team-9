@@ -31,6 +31,7 @@ export function mapBenefitRecord(record: BenefitRow): BenefitModel {
 		id: record.id,
 		title: record.name,
 		description,
+		categoryId: record.categoryId ?? '',
 		category: record.category ?? 'General',
 	};
 }

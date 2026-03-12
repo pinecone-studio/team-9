@@ -6,6 +6,7 @@ import { benefits } from "./benefits";
 import { contracts } from "./contracts";
 import { eligibilityRules } from "./eligibility-rules";
 import { employees } from "./employees";
+import { benefitCategories } from "./benefit-categories";
 
 export const employeesRelations = relations(employees, ({ many }) => ({
   benefitEligibility: many(benefitEligibility),
@@ -19,13 +20,20 @@ export const contractsRelations = relations(contracts, ({ one }) => ({
   }),
 }));
 
-export const benefitsRelations = relations(benefits, ({ many }) => ({
+export const benefitsRelations = relations(benefits, ({ one, many }) => ({
+  category: one(benefitCategories, {
+    fields: [benefits.categoryId],
+    references: [benefitCategories.id],
+  }),
   contracts: many(contracts),
   eligibilityRules: many(eligibilityRules),
   benefitEligibility: many(benefitEligibility),
   benefitRequests: many(benefitRequests),
 }));
 
+export const benefitCategoriesRelations = relations(benefitCategories, ({ many }) => ({
+  benefits: many(benefits),
+}));
 export const eligibilityRulesRelations = relations(eligibilityRules, ({ one }) => ({
   benefit: one(benefits, {
     fields: [eligibilityRules.benefitId],

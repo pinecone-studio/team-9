@@ -16,6 +16,12 @@ export const typeDefs = /* GraphQL */ `
     title: String!
     description: String!
     category: String!
+    categoryId: ID!
+  }
+
+  type BenefitCategory {
+    id: ID!
+    name: String!
   }
 
   type BenefitEligibility {
@@ -63,6 +69,8 @@ export const typeDefs = /* GraphQL */ `
 
   type Mutation {
     createEmployee(name: String!, email: String!, position: String!): Employee
+    createBenefitCategory(name: String!): BenefitCategory!
+    deleteBenefitCategory(id: ID!): Boolean!
     recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     uploadContract(input: ContractInput!): Contract!
   }

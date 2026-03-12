@@ -1,4 +1,5 @@
 import { getEmployeeById } from './get-employee-by-id';
+import { getContractSignedUrl } from './get-contract-signed-url';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
 import { listEmployeeEligibilityRecords } from './list-employee-eligibility-records';
@@ -17,6 +18,9 @@ export const queryResolvers = {
 
 	employeeEligibility: (_: unknown, { employeeId }: EmployeeEligibilityArgs, { DB }: GraphQLContext) =>
 		listEmployeeEligibilityRecords(DB, employeeId),
+
+	contractSignedUrl: (_: unknown, { contractId }: { contractId: string }, env: GraphQLContext) =>
+		getContractSignedUrl(env, contractId),
 
 	// benefits: (parent: EmployeeModel, _: unknown, { DB }: GraphQLContext) => listEmployeeBenefits(DB, parent.id),
 };

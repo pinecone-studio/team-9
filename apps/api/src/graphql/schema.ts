@@ -62,6 +62,7 @@ export const typeDefs = /* GraphQL */ `
   type Query {
     employees: [Employee!]!
     employee(id: ID!): Employee
+    benefitCategories: [BenefitCategory!]!
     allBenefits: [Benefit!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!

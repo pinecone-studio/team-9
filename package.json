@@ -22,5 +22,8 @@
     "build:api": "npm run build --workspace @ebms/api",
     "build:pages": "npm run build:pages --workspace @ebms/web",
     "deploy:api": "npm run deploy --workspace @ebms/api"
+  },
+  "dependencies": {
+    "geist": "^1.7.0"
   }
 }

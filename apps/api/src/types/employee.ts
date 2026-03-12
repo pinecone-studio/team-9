@@ -1,8 +1,12 @@
 export type EmployeeRow = {
+	department: string;
 	id: string;
 	name: string;
 	email: string;
+	employmentStatus: string;
+	hireDate: string;
 	role: string;
+	responsibilityLevel: number | null;
 };
 
 export type BenefitRow = {
@@ -15,10 +19,14 @@ export type BenefitRow = {
 };
 
 export type EmployeeModel = {
+	department: string;
 	id: string;
 	name: string;
 	email: string;
+	employmentStatus: string;
+	hireDate: string;
 	position: string;
+	responsibilityLevel: number;
 };
 
 export type BenefitModel = {

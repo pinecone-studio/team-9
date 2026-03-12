@@ -1,11 +1,15 @@
 export const typeDefs = `
-  type Employee {
-    id: ID!
-    name: String!
-    position: String!
-    email: String!
-    benefits: [Benefit]
-  }
+	type Employee {
+		id: ID!
+		name: String!
+		position: String!
+		email: String!
+		department: String!
+		employmentStatus: String!
+		hireDate: String!
+		responsibilityLevel: Int!
+		benefits: [Benefit]
+	}
 
   type Benefit {
     id: ID!

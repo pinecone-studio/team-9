@@ -1,11 +1,20 @@
 import type { BenefitModel, BenefitRow, EmployeeModel, EmployeeRow } from '../types/employee';
 
 export function mapEmployeeRecord(record: EmployeeRow): EmployeeModel {
+	const normalizedResponsibilityLevel =
+		typeof record.responsibilityLevel === 'number' && Number.isFinite(record.responsibilityLevel)
+			? record.responsibilityLevel
+			: 1;
+
 	return {
+		department: record.department,
 		id: record.id,
 		name: record.name,
 		email: record.email,
+		employmentStatus: record.employmentStatus,
+		hireDate: record.hireDate,
 		position: record.role,
+		responsibilityLevel: normalizedResponsibilityLevel,
 	};
 }
 

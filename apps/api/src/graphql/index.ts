@@ -19,7 +19,11 @@ const yoga = createYoga({
   graphqlEndpoint: "/graphql",
   graphiql: true,
   cors: {
-    origin: ["https://studio.apollographql.com"],
+    origin: [
+      "https://studio.apollographql.com",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ],
     credentials: false,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "OPTIONS"],

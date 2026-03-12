@@ -28,7 +28,7 @@ export default function EmployeesPageContent() {
     return (
       <div className="rounded-3xl border border-[#f0c5c5] bg-[#fff8f8] p-8 shadow-[0_10px_24px_rgba(15,23,42,0.03)]">
         <p className="text-[18px] font-semibold text-slate-950">
-          Employees data could not be loaded
+          Employees data could not be loadeddadeadeada
         </p>
         <p className="mt-2 text-[15px] text-slate-600">{error}</p>
       </div>

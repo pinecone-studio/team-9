@@ -28,17 +28,19 @@ const getEnv = (key) => {
   return typeof value === 'string' ? value.trim() : '';
 };
 
-const runCommand = (command, { capture = false } = {}) => {
+const runCommand = (command, { capture = false, env = {} } = {}) => {
   console.log(`\\n> ${command}\\n`);
+  const commandEnv = { ...process.env, ...env };
   if (capture) {
     return execSync(command, {
       cwd: ROOT,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      env: commandEnv,
     }).toString();
   }
 
-  execSync(command, { cwd: ROOT, stdio: 'inherit' });
+  execSync(command, { cwd: ROOT, stdio: 'inherit', env: commandEnv });
   return '';
 };
 

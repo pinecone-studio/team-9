@@ -1,8 +1,21 @@
 const { getAffectedProjects, getEnv, getPrContext, normalizeName, runCommand } = require('../common.cjs');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const getWorkerName = () => {
-  const { number } = getPrContext();
-  return normalizeName(`ebms-backend-pr-${number ?? 'preview'}`, 63);
+const getDefaultWorkerName = () => {
+  const explicitName = getEnv('CF_API_WORKER_NAME') || getEnv('CF_WORKER_NAME');
+  if (explicitName) return normalizeName(explicitName, 63);
+
+  try {
+    const wranglerPath = path.resolve(__dirname, '../../../../../../apps/api/wrangler.jsonc');
+    const source = fs.readFileSync(wranglerPath, 'utf8');
+    const match = source.match(/"name"\s*:\s*"([^"]+)"/);
+    if (match?.[1]) return normalizeName(match[1], 63);
+  } catch {
+    // Fallback below
+  }
+
+  return 'ebms-backend';
 };
 
 const ensurePagesProject = async (projectName) => {
@@ -82,7 +95,20 @@ const extractPagesPreviewUrl = (output, projectName) => {
   return previewUrl || matches[0];
 };
 
-const commentPreview = async ({ webAffected, apiAffected, webUrl, apiUrl }) => {
+const extractWorkersDevUrl = (output, workerName) => {
+  if (!output) return '';
+
+  const matches = [...output.matchAll(/https:\/\/[^\s)]+\.workers\.dev/g)].map((match) => match[0]);
+  if (matches.length === 0) return '';
+
+  if (!workerName) return matches[0];
+
+  const primaryUrl = matches.find((url) => url.includes(`https://${workerName}.`));
+  const previewUrl = matches.find((url) => !url.includes(`https://${workerName}.`));
+  return previewUrl || primaryUrl || matches[0];
+};
+
+const commentPreview = async ({ webAffected, apiAvailable, webUrl, apiUrl }) => {
   const token = getEnv('GITHUB_TOKEN');
   const { owner, repo, number } = getPrContext();
   if (!token || !owner || !repo || !number) return;
@@ -96,7 +122,7 @@ const commentPreview = async ({ webAffected, apiAffected, webUrl, apiUrl }) => {
     '| Target | URL |',
     '|---|---|',
     webAffected ? `| Web | [${webUrl}](${webUrl}) |` : '| Web | Skipped (not affected) |',
-    apiAffected ? `| API | [${apiUrl}](${apiUrl}) |` : '| API | Skipped (not affected) |',
+    apiAvailable ? `| API | [${apiUrl}](${apiUrl}) |` : '| API | Skipped (not affected) |',
     `| Branch | \`${branch}\` |`,
     `| Commit | \`${sha}\` |`,
   ].join('\n');
@@ -130,8 +156,27 @@ const main = async () => {
   let webUrl = 'N/A';
   let apiUrl = 'N/A';
 
+  const workerName = getDefaultWorkerName();
+
+  if (apiAffected) {
+    const uploadOutput = runCommand(
+      `bunx wrangler versions upload --config apps/api/wrangler.jsonc --name=${workerName}`,
+      { capture: true },
+    );
+    process.stdout.write(uploadOutput);
+    apiUrl = extractWorkersDevUrl(uploadOutput, workerName) || (await resolveApiPreviewUrl(workerName));
+  } else if (webAffected) {
+    apiUrl = await resolveApiPreviewUrl(workerName);
+  }
+
   if (webAffected) {
-    runCommand('bunx nx run ebms-web:build-pages');
+    const fallbackGraphqlEndpoint = getEnv('NEXT_PUBLIC_GRAPHQL_ENDPOINT') || 'http://localhost:8787/graphql';
+    const graphqlEndpoint = apiUrl !== 'N/A' ? `${apiUrl}/graphql` : fallbackGraphqlEndpoint;
+    runCommand('bunx nx run ebms-web:build-pages --skip-nx-cache', {
+      env: {
+        NEXT_PUBLIC_GRAPHQL_ENDPOINT: graphqlEndpoint,
+      },
+    });
 
     const rawProjectName = getEnv('CF_PAGES_PROJECT_NAME') || getEnv('GITHUB_REPOSITORY').split('/')[1] || 'team-9';
     const projectName = normalizeName(rawProjectName);
@@ -147,13 +192,7 @@ const main = async () => {
     webUrl = extractPagesPreviewUrl(deployOutput, projectName) || `https://${projectName}.pages.dev`;
   }
 
-  if (apiAffected) {
-    const workerName = getWorkerName();
-    runCommand(`bun run --cwd apps/api deploy -- --name=${workerName}`);
-    apiUrl = await resolveApiPreviewUrl(workerName);
-  }
-
-  await commentPreview({ webAffected, apiAffected, webUrl, apiUrl });
+  await commentPreview({ webAffected, apiAvailable: apiUrl !== 'N/A', webUrl, apiUrl });
 };
 
 main().catch((error) => {

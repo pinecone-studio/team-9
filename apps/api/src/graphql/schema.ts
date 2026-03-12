@@ -16,6 +16,12 @@ export const typeDefs = `
     title: String!
     description: String!
     category: String!
+    categoryId: ID!
+  }
+
+  type BenefitCategory {
+    id: ID!
+    name: String!
   }
 
   type BenefitEligibility {
@@ -56,6 +62,7 @@ export const typeDefs = `
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
+    benefitCategories: [BenefitCategory!]!
     benefitCatalog: [Benefit]
     allBenefits: [Benefit]
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
@@ -65,6 +72,8 @@ export const typeDefs = `
 
   type Mutation {
     createEmployee(name: String!, email: String!, position: String!): Employee
+    createBenefitCategory(name: String!): BenefitCategory!
+    deleteBenefitCategory(id: ID!): Boolean!
     recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     uploadContract(input: ContractInput!): Contract!
   }

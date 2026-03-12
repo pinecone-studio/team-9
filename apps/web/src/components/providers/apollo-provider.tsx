@@ -1,21 +1,18 @@
 "use client";
 
 import { ApolloProvider } from "@apollo/client/react";
-import { useState, type PropsWithChildren } from "react";
-import {
-  createApolloClient,
-  type GetAuthToken,
-} from "@/lib/apollo/client";
+import { type PropsWithChildren } from "react";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 
-type AppApolloProviderProps = PropsWithChildren<{
-  getToken?: GetAuthToken;
-}>;
+export function AppApolloProvider({ children }: PropsWithChildren) {
+  const httpLink = new HttpLink({
+    uri: process.env.GRAPHQL_ENDPOINT!,
+  });
 
-export function AppApolloProvider({
-  children,
-  getToken,
-}: AppApolloProviderProps) {
-  const [client] = useState(() => createApolloClient({ getToken }));
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+  });
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }

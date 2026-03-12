@@ -2,10 +2,20 @@
 
 import { ApolloProvider } from "@apollo/client/react";
 import { useState, type PropsWithChildren } from "react";
-import { createApolloClient } from "@/lib/apollo/client";
+import {
+  createApolloClient,
+  type GetAuthToken,
+} from "@/lib/apollo/client";
 
-export function AppApolloProvider({ children }: PropsWithChildren) {
-  const [client] = useState(createApolloClient);
+type AppApolloProviderProps = PropsWithChildren<{
+  getToken?: GetAuthToken;
+}>;
+
+export function AppApolloProvider({
+  children,
+  getToken,
+}: AppApolloProviderProps) {
+  const [client] = useState(() => createApolloClient({ getToken }));
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }

@@ -22,6 +22,7 @@
     },
     "lint": {
       "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
       "options": {
         "cwd": "apps/api",
         "command": "bun run type-check"
@@ -51,6 +52,7 @@
     },
     "deploy": {
       "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
       "options": {
         "cwd": "apps/api",
         "command": "bun run deploy"

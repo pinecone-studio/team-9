@@ -70,6 +70,18 @@ const resolveApiPreviewUrl = async (workerName) => {
   return `https://${workerName}.${subdomain}.workers.dev`;
 };
 
+const extractPagesPreviewUrl = (output, projectName) => {
+  if (!output) return '';
+
+  const matches = [...output.matchAll(/https:\/\/[^\s)]+\.pages\.dev/g)].map((match) => match[0]);
+  if (matches.length === 0) return '';
+
+  const defaultProjectUrl = `https://${projectName}.pages.dev`;
+  const previewUrl = matches.find((url) => url !== defaultProjectUrl);
+
+  return previewUrl || matches[0];
+};
+
 const commentPreview = async ({ webAffected, apiAffected, webUrl, apiUrl }) => {
   const token = getEnv('GITHUB_TOKEN');
   const { owner, repo, number } = getPrContext();
@@ -83,8 +95,8 @@ const commentPreview = async ({ webAffected, apiAffected, webUrl, apiUrl }) => {
     '',
     '| Target | URL |',
     '|---|---|',
-    webAffected ? `| Web | ${webUrl} |` : '| Web | Skipped (not affected) |',
-    apiAffected ? `| API | ${apiUrl} |` : '| API | Skipped (not affected) |',
+    webAffected ? `| Web | [${webUrl}](${webUrl}) |` : '| Web | Skipped (not affected) |',
+    apiAffected ? `| API | [${apiUrl}](${apiUrl}) |` : '| API | Skipped (not affected) |',
     `| Branch | \`${branch}\` |`,
     `| Commit | \`${sha}\` |`,
   ].join('\n');
@@ -126,9 +138,13 @@ const main = async () => {
     await ensurePagesProject(projectName);
 
     const branch = getEnv('GITHUB_HEAD_REF') || getEnv('GITHUB_REF_NAME') || 'preview';
-    runCommand(`bunx wrangler pages deploy apps/web/out --project-name=${projectName} --branch=${branch} --commit-dirty=true`);
+    const deployOutput = runCommand(
+      `bunx wrangler pages deploy apps/web/out --project-name=${projectName} --branch=${branch} --commit-dirty=true`,
+      { capture: true },
+    );
+    process.stdout.write(deployOutput);
 
-    webUrl = `https://${projectName}.pages.dev`;
+    webUrl = extractPagesPreviewUrl(deployOutput, projectName) || `https://${projectName}.pages.dev`;
   }
 
   if (apiAffected) {

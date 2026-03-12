@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   useEmployeeEligibilityLazyQuery,
   useEmployeesPageQuery,
@@ -15,96 +15,64 @@ import {
 export type StatusFilter = "all" | "active" | "probation" | "terminated";
 
 export function useEmployeesPageData() {
-  const [eligibilityByEmployee, setEligibilityByEmployee] = useState<
-    Record<string, EligibilitySummary>
-  >({});
+  const [eligibilityByEmployee, setEligibilityByEmployee] = useState<Record<string, EligibilitySummary>>({});
   const [isEligibilityLoading, setIsEligibilityLoading] = useState(true);
   const [manualError, setManualError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [refreshingEmployeeId, setRefreshingEmployeeId] = useState<
-    string | null
-  >(null);
+  const [refreshingEmployeeId, setRefreshingEmployeeId] = useState<string | null>(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
-  const {
-    data: employeesData,
-    error: employeesQueryError,
-    loading: isEmployeesLoading,
-  } = useEmployeesPageQuery({
+  const { data: employeesData, error: employeesQueryError, loading: isEmployeesLoading } = useEmployeesPageQuery({
     fetchPolicy: "network-only",
   });
-  const [loadEmployeeEligibility] = useEmployeeEligibilityLazyQuery(
-    { fetchPolicy: "network-only" },
-  );
-  const [recalculateEmployeeEligibility] =
-    useRecalculateEmployeeEligibilityMutation();
 
-  const employees = (employeesData?.employees ?? []).filter(
-    (employee): employee is Employee => employee !== null,
+  const [loadEmployeeEligibility] = useEmployeeEligibilityLazyQuery({ fetchPolicy: "network-only" });
+  const [recalculateEmployeeEligibility] = useRecalculateEmployeeEligibilityMutation();
+
+  // 1. useMemo ашиглан reference-ийг тогтвортой байлгах
+  const employees = useMemo(() =>
+    (employeesData?.employees ?? []).filter((e): e is Employee => e !== null),
+    [employeesData]
   );
 
   useEffect(() => {
     let isActive = true;
 
-    async function loadEmployeeEligibilityMap() {
-      if (isEmployeesLoading) {
-        return;
-      }
-
-      if (employees.length === 0) {
-        setEligibilityByEmployee({});
-        setIsEligibilityLoading(false);
+    async function loadAll() {
+      if (isEmployeesLoading || employees.length === 0) {
+        if (!isEmployeesLoading) setIsEligibilityLoading(false);
         return;
       }
 
       setIsEligibilityLoading(true);
-      setManualError(null);
-
       try {
-        const eligibilityEntries = await Promise.all(
-          employees.map(async (employee) => {
-            const eligibilityResult = await loadEmployeeEligibility({
-              variables: { employeeId: employee.id },
-            });
-
-            return [
-              employee.id,
-              buildEligibilitySummary(
-                eligibilityResult.data?.employeeEligibility ?? [],
-              ),
-            ] as const;
-          }),
+        // Тайлбар: Энэ хэсгийг Backend дээр нэг Query болгох нь хамгийн зөв.
+        // Одоохондоо байгаа кодоо оновчтой болгоё:
+        const results = await Promise.all(
+          employees.map(async (emp) => {
+            const res = await loadEmployeeEligibility({ variables: { employeeId: emp.id } });
+            return { id: emp.id, data: res.data?.employeeEligibility ?? [] };
+          })
         );
 
-        if (!isActive) {
-          return;
-        }
-
-        setEligibilityByEmployee(Object.fromEntries(eligibilityEntries));
-      } catch (caughtError) {
-        if (!isActive) {
-          return;
-        }
-
-        setManualError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to load employee eligibility.",
-        );
-      } finally {
         if (isActive) {
-          setIsEligibilityLoading(false);
+          const newMap: Record<string, EligibilitySummary> = {};
+          results.forEach(res => {
+            newMap[res.id] = buildEligibilitySummary(res.data);
+          });
+          setEligibilityByEmployee(newMap);
         }
+      } catch {
+        if (isActive) setManualError("Мэдээлэл авахад алдаа гарлаа.");
+      } finally {
+        if (isActive) setIsEligibilityLoading(false);
       }
     }
 
-    void loadEmployeeEligibilityMap();
-
-    return () => {
-      isActive = false;
-    };
-  }, [employees, isEmployeesLoading, loadEmployeeEligibility]);
+    void loadAll();
+    return () => { isActive = false; };
+  }, [employees]);
 
   async function handleRecalculate(employee: Employee) {
     setRefreshingEmployeeId(employee.id);

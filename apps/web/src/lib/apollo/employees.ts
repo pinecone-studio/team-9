@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 
+// Source operations for GraphQL Code Generatorrrrr
 export const EMPLOYEES_QUERY = gql`
   query EmployeesPage {
     employees {
@@ -42,40 +43,3 @@ export const RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION = gql`
     }
   }
 `;
-
-export type Employee = {
-  department: string;
-  email: string;
-  employmentStatus: string;
-  hireDate: string;
-  id: string;
-  name: string;
-  position: string;
-  responsibilityLevel: number;
-};
-
-export type BenefitEligibility = {
-  computedAt: string;
-  status: string;
-  benefit: {
-    category: string;
-    id: string;
-    title: string;
-  };
-};
-
-export type EmployeesQueryData = {
-  employees: Employee[] | null;
-};
-
-export type EmployeeEligibilityQueryData = {
-  employeeEligibility: BenefitEligibility[];
-};
-
-export type RecalculateEligibilityMutationData = {
-  recalculateEmployeeEligibility: BenefitEligibility[];
-};
-
-export type RecalculateEligibilityMutationVars = {
-  employeeId: string;
-};

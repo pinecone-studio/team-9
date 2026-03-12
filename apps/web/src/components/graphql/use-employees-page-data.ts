@@ -3,21 +3,27 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useDeferredValue, useEffect, useState } from "react";
 import {
-  EMPLOYEES_QUERY,
-  EMPLOYEE_ELIGIBILITY_QUERY,
-  RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
-  type Employee,
-  type EmployeeEligibilityQueryData,
-  type EmployeesQueryData,
-  type RecalculateEligibilityMutationData,
-  type RecalculateEligibilityMutationVars,
-} from "@/lib/apollo/employees";
+  EmployeesPageDocument,
+  EmployeeEligibilityDocument,
+  RecalculateEmployeeEligibilityDocument,
+  type EmployeesPageQuery,
+} from "@/lib/apollo/__generated__/graphql";
 import {
   buildEligibilitySummary,
   type EligibilitySummary,
 } from "@/components/graphql/employees-page-utils";
 
 export type StatusFilter = "all" | "active" | "probation" | "terminated";
+
+type Employee = EmployeesPageQuery["employees"][number];
+
+function getErrorMessage(caughtError: unknown, fallbackMessage: string) {
+  if (caughtError instanceof Error && caughtError.message.trim().length > 0) {
+    return caughtError.message;
+  }
+
+  return fallbackMessage;
+}
 
 export function useEmployeesPageData() {
   const client = useApolloClient();
@@ -29,9 +35,9 @@ export function useEmployeesPageData() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [refreshingEmployeeId, setRefreshingEmployeeId] = useState<string | null>(
-    null,
-  );
+  const [refreshingEmployeeId, setRefreshingEmployeeId] = useState<
+    string | null
+  >(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
   useEffect(() => {
@@ -42,28 +48,45 @@ export function useEmployeesPageData() {
       setError(null);
 
       try {
-        const employeesResult = await client.query<EmployeesQueryData>({
+        const employeesResult = await client.query({
           fetchPolicy: "network-only",
-          query: EMPLOYEES_QUERY,
+          query: EmployeesPageDocument,
         });
 
         const loadedEmployees = employeesResult.data?.employees ?? [];
 
         const eligibilityEntries = await Promise.all(
           loadedEmployees.map(async (employee) => {
-            const eligibilityResult =
-              await client.query<EmployeeEligibilityQueryData>({
+            try {
+              const eligibilityResult = await client.query({
+                errorPolicy: "all",
                 fetchPolicy: "network-only",
-                query: EMPLOYEE_ELIGIBILITY_QUERY,
+                query: EmployeeEligibilityDocument,
                 variables: { employeeId: employee.id },
               });
 
-            return [
-              employee.id,
-              buildEligibilitySummary(
-                eligibilityResult.data?.employeeEligibility ?? [],
-              ),
-            ] as const;
+              if (eligibilityResult.error) {
+                throw eligibilityResult.error;
+              }
+
+              return [
+                employee.id,
+                buildEligibilitySummary(
+                  eligibilityResult.data?.employeeEligibility ?? [],
+                ),
+                false,
+              ] as const;
+            } catch {
+              return [
+                employee.id,
+                {
+                  active: 0,
+                  eligible: 0,
+                  locked: 0,
+                },
+                true,
+              ] as const;
+            }
           }),
         );
 
@@ -72,17 +95,32 @@ export function useEmployeesPageData() {
         }
 
         setEmployees(loadedEmployees);
-        setEligibilityByEmployee(Object.fromEntries(eligibilityEntries));
+        setEligibilityByEmployee(
+          Object.fromEntries(
+            eligibilityEntries.map(([employeeId, summary]) => [
+              employeeId,
+              summary,
+            ]),
+          ),
+        );
+
+        const failedEligibilityCount = eligibilityEntries.filter(
+          ([, , failed]) => failed,
+        ).length;
+
+        if (failedEligibilityCount > 0) {
+          setError(
+            failedEligibilityCount === loadedEmployees.length
+              ? "Employee eligibility data could not be loaded. Check the employeeEligibility API or apply the latest API migrations."
+              : `Employee eligibility data could not be loaded for ${failedEligibilityCount} employee${failedEligibilityCount === 1 ? "" : "s"}.`,
+          );
+        }
       } catch (caughtError) {
         if (!isActive) {
           return;
         }
 
-        setError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to load employees.",
-        );
+        setError(getErrorMessage(caughtError, "Unable to load employees."));
       } finally {
         if (isActive) {
           setLoading(false);
@@ -102,11 +140,8 @@ export function useEmployeesPageData() {
     setError(null);
 
     try {
-      const result = await client.mutate<
-        RecalculateEligibilityMutationData,
-        RecalculateEligibilityMutationVars
-      >({
-        mutation: RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
+      const result = await client.mutate({
+        mutation: RecalculateEmployeeEligibilityDocument,
         variables: { employeeId: employee.id },
       });
 
@@ -118,9 +153,10 @@ export function useEmployeesPageData() {
       }));
     } catch (caughtError) {
       setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Unable to recalculate eligibility.",
+        getErrorMessage(
+          caughtError,
+          `Unable to recalculate eligibility for ${employee.name}.`,
+        ),
       );
     } finally {
       setRefreshingEmployeeId(null);

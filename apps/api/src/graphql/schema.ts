@@ -1,4 +1,4 @@
-export const typeDefs = `
+export const typeDefs = /* GraphQL */ `
 	type Employee {
 		id: ID!
 		name: String!
@@ -60,12 +60,10 @@ export const typeDefs = `
   }
 
   type Query {
-    employees: [Employee]
+    employees: [Employee!]!
     employee(id: ID!): Employee
     benefitCategories: [BenefitCategory!]!
-    benefitCatalog: [Benefit]
-    allBenefits: [Benefit]
-    employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
+    allBenefits: [Benefit!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
   }

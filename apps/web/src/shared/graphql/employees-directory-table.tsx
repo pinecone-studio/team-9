@@ -48,7 +48,7 @@ export default function EmployeesDirectoryTable({
         </label>
       </div>
 
-      <div className="max-h-[320px] overflow-auto border-t border-[#E5E5E5]">
+      <div className="max-h-[320px] overflow-auto border-t border-[#E5E5E5] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <table className="w-full min-w-[980px] border-collapse">
           <thead>
             <tr className="border-b border-[#E5E5E5] text-left">

@@ -16,6 +16,59 @@ import {
   useEmployeesPageData,
 } from "@/shared/graphql/use-employees-page-data";
 
+function SkeletonBlock({ className }: { className: string }) {
+  return <div className={`animate-pulse rounded-md bg-slate-200/80 ${className}`} />;
+}
+
+function EmployeesPageSkeleton() {
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            className="rounded-[14px] border border-[#E5E5E5] bg-white p-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]"
+            key={index}
+          >
+            <SkeletonBlock className="h-4 w-28" />
+            <SkeletonBlock className="mt-4 h-10 w-16" />
+            <SkeletonBlock className="mt-3 h-3 w-36" />
+          </div>
+        ))}
+      </section>
+
+      <section className="overflow-hidden rounded-[14px] border border-[#E5E5E5] bg-white shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col gap-4 px-6 pt-6 pb-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <SkeletonBlock className="h-5 w-40" />
+            <SkeletonBlock className="mt-2 h-4 w-72" />
+          </div>
+          <SkeletonBlock className="h-9 w-full md:w-[256px]" />
+        </div>
+
+        <div className="border-t border-[#E5E5E5] px-6 py-4">
+          <div className="grid grid-cols-6 gap-6 pb-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <SkeletonBlock className="h-4 w-20" key={`header-${index}`} />
+            ))}
+          </div>
+          <div className="space-y-4 pt-2">
+            {Array.from({ length: 5 }).map((_, rowIndex) => (
+              <div className="grid grid-cols-6 gap-6" key={`row-${rowIndex}`}>
+                <SkeletonBlock className="h-5 w-24" />
+                <SkeletonBlock className="h-5 w-20" />
+                <SkeletonBlock className="h-5 w-20" />
+                <SkeletonBlock className="h-5 w-16" />
+                <SkeletonBlock className="h-5 w-20" />
+                <SkeletonBlock className="h-5 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function EmployeesPageContent() {
   const {
     eligibilityByEmployee,
@@ -40,11 +93,7 @@ export default function EmployeesPageContent() {
   }, 0);
 
   if (loading) {
-    return (
-      <div className="rounded-[14px] border border-[#E5E5E5] bg-white p-8 text-[16px] text-slate-500 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
-        Loading employees...
-      </div>
-    );
+    return <EmployeesPageSkeleton />;
   }
 
   if (error && employees.length === 0) {

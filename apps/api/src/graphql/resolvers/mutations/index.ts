@@ -1,20 +1,34 @@
 import { createBenefit } from './create-benefit';
 import { createBenefitCategory } from './create-benefit-category';
+import { createEligibilityRule } from './create-eligibility-rule';
 import { createEmployeeRecord } from './create-employee-record';
 import { deleteBenefit } from './delete-benefit';
+import { createRuleCategory } from './create-rule-category';
+import { createRuleDefinition } from './create-rule-definition';
 import { deleteBenefitCategory } from './delete-benefit-category';
+import { deleteEligibilityRule } from './delete-eligibility-rule';
+import { deleteRuleDefinition } from './delete-rule-definition';
 import { recalculateEmployeeEligibility } from './recalculate-employee-eligibility';
 import { setBenefitStatus } from './set-benefit-status';
 import { updateBenefit } from './update-benefit';
+import { updateEligibilityRule } from './update-eligibility-rule';
+import { updateRuleDefinition } from './update-rule-definition';
 import type {
 	MutationCreateBenefitArgs,
 	MutationCreateBenefitCategoryArgs,
+	MutationCreateEligibilityRuleArgs,
 	MutationCreateEmployeeArgs,
 	MutationDeleteBenefitArgs,
+	MutationCreateRuleCategoryArgs,
+	MutationCreateRuleDefinitionArgs,
 	MutationDeleteBenefitCategoryArgs,
+	MutationDeleteEligibilityRuleArgs,
+	MutationDeleteRuleDefinitionArgs,
 	MutationRecalculateEmployeeEligibilityArgs,
 	MutationSetBenefitStatusArgs,
 	MutationUpdateBenefitArgs,
+	MutationUpdateEligibilityRuleArgs,
+	MutationUpdateRuleDefinitionArgs,
 } from '../../generated/resolvers-types';
 import { uploadContract, UploadContractInput } from './upload-contract';
 
@@ -40,6 +54,27 @@ export const mutationResolvers = {
 
 	deleteBenefitCategory: (_: unknown, { id }: MutationDeleteBenefitCategoryArgs, { DB }: GraphQLContext) =>
 		deleteBenefitCategory(DB, id),
+
+	createRuleCategory: (_: unknown, args: MutationCreateRuleCategoryArgs, { DB }: GraphQLContext) =>
+		createRuleCategory(DB, args),
+
+	createRuleDefinition: (_: unknown, args: MutationCreateRuleDefinitionArgs, { DB }: GraphQLContext) =>
+		createRuleDefinition(DB, args),
+
+	updateRuleDefinition: (_: unknown, args: MutationUpdateRuleDefinitionArgs, { DB }: GraphQLContext) =>
+		updateRuleDefinition(DB, args),
+
+	deleteRuleDefinition: (_: unknown, { id }: MutationDeleteRuleDefinitionArgs, { DB }: GraphQLContext) =>
+		deleteRuleDefinition(DB, id),
+
+	createEligibilityRule: (_: unknown, args: MutationCreateEligibilityRuleArgs, { DB }: GraphQLContext) =>
+		createEligibilityRule(DB, args),
+
+	updateEligibilityRule: (_: unknown, args: MutationUpdateEligibilityRuleArgs, { DB }: GraphQLContext) =>
+		updateEligibilityRule(DB, args),
+
+	deleteEligibilityRule: (_: unknown, { id }: MutationDeleteEligibilityRuleArgs, { DB }: GraphQLContext) =>
+		deleteEligibilityRule(DB, id),
 
 	recalculateEmployeeEligibility: (
 		_: unknown,

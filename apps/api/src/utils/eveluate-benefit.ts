@@ -2,6 +2,8 @@ import type { EligibilityRule, EmployeeMetrics } from '../graphql/generated/reso
 
 import { evaluateRule } from './eveluate-rule';
 
+type RuleForEvaluation = Pick<EligibilityRule, 'rule_type' | 'operator' | 'value'>;
+
 export type RuleResult = {
 	ruleType: string;
 	passed: boolean;
@@ -12,7 +14,7 @@ export type BenefitEvaluation = {
 	results: RuleResult[];
 };
 
-export const evaluateBenefit = (rules: EligibilityRule[], metrics: EmployeeMetrics): BenefitEvaluation => {
+export const evaluateBenefit = (rules: RuleForEvaluation[], metrics: EmployeeMetrics): BenefitEvaluation => {
 	try {
 		const results: RuleResult[] = [];
 

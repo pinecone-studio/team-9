@@ -1,6 +1,8 @@
 import type { EligibilityRule, EmployeeMetrics } from '../graphql/generated/resolvers-types';
 
-export const evaluateRule = (rule: EligibilityRule, metrics: EmployeeMetrics): boolean => {
+type RuleForEvaluation = Pick<EligibilityRule, 'rule_type' | 'operator' | 'value'>;
+
+export const evaluateRule = (rule: RuleForEvaluation, metrics: EmployeeMetrics): boolean => {
 	try {
 		const metricValue = metrics[rule.rule_type];
 

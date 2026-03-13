@@ -1,24 +1,17 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { benefits } from "./benefits";
+import { eligibilityRuleOperators } from "./eligibility-rules";
+import { rules } from "./rules";
 
-export const employeeRuleTypes = [
-  "employment_status",
-  "okr_submitted",
-  "attendance",
-  "responsibility_level",
-  "role",
-  "tenure_days",
-] as const;
-
-export const eligibilityRuleOperators = ["eq", "neq", "gt", "gte", "lt", "lte", "in", "not_in"] as const;
-
-export const eligibilityRules = sqliteTable("eligibility_rules", {
+export const benefitRules = sqliteTable("benefit_rules", {
   id: text("id").primaryKey(),
   benefitId: text("benefit_id")
     .notNull()
     .references(() => benefits.id),
-  ruleType: text("rule_type", { enum: employeeRuleTypes }).notNull(),
+  ruleId: text("rule_id")
+    .notNull()
+    .references(() => rules.id),
   operator: text("operator", { enum: eligibilityRuleOperators }).notNull(),
   value: text("value").notNull(),
   errorMessage: text("error_message").notNull(),

@@ -2,11 +2,11 @@ name: CI
 
 on:
   pull_request:
-    types: [synchronize]
+    types: [labeled, synchronize]
     branches:
       - main
     paths-ignore:
-      - '.nxignore'
+      - ".nxignore"
 
 permissions:
   id-token: write
@@ -20,6 +20,8 @@ concurrency:
 jobs:
   schema-check-test:
     runs-on: ubuntu-latest
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'PR status: schema check')
     timeout-minutes: 20
     steps:
       - name: Check out repository
@@ -30,12 +32,12 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20.18.1'
+          node-version: "20.18.1"
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: '1.1.45'
+          bun-version: "1.1.45"
 
       - name: Install workspace dependencies
         run: bun install -y
@@ -54,6 +56,8 @@ jobs:
 
   schema-check-prod:
     runs-on: ubuntu-latest
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'PR status: schema check')
     timeout-minutes: 20
     steps:
       - name: Check out repository
@@ -64,12 +68,12 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20.18.1'
+          node-version: "20.18.1"
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: '1.1.45'
+          bun-version: "1.1.45"
 
       - name: Install workspace dependencies
         run: bun install -y
@@ -88,6 +92,10 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready') ||
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready parallel') ||
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready with Playwright')
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -96,11 +104,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.18.1'
+          node-version: "20.18.1"
 
       - uses: oven-sh/setup-bun@v1
         with:
-          bun-version: '1.1.45'
+          bun-version: "1.1.45"
 
       - run: bun install -y
 
@@ -118,6 +126,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready') ||
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready parallel') ||
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready with Playwright')
     timeout-minutes: 45
     env:
       NODE_OPTIONS: --max-old-space-size=8192
@@ -128,11 +140,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.18.1'
+          node-version: "20.18.1"
 
       - uses: oven-sh/setup-bun@v1
         with:
-          bun-version: '1.1.45'
+          bun-version: "1.1.45"
 
       - run: bun install -y
 
@@ -150,6 +162,9 @@ jobs:
 
   preview:
     runs-on: ubuntu-latest
+    if: >
+      github.event.pull_request.head.repo.fork == false &&
+      contains(github.event.pull_request.labels.*.name, 'PR status: code ready')
     timeout-minutes: 50
     env:
       NODE_OPTIONS: --max-old-space-size=8192
@@ -164,11 +179,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.18.1'
+          node-version: "20.18.1"
 
       - uses: oven-sh/setup-bun@v1
         with:
-          bun-version: '1.1.45'
+          bun-version: "1.1.45"
 
       - run: bun install -y
 

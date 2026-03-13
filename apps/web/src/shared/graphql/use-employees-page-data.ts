@@ -1,8 +1,11 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
 import {
-  useEmployeeEligibilityLazyQuery,
+  EmployeeEligibilityDocument,
+  type EmployeeEligibilityQuery,
+  type EmployeeEligibilityQueryVariables,
   useEmployeesPageQuery,
   useRecalculateEmployeeEligibilityMutation,
 } from "@/shared/apollo/generated";
@@ -26,6 +29,7 @@ export function useEmployeesPageData() {
     string | null
   >(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
+  const client = useApolloClient();
 
   const {
     data: employeesData,
@@ -35,9 +39,6 @@ export function useEmployeesPageData() {
     fetchPolicy: "network-only",
   });
 
-  const [loadEmployeeEligibility] = useEmployeeEligibilityLazyQuery({
-    fetchPolicy: "network-only",
-  });
   const [recalculateEmployeeEligibility] =
     useRecalculateEmployeeEligibilityMutation();
 
@@ -58,14 +59,19 @@ export function useEmployeesPageData() {
       }
 
       setIsEligibilityLoading(true);
+      setManualError(null);
       try {
-        // Тайлбар: Энэ хэсгийг Backend дээр нэг Query болгох нь хамгийн зөв.
-        // Одоохондоо байгаа кодоо оновчтой болгоё:
         const results = await Promise.all(
           employees.map(async (emp) => {
-            const res = await loadEmployeeEligibility({
+            const res = await client.query<
+              EmployeeEligibilityQuery,
+              EmployeeEligibilityQueryVariables
+            >({
+              query: EmployeeEligibilityDocument,
               variables: { employeeId: emp.id },
+              fetchPolicy: "network-only",
             });
+
             return { id: emp.id, data: res.data?.employeeEligibility ?? [] };
           }),
         );

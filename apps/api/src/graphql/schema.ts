@@ -1,15 +1,15 @@
 export const typeDefs = /* GraphQL */ `
-	type Employee {
-		id: ID!
-		name: String!
-		position: String!
-		email: String!
-		department: String!
-		employmentStatus: String!
-		hireDate: String!
-		responsibilityLevel: Int!
-		benefits: [Benefit]
-	}
+  type Employee {
+    id: ID!
+    name: String!
+    position: String!
+    email: String!
+    department: String!
+    employmentStatus: String!
+    hireDate: String!
+    responsibilityLevel: Int!
+    benefits: [Benefit]
+  }
 
   type Benefit {
     id: ID!

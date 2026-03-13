@@ -1,0 +1,62 @@
+query EligibilityRulesPageData {
+  ruleDefinitions {
+    id
+    category_id
+    category_name
+    rule_type
+    name
+    description
+    value_type
+    allowed_operators_json
+    options_json
+    default_unit
+    default_value
+    default_operator
+    is_active
+    usage_count
+    linked_benefits_json
+  }
+}
+
+mutation CreateRuleDefinition($input: CreateRuleDefinitionInput!) {
+  createRuleDefinition(input: $input) {
+    id
+    category_id
+    category_name
+    rule_type
+    name
+    description
+    value_type
+    allowed_operators_json
+    options_json
+    default_unit
+    default_value
+    default_operator
+    is_active
+    usage_count
+    linked_benefits_json
+  }
+}
+
+mutation UpdateRuleDefinition($input: UpdateRuleDefinitionInput!) {
+  updateRuleDefinition(input: $input) {
+    id
+    category_id
+    category_name
+    rule_type
+    name
+    description
+    value_type
+    allowed_operators_json
+    options_json
+    default_unit
+    default_value
+    default_operator
+    is_active
+    usage_count
+    linked_benefits_json
+  }
+}
+mutation DeleteRuleDefinition($id: ID!) {
+  deleteRuleDefinition(id: $id)
+}

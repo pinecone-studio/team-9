@@ -1,7 +1,8 @@
 "use client";
+/* eslint-disable max-lines */
 
 import { gql } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { useState } from "react";
 
 import AddBenefitCard from "./AddBenefitCard";
@@ -20,43 +21,109 @@ const BENEFIT_CATALOG_QUERY = gql`
       title
       description
       category
+      categoryId
+      isActive
+      subsidyPercent
+      vendorName
     }
   }
 `;
 
-type BenefitCatalogQuery = {
-  allBenefits?: Array<{
-    category: string;
-    description: string;
-    id: string;
-    title: string;
-  } | null> | null;
+const SET_BENEFIT_STATUS_MUTATION = gql`
+  mutation SetBenefitStatus($input: SetBenefitStatusInput!) {
+    setBenefitStatus(input: $input) {
+      id
+      isActive
+    }
+  }
+`;
+
+type BenefitCatalogRecord = {
+  category: string;
+  categoryId: string;
+  description: string;
+  id: string;
+  isActive: boolean;
+  subsidyPercent?: number | null;
+  title: string;
+  vendorName?: string | null;
 };
 
-export default function WellnessSection() {
+type BenefitCatalogQuery = {
+  allBenefits?: Array<BenefitCatalogRecord | null> | null;
+};
+
+type SetBenefitStatusMutation = {
+  setBenefitStatus: {
+    id: string;
+    isActive: boolean;
+  };
+};
+
+type SetBenefitStatusVariables = {
+  input: {
+    id: string;
+    isActive: boolean;
+  };
+};
+
+type WellnessSectionProps = {
+  searchQuery?: string;
+};
+
+export default function WellnessSection({
+  searchQuery = "",
+}: WellnessSectionProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedBenefit, setSelectedBenefit] = useState<{
-    benefit: BenefitCardData;
-    category: string;
-  } | null>(null);
-  const { data, error, loading } = useQuery<BenefitCatalogQuery>(
+  const [benefitOverrides, setBenefitOverrides] = useState<
+    Record<string, Partial<BenefitCatalogRecord>>
+  >({});
+  const [deletedBenefitIds, setDeletedBenefitIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [selectedBenefit, setSelectedBenefit] = useState<BenefitCardData | null>(
+    null,
+  );
+  const [setBenefitStatus] = useMutation<
+    SetBenefitStatusMutation,
+    SetBenefitStatusVariables
+  >(SET_BENEFIT_STATUS_MUTATION);
+  const { data, error, loading, refetch } = useQuery<BenefitCatalogQuery>(
     BENEFIT_CATALOG_QUERY,
   );
 
-  const benefitSections = buildBenefitSections(
-    (data?.allBenefits ?? []).flatMap((benefit) =>
-      benefit
-        ? [
-            {
-              id: benefit.id,
-              title: benefit.title,
-              description: benefit.description,
-              category: benefit.category,
-            },
+  const benefitCatalogRecords = (data?.allBenefits ?? []).flatMap((benefit) => {
+    if (!benefit || deletedBenefitIds.has(benefit.id)) {
+      return [];
+    }
+
+    return [
+      {
+        ...benefit,
+        ...benefitOverrides[benefit.id],
+      },
+    ];
+  });
+
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredBenefitRecords =
+    normalizedSearchQuery.length === 0
+      ? benefitCatalogRecords
+      : benefitCatalogRecords.filter((benefit) => {
+          const haystack = [
+            benefit.title,
+            benefit.description,
+            benefit.category,
+            benefit.vendorName ?? "",
+            `${benefit.subsidyPercent ?? ""}`,
           ]
-        : [],
-    ),
-  );
+            .join(" ")
+            .toLowerCase();
+
+          return haystack.includes(normalizedSearchQuery);
+        });
+
+  const benefitSections = buildBenefitSections(filteredBenefitRecords);
 
   return (
     <>
@@ -79,7 +146,7 @@ export default function WellnessSection() {
       {!loading && !error && benefitSections.length === 0 ? (
         <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
           <div className="rounded-[8px] border border-dashed border-[#DBDEE1] bg-white p-6 text-[14px] text-[#51565B]">
-            No active benefits found in the catalog.
+            No benefits found in the catalog.
           </div>
         </section>
       ) : null}
@@ -108,7 +175,48 @@ export default function WellnessSection() {
                 <BenefitCard
                   key={`${title}-${card.title}`}
                   {...card}
-                  onEdit={(benefit) => setSelectedBenefit({ benefit, category: title })}
+                  onEdit={setSelectedBenefit}
+                  onToggle={async (benefitId, isActive) => {
+                    const previousIsActive =
+                      benefitCatalogRecords.find((record) => record.id === benefitId)
+                        ?.isActive ?? isActive;
+
+                    setBenefitOverrides((prev) => ({
+                      ...prev,
+                      [benefitId]: {
+                        ...prev[benefitId],
+                        isActive,
+                      },
+                    }));
+
+                    try {
+                      const result = await setBenefitStatus({
+                        variables: {
+                          input: {
+                            id: benefitId,
+                            isActive,
+                          },
+                        },
+                      });
+
+                      setBenefitOverrides((prev) => ({
+                        ...prev,
+                        [benefitId]: {
+                          ...prev[benefitId],
+                          isActive:
+                            result.data?.setBenefitStatus.isActive ?? isActive,
+                        },
+                      }));
+                    } catch {
+                      setBenefitOverrides((prev) => ({
+                        ...prev,
+                        [benefitId]: {
+                          ...prev[benefitId],
+                          isActive: previousIsActive,
+                        },
+                      }));
+                    }
+                  }}
                   stats={stats}
                 />
               ))}
@@ -117,12 +225,41 @@ export default function WellnessSection() {
           </section>
         ))}
 
-      {isAddDialogOpen && <AddBenefitDialog onClose={() => setIsAddDialogOpen(false)} />}
+      {isAddDialogOpen && (
+        <AddBenefitDialog
+          onClose={() => setIsAddDialogOpen(false)}
+          onCreated={() => refetch()}
+        />
+      )}
       {selectedBenefit && (
         <EditBenefitDialog
-          benefitName={selectedBenefit.benefit.title}
+          benefitId={selectedBenefit.id}
+          benefitName={selectedBenefit.title}
           category={selectedBenefit.category}
-          description={selectedBenefit.benefit.description}
+          categoryId={selectedBenefit.categoryId}
+          description={selectedBenefit.description}
+          subsidyPercent={selectedBenefit.subsidyPercent ?? 0}
+          vendorName={selectedBenefit.vendorName ?? ""}
+          onDeleted={(benefitId) =>
+            setDeletedBenefitIds((prev) => {
+              const next = new Set(prev);
+              next.add(benefitId);
+              return next;
+            })
+          }
+          onUpdated={(benefit) =>
+            setBenefitOverrides((prev) => ({
+              ...prev,
+              [benefit.id]: {
+                category: benefit.category,
+                categoryId: benefit.categoryId,
+                description: benefit.description,
+                subsidyPercent: benefit.subsidyPercent,
+                title: benefit.title,
+                vendorName: benefit.vendorName,
+              },
+            }))
+          }
           onClose={() => setSelectedBenefit(null)}
         />
       )}

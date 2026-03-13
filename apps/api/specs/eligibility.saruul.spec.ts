@@ -24,7 +24,8 @@ const bootstrapSaruulFixtures = async () => {
     `CREATE TABLE IF NOT EXISTS benefits (
       id text PRIMARY KEY NOT NULL,
       name text NOT NULL,
-      category text NOT NULL,
+      description text,
+      category_id text NOT NULL,
       subsidy_percent integer NOT NULL,
       vendor_name text,
       requires_contract integer NOT NULL DEFAULT false,
@@ -88,11 +89,11 @@ const bootstrapSaruulFixtures = async () => {
     .run();
 
   await env.DB.prepare(`
-    INSERT INTO benefits (id, name, category, subsidy_percent, vendor_name, requires_contract, active_contract_id, is_active)
+    INSERT INTO benefits (id, name, description, category_id, subsidy_percent, vendor_name, requires_contract, active_contract_id, is_active)
     VALUES
-      ('gym-pinefit', 'Gym - PineFit', 'wellness', 50, 'PineFit', 1, NULL, 1),
-      ('private-insurance', 'Private Insurance', 'health', 50, NULL, 0, NULL, 1),
-      ('digital-wellness', 'Digital Wellness', 'wellness', 100, NULL, 0, NULL, 1)
+      ('gym-pinefit', 'Gym - PineFit', 'Gym benefit', 'cat-wellness', 50, 'PineFit', 1, NULL, 1),
+      ('private-insurance', 'Private Insurance', 'Insurance benefit', 'cat-health', 50, NULL, 0, NULL, 1),
+      ('digital-wellness', 'Digital Wellness', 'Digital wellness benefit', 'cat-wellness', 100, NULL, 0, NULL, 1)
   `).run();
 
   await env.DB.prepare(`

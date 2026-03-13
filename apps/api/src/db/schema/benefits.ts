@@ -4,6 +4,7 @@ import { benefitCategories } from "./benefit-categories";
 export const benefits = sqliteTable("benefits", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
   categoryId: text("category_id")
     .notNull()
     .references(() => benefitCategories.id),

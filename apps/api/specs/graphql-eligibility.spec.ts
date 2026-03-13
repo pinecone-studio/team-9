@@ -24,12 +24,17 @@ const bootstrapGraphqlEligibilityFixtures = async () => {
     `CREATE TABLE IF NOT EXISTS benefits (
       id text PRIMARY KEY NOT NULL,
       name text NOT NULL,
-      category text NOT NULL,
+      description text,
+      category_id text NOT NULL,
       subsidy_percent integer NOT NULL,
       vendor_name text,
       requires_contract integer NOT NULL DEFAULT false,
       active_contract_id text,
       is_active integer NOT NULL DEFAULT true
+    )`,
+    `CREATE TABLE IF NOT EXISTS benefit_categories (
+      id text PRIMARY KEY NOT NULL,
+      name text NOT NULL
     )`,
     `CREATE TABLE IF NOT EXISTS eligibility_rules (
       id text PRIMARY KEY NOT NULL,
@@ -55,6 +60,7 @@ const bootstrapGraphqlEligibilityFixtures = async () => {
     "DELETE FROM benefit_eligibility",
     "DELETE FROM eligibility_rules",
     "DELETE FROM benefits",
+    "DELETE FROM benefit_categories",
     "DELETE FROM employees",
   ];
 
@@ -88,10 +94,16 @@ const bootstrapGraphqlEligibilityFixtures = async () => {
     .run();
 
   await env.DB.prepare(`
-    INSERT INTO benefits (id, name, category, subsidy_percent, vendor_name, requires_contract, active_contract_id, is_active)
+    INSERT INTO benefit_categories (id, name)
     VALUES
-      ('gym-pinefit', 'Gym - PineFit', 'wellness', 50, 'PineFit', 1, NULL, 1),
-      ('digital-wellness', 'Digital Wellness', 'wellness', 100, NULL, 0, NULL, 1)
+      ('cat-wellness', 'wellness')
+  `).run();
+
+  await env.DB.prepare(`
+    INSERT INTO benefits (id, name, description, category_id, subsidy_percent, vendor_name, requires_contract, active_contract_id, is_active)
+    VALUES
+      ('gym-pinefit', 'Gym - PineFit', 'Gym benefit', 'cat-wellness', 50, 'PineFit', 1, NULL, 1),
+      ('digital-wellness', 'Digital Wellness', 'Digital wellness benefit', 'cat-wellness', 100, NULL, 0, NULL, 1)
   `).run();
 
   await env.DB.prepare(`
@@ -113,8 +125,8 @@ describe("GraphQL eligibility integration", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: `
-          mutation RecomputeEligibility($employeeId: ID!) {
-            recomputeEmployeeEligibility(employeeId: $employeeId) {
+          mutation RecalculateEligibility($employeeId: ID!) {
+            recalculateEmployeeEligibility(employeeId: $employeeId) {
               status
               computedAt
               ruleEvaluationJson
@@ -140,7 +152,7 @@ describe("GraphQL eligibility integration", () => {
 
     const payload = await response.json<{
       data: {
-        recomputeEmployeeEligibility: Array<{
+        recalculateEmployeeEligibility: Array<{
           status: string;
           computedAt: string;
           ruleEvaluationJson: string;
@@ -152,9 +164,9 @@ describe("GraphQL eligibility integration", () => {
       };
     }>();
 
-    expect(payload.data.recomputeEmployeeEligibility).toHaveLength(2);
+    expect(payload.data.recalculateEmployeeEligibility).toHaveLength(2);
 
-    expect(payload.data.recomputeEmployeeEligibility).toEqual([
+    expect(payload.data.recalculateEmployeeEligibility).toEqual([
       {
         benefit: {
           id: "digital-wellness",

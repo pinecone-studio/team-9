@@ -94,7 +94,7 @@ export function useEmployeesPageData() {
     return () => {
       isActive = false;
     };
-  }, [client, employees, isEmployeesLoading]);
+  }, [employees, isEmployeesLoading]);
 
   async function handleRecalculate(employee: Employee) {
     setRefreshingEmployeeId(employee.id);

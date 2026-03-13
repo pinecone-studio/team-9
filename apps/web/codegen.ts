@@ -11,6 +11,7 @@ const config: CodegenConfig = {
     withComponent: false,
     withMutationFn: false,
     withMutationOptionsType: false,
+    withSuspense: false,
     reactApolloVersion: 3,
     apolloReactCommonImportFrom: '@apollo/client/react',
     apolloReactHooksImportFrom: '@apollo/client/react',

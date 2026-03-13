@@ -1,5 +1,5 @@
 import HrPageShell from "../../HR/_components/HrPageShell";
-import EmployeesPageContent from "@/components/graphql/employees-page-content";
+import EmployeesPageContent from "@/shared/graphql/employees-page-content";
 
 export default function EmployeesPage() {
   return (

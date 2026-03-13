@@ -1,4 +1,4 @@
-import { EligibilityRule, EmployeeMetrics } from '../types';
+import type { EligibilityRule, EmployeeMetrics } from '../graphql/generated/resolvers-types';
 
 import { evaluateRule } from './eveluate-rule';
 

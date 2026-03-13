@@ -1,0 +1,36 @@
+query EmployeesPage {
+  employees {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+  }
+}
+
+query EmployeeEligibility($employeeId: ID!) {
+  employeeEligibility(employeeId: $employeeId) {
+    status
+    computedAt
+    benefit {
+      id
+      title
+      category
+    }
+  }
+}
+
+mutation RecalculateEmployeeEligibility($employeeId: ID!) {
+  recalculateEmployeeEligibility(employeeId: $employeeId) {
+    status
+    computedAt
+    benefit {
+      id
+      title
+      category
+    }
+  }
+}

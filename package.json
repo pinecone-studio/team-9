@@ -1,29 +1,42 @@
 {
-  "name": "team-9",
+  "name": "@pinecone-monorepo/team-9",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "bun@1.1.45",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev:web",
-    "dev:web": "npm run dev --workspace @ebms/web",
-    "dev:api": "npm run dev --workspace @ebms/api",
-    "lint": "npm run lint:web",
-    "lint:web": "npm run lint --workspace @ebms/web",
-    "type-check": "npm run type-check:web && npm run type-check:api",
-    "type-check:web": "npm run type-check --workspace @ebms/web",
-    "type-check:api": "npm run type-check --workspace @ebms/api",
-    "test": "npm run test:api",
-    "test:api": "npm run test --workspace @ebms/api",
-    "build": "npm run build:web && npm run build:api",
-    "build:web": "npm run build --workspace @ebms/web",
-    "build:api": "npm run build --workspace @ebms/api",
-    "build:pages": "npm run build:pages --workspace @ebms/web",
-    "deploy:api": "npm run deploy --workspace @ebms/api"
+    "dev:web": "bunx nx run ebms-web:serve",
+    "dev:api": "bunx nx run ebms-api:serve",
+    "lint": "bunx nx run-many -t lint --projects=ebms-web,ebms-api --parallel=2",
+    "lint:web": "bunx nx run ebms-web:lint",
+    "lint:api": "bunx nx run ebms-api:lint",
+    "type-check": "bunx nx run-many -t type-check --projects=ebms-web,ebms-api --parallel=2",
+    "type-check:web": "bunx nx run ebms-web:type-check",
+    "type-check:api": "bunx nx run ebms-api:type-check",
+    "test:api": "bunx nx run ebms-api:test",
+    "build": "bunx nx run-many -t build --projects=ebms-web,ebms-api --parallel=2",
+    "build:web": "bunx nx run ebms-web:build",
+    "build:api": "bunx nx run ebms-api:build",
+    "build:pages": "bunx nx run ebms-web:build-pages",
+    "codegen": "bunx nx run-many -t codegen --projects=ebms-web,ebms-api --parallel=2",
+    "codegen:web": "bunx nx run ebms-web:codegen",
+    "codegen:api": "bunx nx run ebms-api:codegen",
+    "deploy:api": "bunx nx run ebms-api:deploy",
+    "nx": "bunx nx"
   },
   "dependencies": {
     "geist": "^1.7.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typed-document-node": "^5.0.12",
+    "@graphql-codegen/typescript": "^4.0.9",
+    "@graphql-codegen/typescript-operations": "^4.6.1",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.3",
+    "@graphql-codegen/typescript-resolvers": "^4.5.2",
+    "nx": "17.1.3"
   }
 }

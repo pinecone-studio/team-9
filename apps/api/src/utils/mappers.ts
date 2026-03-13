@@ -1,6 +1,27 @@
-import type { BenefitModel, BenefitRow, EmployeeModel, EmployeeRow } from '../types/employee';
+import type { Benefit, Employee } from '../graphql/generated/resolvers-types';
 
-export function mapEmployeeRecord(record: EmployeeRow): EmployeeModel {
+type EmployeeRow = {
+	department: string;
+	id: string;
+	name: string;
+	email: string;
+	employmentStatus: string;
+	hireDate: string;
+	role: string;
+	responsibilityLevel: number | null;
+};
+
+type BenefitRow = {
+	id: string;
+	name: string;
+	categoryId: string | null;
+	category: string | null;
+	subsidy_percent?: number | null;
+	vendor_name?: string | null;
+	description?: string | null;
+};
+
+export function mapEmployeeRecord(record: EmployeeRow): Employee {
 	const normalizedResponsibilityLevel =
 		typeof record.responsibilityLevel === 'number' && Number.isFinite(record.responsibilityLevel)
 			? record.responsibilityLevel
@@ -18,7 +39,7 @@ export function mapEmployeeRecord(record: EmployeeRow): EmployeeModel {
 	};
 }
 
-export function mapBenefitRecord(record: BenefitRow): BenefitModel {
+export function mapBenefitRecord(record: BenefitRow): Benefit {
 	const subsidyText = typeof record.subsidy_percent === 'number' ? `${record.subsidy_percent}% subsidy` : null;
 
 	const description = record.vendor_name

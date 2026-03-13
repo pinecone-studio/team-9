@@ -4,11 +4,12 @@ This repository contains both applications:
 
 - `apps/web`: Next.js frontend
 - `apps/api`: Cloudflare Workers + Hono backend
+- Nx workspace orchestration with Bun scripts
 
 ## Install
 
 ```bash
-npm install
+bun install
 ```
 
 ## Local Development
@@ -16,22 +17,22 @@ npm install
 Run the frontend:
 
 ```bash
-npm run dev:web
+bun run dev:web
 ```
 
 Run the backend:
 
 ```bash
-npm run dev:api
+bun run dev:api
 ```
 
 ## Workspace Commands
 
 ```bash
-npm run lint
-npm run type-check
-npm run test
-npm run build
+bun run lint
+bun run type-check
+bun run test
+bun run build
 ```
 
 ## Deploy

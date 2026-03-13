@@ -3,7 +3,8 @@ import { type DbEnv, getDb } from '../../../db';
 
 import { employees } from '../../../db/schema/employees';
 import { benefits } from '../../../db/schema/benefits';
-import { eligibilityRules } from '../../../db/schema/eligibility-rules';
+import { benefitRules } from '../../../db/schema/benefit-rules';
+import { rules } from '../../../db/schema/rules';
 import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
 
 import { buildEmployeeMetrics } from '../../../utils/build-employee-metrics';
@@ -32,10 +33,22 @@ export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string)
 		const benefitList = await db.select().from(benefits);
 
 		for (const benefit of benefitList) {
-			const rules = await db.select().from(eligibilityRules).where(eq(eligibilityRules.benefitId, benefit.id));
+			const assignedRules = await db
+				.select({
+					id: benefitRules.id,
+					ruleType: rules.ruleType,
+					operator: benefitRules.operator,
+					value: benefitRules.value,
+					priority: benefitRules.priority,
+				})
+				.from(benefitRules)
+				.innerJoin(rules, eq(rules.id, benefitRules.ruleId))
+				.where(eq(benefitRules.benefitId, benefit.id));
+
+			const orderedRules = assignedRules.sort((a, b) => a.priority - b.priority);
 
 			const evaluation = evaluateBenefit(
-				rules.map((rule) => ({
+				orderedRules.map((rule) => ({
 					id: rule.id,
 					rule_type: rule.ruleType as RuleType,
 					operator: rule.operator as Operator,

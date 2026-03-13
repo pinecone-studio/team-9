@@ -1,15 +1,15 @@
 export const typeDefs = /* GraphQL */ `
-	type Employee {
-		id: ID!
-		name: String!
-		position: String!
-		email: String!
-		department: String!
-		employmentStatus: String!
-		hireDate: String!
-		responsibilityLevel: Int!
-		benefits: [Benefit]
-	}
+  type Employee {
+    id: ID!
+    name: String!
+    position: String!
+    email: String!
+    department: String!
+    employmentStatus: String!
+    hireDate: String!
+    responsibilityLevel: Int!
+    benefits: [Benefit]
+  }
 
   type Benefit {
     id: ID!
@@ -86,6 +86,13 @@ export const typeDefs = /* GraphQL */ `
     tenure_days
   }
 
+  enum RuleValueType {
+    number
+    boolean
+    enum
+    date
+  }
+
   type EmployeeMetrics {
     employment_status: EmploymentStatus!
     okr_submitted: Boolean!
@@ -97,9 +104,100 @@ export const typeDefs = /* GraphQL */ `
 
   type EligibilityRule {
     id: ID!
+    benefit_id: ID!
+    rule_id: ID!
+    category_id: ID!
+    category_name: String!
+    name: String!
+    description: String!
     rule_type: RuleType!
+    value_type: RuleValueType!
+    operator: Operator!
+    allowed_operators_json: String!
+    options_json: String
+    default_unit: String
+    value: String!
+    error_message: String!
+    priority: Int!
+    is_active: Boolean!
+  }
+
+  type RuleCategory {
+    id: ID!
+    name: String!
+    description: String
+  }
+
+  type RuleDefinition {
+    id: ID!
+    category_id: ID!
+    category_name: String!
+    rule_type: RuleType!
+    name: String!
+    description: String!
+    value_type: RuleValueType!
+    allowed_operators_json: String!
+    options_json: String
+    default_unit: String
+    default_value: String
+    default_operator: Operator!
+    is_active: Boolean!
+    usage_count: Int!
+    linked_benefits_json: String!
+  }
+
+  input CreateRuleCategoryInput {
+    name: String!
+    description: String
+  }
+
+  input CreateRuleDefinitionInput {
+    categoryId: ID!
+    ruleType: RuleType!
+    name: String!
+    description: String!
+    valueType: RuleValueType!
+    allowedOperators: [Operator!]!
+    optionsJson: String
+    defaultUnit: String
+    defaultValue: String
+    defaultOperator: Operator
+    isActive: Boolean
+  }
+
+  input UpdateRuleDefinitionInput {
+    id: ID!
+    categoryId: ID
+    ruleType: RuleType
+    name: String
+    description: String
+    valueType: RuleValueType
+    allowedOperators: [Operator!]
+    optionsJson: String
+    defaultUnit: String
+    defaultValue: String
+    defaultOperator: Operator
+    isActive: Boolean
+  }
+
+  input CreateEligibilityRuleInput {
+    benefitId: ID!
+    ruleId: ID!
     operator: Operator!
     value: String!
+    errorMessage: String!
+    priority: Int
+    isActive: Boolean
+  }
+
+  input UpdateEligibilityRuleInput {
+    id: ID!
+    ruleId: ID
+    operator: Operator
+    value: String
+    errorMessage: String
+    priority: Int
+    isActive: Boolean
   }
 
   type Query {
@@ -108,6 +206,9 @@ export const typeDefs = /* GraphQL */ `
     benefitCategories: [BenefitCategory!]!
     benefitCatalog: [Benefit]
     allBenefits: [Benefit]
+    ruleCategories: [RuleCategory!]!
+    ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!
+    eligibilityRules(benefitId: ID): [EligibilityRule!]!
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
@@ -117,6 +218,13 @@ export const typeDefs = /* GraphQL */ `
     createEmployee(name: String!, email: String!, position: String!): Employee
     createBenefitCategory(name: String!): BenefitCategory!
     deleteBenefitCategory(id: ID!): Boolean!
+    createRuleCategory(input: CreateRuleCategoryInput!): RuleCategory!
+    createRuleDefinition(input: CreateRuleDefinitionInput!): RuleDefinition!
+    updateRuleDefinition(input: UpdateRuleDefinitionInput!): RuleDefinition!
+    deleteRuleDefinition(id: ID!): Boolean!
+    createEligibilityRule(input: CreateEligibilityRuleInput!): EligibilityRule!
+    updateEligibilityRule(input: UpdateEligibilityRuleInput!): EligibilityRule!
+    deleteEligibilityRule(id: ID!): Boolean!
     recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     uploadContract(input: ContractInput!): Contract!
   }

@@ -1,0 +1,24 @@
+{
+  "name": "ebms-backend",
+  "main": "src/index.ts",
+  "preview_urls": true,
+  "compatibility_date": "2026-03-09",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "team9_pinequest_dev",
+      "database_id": "4cb7fad9-625c-4540-a076-a0a2ea44b572",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CONTRACTS_BUCKET",
+      "bucket_name": "company-ebms-contracts",
+      "preview_bucket_name": "company-ebms-contracts-preview"
+    }
+  ]
+}

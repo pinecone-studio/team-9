@@ -1,0 +1,63 @@
+{
+  "name": "tools",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/tools/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo \"No Build\""
+      }
+    },
+    "preview-action": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/preview/preview-action.cjs"
+      }
+    },
+    "lint-affected-projects": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/lint-affected-projects-and-cache/lint-affected-projects-and-cache.cjs"
+      }
+    },
+    "test-affected-projects": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/test-affected-projects-and-cache/test-affected-projects-and-cache.cjs"
+      }
+    },
+    "build-affected-projects": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/build-affected-projects-and-cache/build-affected-projects-and-cache.cjs"
+      }
+    },
+    "schema-check-affected-projects-testing": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/schema-check/schema-check-test.cjs"
+      }
+    },
+    "schema-check-affected-projects-prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/schema-check/schema-check-prod.cjs"
+      }
+    },
+    "schema-publish-affected-projects-testing": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/schema-check/schema-publish-test.cjs"
+      }
+    },
+    "schema-publish-affected-projects-prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/tools/src/executors/github-actions/schema-check/schema-publish-prod.cjs"
+      }
+    }
+  },
+  "tags": ["tools"]
+}

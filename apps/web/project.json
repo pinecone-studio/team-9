@@ -1,0 +1,56 @@
+{
+  "name": "ebms-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/web",
+        "command": "bun run dev"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.next", "{projectRoot}/out"],
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/web",
+        "command": "bun run build"
+      }
+    },
+    "build-pages": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/out"],
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/web",
+        "command": "bun run build:pages"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/web",
+        "command": "bun run lint"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "codegen", "params": "forward" }],
+      "options": {
+        "cwd": "apps/web",
+        "command": "bun run type-check"
+      }
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx graphql-codegen --config apps/web/codegen.ts && node apps/web/scripts/postprocess-generated-apollo.mjs"
+      }
+    }
+  },
+  "tags": ["type:app", "scope:web"]
+}

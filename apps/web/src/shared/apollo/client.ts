@@ -1,7 +1,7 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 
 const graphqlEndpoint =
-  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:8787/graphql";
+  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? process.env.GRAPHQL_ENDPOINT;
 
 const httpLink = createHttpLink({
   uri: graphqlEndpoint,

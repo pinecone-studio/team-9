@@ -17,6 +17,8 @@ export const queryResolvers = {
 
 	benefitCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCategories(DB),
 
+	benefitCatalog: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCatalog(DB),
+
 	allBenefits: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCatalog(DB),
 
 	employeeEligibility: (_: unknown, { employeeId }: QueryEmployeeEligibilityArgs, { DB }: GraphQLContext) =>

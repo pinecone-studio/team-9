@@ -1,6 +1,5 @@
 import HrPageShell from "../../HR/_components/HrPageShell";
-import BenefitsCatalogHeader from "./components/BenefitsCatalogHeader";
-import WellnessSection from "./components/WellnessSection";
+import BenefitsCatalogContent from "./components/BenefitsCatalogContent";
 
 export default function BenefitsCatalogPage() {
   return (
@@ -10,8 +9,7 @@ export default function BenefitsCatalogPage() {
       subtitle="Review, publish, and maintain employee benefit offerings."
       title="Benefits Catalog"
     >
-      <BenefitsCatalogHeader />
-      <WellnessSection />
+      <BenefitsCatalogContent />
     </HrPageShell>
   );
 }

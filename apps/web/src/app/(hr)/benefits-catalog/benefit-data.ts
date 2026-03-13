@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+
 import type { ComponentType } from "react";
 import type { LucideProps } from "lucide-react";
 import {
@@ -27,11 +29,16 @@ export type BenefitStat = {
 
 export type BenefitCard = {
   badges: readonly BenefitBadge[];
+  category: string;
+  categoryId: string;
   description: string;
   enabled: boolean;
+  id: string;
   icon: ComponentType<LucideProps>;
+  subsidyPercent?: number | null;
   title: string;
   titleIcon?: ComponentType<LucideProps>;
+  vendorName?: string | null;
 };
 
 export type BenefitSection = {
@@ -44,9 +51,13 @@ export type BenefitSection = {
 
 export type BenefitCatalogRecord = {
   category: string;
+  categoryId: string;
   description: string;
   id: string;
+  isActive: boolean;
+  subsidyPercent?: number | null;
   title: string;
+  vendorName?: string | null;
 };
 
 const DEFAULT_SECTION_ICON = Heart;
@@ -86,34 +97,31 @@ function findMatchingIcon(
   );
 }
 
-function buildBadges(description: string, category: string): BenefitBadge[] {
-  const subsidyMatch = description.match(/(\d+)% subsidy/i);
-  const vendorName = description.includes(" - ")
-    ? description.split(" - ")[0]?.trim()
-    : "";
-
+function buildBadges(record: BenefitCatalogRecord): BenefitBadge[] {
+  const normalizedVendorName = record.vendorName?.trim() ?? "";
   const badges: BenefitBadge[] = [];
 
-  if (subsidyMatch?.[1]) {
+  if (
+    typeof record.subsidyPercent === "number" &&
+    Number.isFinite(record.subsidyPercent)
+  ) {
     badges.push({
       icon: BadgePercent,
-      label: `${subsidyMatch[1]}% OFF`,
+      label: `${record.subsidyPercent}% OFF`,
       weight: "semibold",
     });
   }
 
-  if (vendorName) {
+  if (normalizedVendorName) {
     badges.push({
       icon: StickyNote,
-      label: vendorName,
+      label: normalizedVendorName,
       weight: "medium",
     });
-  }
-
-  if (badges.length === 0) {
+  } else {
     badges.push({
       icon: StickyNote,
-      label: category,
+      label: "No vendor",
       weight: "medium",
     });
   }
@@ -147,22 +155,27 @@ export function buildBenefitSections(
       stats: [
         {
           icon: CircleCheck,
-          label: `${records.length} Active`,
+          label: `${records.filter((record) => record.isActive).length} Active`,
         },
         {
           icon: Users,
-          label: `${records.filter((record) => record.description.includes(" - ")).length} Vendors`,
+          label: `${records.filter((record) => (record.vendorName?.trim() ?? "").length > 0).length} Vendors`,
         },
       ],
       cards: records.map((record) => ({
+        id: record.id,
+        category,
+        categoryId: record.categoryId,
         title: record.title,
         icon: findMatchingIcon(
           `${record.title} ${category}`,
           cardIconMatchers,
           DEFAULT_CARD_ICON,
         ),
-        enabled: true,
-        badges: buildBadges(record.description, category),
+        enabled: record.isActive,
+        subsidyPercent: record.subsidyPercent,
+        vendorName: record.vendorName ?? null,
+        badges: buildBadges(record),
         description: record.description,
       })),
     };

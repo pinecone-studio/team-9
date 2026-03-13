@@ -16,6 +16,7 @@ type BenefitRow = {
 	name: string;
 	categoryId: string | null;
 	category: string | null;
+	is_active?: boolean | null;
 	subsidy_percent?: number | null;
 	vendor_name?: string | null;
 	description?: string | null;
@@ -41,12 +42,16 @@ export function mapEmployeeRecord(record: EmployeeRow): Employee {
 
 export function mapBenefitRecord(record: BenefitRow): Benefit {
 	const subsidyText = typeof record.subsidy_percent === 'number' ? `${record.subsidy_percent}% subsidy` : null;
+	const explicitDescription = record.description?.trim();
+	const vendorName = record.vendor_name?.trim() || null;
 
-	const description = record.vendor_name
-		? subsidyText
-			? `${record.vendor_name} - ${subsidyText}`
-			: record.vendor_name
-		: (record.description ?? subsidyText ?? 'Benefit details unavailable');
+	const description = explicitDescription
+		? explicitDescription
+		: vendorName
+			? subsidyText
+				? `${vendorName} - ${subsidyText}`
+				: vendorName
+			: (subsidyText ?? 'Benefit details unavailable');
 
 	return {
 		id: record.id,
@@ -54,5 +59,8 @@ export function mapBenefitRecord(record: BenefitRow): Benefit {
 		description,
 		categoryId: record.categoryId ?? '',
 		category: record.category ?? 'General',
+		subsidyPercent: record.subsidy_percent ?? null,
+		vendorName,
+		isActive: record.is_active ?? true,
 	};
 }

@@ -4,17 +4,24 @@ import type { BenefitCard as BenefitCardData, BenefitStat } from "../benefit-dat
 
 type BenefitCardProps = BenefitCardData & {
   onEdit?: (benefit: BenefitCardData) => void;
+  onToggle?: (benefitId: string, isActive: boolean) => void | Promise<void>;
   stats: readonly BenefitStat[];
 };
 
 export default function BenefitCard({
   badges,
+  category,
+  categoryId,
   description,
   enabled,
+  id,
   icon: Icon,
   onEdit,
+  onToggle,
   stats,
+  subsidyPercent,
   title,
+  vendorName,
 }: BenefitCardProps) {
   return (
     <article className="flex h-[184px] w-full min-w-0 flex-col justify-between rounded-[8px] border border-[#DBDEE1] bg-white p-4 xl:max-w-[420px]">
@@ -30,7 +37,18 @@ export default function BenefitCard({
             <button
               className="ml-2 flex h-6 items-center justify-center gap-1 rounded-[2px] px-[13px] pr-[13px] pl-2 text-[#5D5D5D]"
               onClick={() =>
-                onEdit?.({ badges, description, enabled, icon: Icon, title })
+                onEdit?.({
+                  badges,
+                  category,
+                  categoryId,
+                  description,
+                  enabled,
+                  icon: Icon,
+                  id,
+                  subsidyPercent,
+                  title,
+                  vendorName,
+                })
               }
               type="button"
             >
@@ -38,17 +56,20 @@ export default function BenefitCard({
               <span className="text-[14px] leading-[18px] font-medium">edit</span>
             </button>
           </div>
-          <span
+          <button
+            aria-pressed={enabled}
             className={`relative inline-flex h-6 w-11 items-center rounded-[50px] ${
               enabled ? "bg-[#060B10]" : "bg-slate-200"
             }`}
+            onClick={() => onToggle?.(id, !enabled)}
+            type="button"
           >
             <span
               className={`h-5 w-5 rounded-full bg-white transition-transform ${
                 enabled ? "translate-x-[22px]" : "translate-x-[2px]"
               }`}
             />
-          </span>
+          </button>
         </div>
 
         <div className="flex flex-wrap items-start gap-2">

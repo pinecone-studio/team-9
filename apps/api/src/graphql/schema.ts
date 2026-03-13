@@ -17,6 +17,9 @@ export const typeDefs = /* GraphQL */ `
     description: String!
     category: String!
     categoryId: ID!
+    subsidyPercent: Int
+    vendorName: String
+    isActive: Boolean!
   }
 
   type BenefitCategory {
@@ -57,6 +60,30 @@ export const typeDefs = /* GraphQL */ `
     expiryDate: String!
     fileBase64: String!
     fileName: String!
+  }
+
+  input CreateBenefitInput {
+    name: String!
+    description: String!
+    categoryId: ID!
+    subsidyPercent: Int!
+    vendorName: String
+    requiresContract: Boolean
+  }
+
+  input UpdateBenefitInput {
+    id: ID!
+    name: String!
+    description: String!
+    categoryId: ID!
+    subsidyPercent: Int!
+    vendorName: String
+    requiresContract: Boolean
+  }
+
+  input SetBenefitStatusInput {
+    id: ID!
+    isActive: Boolean!
   }
 
   enum EmploymentStatus {
@@ -115,6 +142,10 @@ export const typeDefs = /* GraphQL */ `
 
   type Mutation {
     createEmployee(name: String!, email: String!, position: String!): Employee
+    createBenefit(input: CreateBenefitInput!): Benefit!
+    updateBenefit(input: UpdateBenefitInput!): Benefit!
+    setBenefitStatus(input: SetBenefitStatusInput!): Benefit!
+    deleteBenefit(id: ID!): Boolean!
     createBenefitCategory(name: String!): BenefitCategory!
     deleteBenefitCategory(id: ID!): Boolean!
     recalculateEmployeeEligibility(employeeId: ID!): [BenefitEligibility!]!

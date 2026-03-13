@@ -13,22 +13,25 @@ export async function listBenefitCatalog(DB: D1Database): Promise<Benefit[]> {
 		.select({
 			id: benefits.id,
 			name: benefits.name,
+			description: benefits.description,
 			categoryId: benefits.categoryId,
 			category: benefitCategories.name,
+			is_active: benefits.isActive,
 			subsidy_percent: benefits.subsidyPercent,
 			vendor_name: benefits.vendorName,
 		})
 		.from(benefits)
 		.leftJoin(benefitCategories, eq(benefitCategories.id, benefits.categoryId))
-		.where(eq(benefits.isActive, true))
 		.orderBy(asc(benefits.name));
 
 	return rows.map((row) =>
 		mapBenefitRecord({
 			id: String(row.id),
 			name: row.name,
+			description: row.description,
 			categoryId: row.categoryId,
 			category: row.category,
+			is_active: row.is_active,
 			subsidy_percent: row.subsidy_percent,
 			vendor_name: row.vendor_name,
 		}),

@@ -44,7 +44,8 @@ const bootstrapEligibilityFixtures = async () => {
     `CREATE TABLE IF NOT EXISTS benefits (
       id text PRIMARY KEY NOT NULL,
       name text NOT NULL,
-      category text NOT NULL,
+      description text,
+      category_id text NOT NULL,
       subsidy_percent integer NOT NULL,
       vendor_name text,
       requires_contract integer NOT NULL DEFAULT false,
@@ -119,10 +120,10 @@ const bootstrapEligibilityFixtures = async () => {
     .run();
 
   await env.DB.prepare(`
-    INSERT INTO benefits (id, name, category, subsidy_percent, vendor_name, requires_contract, active_contract_id, is_active)
+    INSERT INTO benefits (id, name, description, category_id, subsidy_percent, vendor_name, requires_contract, active_contract_id, is_active)
     VALUES
-      ('gym', 'Gym Membership', 'wellness', 50, 'PineFit', 1, NULL, 1),
-      ('ux-tools', 'UX Tools', 'career', 100, NULL, 0, NULL, 1)
+      ('gym', 'Gym Membership', 'Gym membership benefit', 'cat-wellness', 50, 'PineFit', 1, NULL, 1),
+      ('ux-tools', 'UX Tools', 'UX tools benefit', 'cat-career', 100, NULL, 0, NULL, 1)
   `).run();
 
   await env.DB.prepare(`

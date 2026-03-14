@@ -21,6 +21,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}-dev
       API_WORKER_NAME: ebms-backend-dev
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_DEV }}
       DEPLOY_BRANCH: develop
     steps:
       - name: Checkout code
@@ -46,6 +47,25 @@ jobs:
           HEAD_SHA="${{ github.event.pull_request.merge_commit_sha }}"
           AFFECTED="$(bunx nx show projects --affected --base="${BASE_SHA}" --head="${HEAD_SHA}" --json)"
           node -e 'const fs=require("node:fs");const out=process.env.GITHUB_OUTPUT;const affected=JSON.parse(process.argv[1]);fs.appendFileSync(out,`web=${affected.includes("ebms-web")}\n`);fs.appendFileSync(out,`api=${affected.includes("ebms-api")}\n`);' "${AFFECTED}"
+
+      - name: Resolve GraphQL endpoint
+        if: steps.affected.outputs.web == 'true'
+        run: |
+          set -euo pipefail
+          if [ -n "${NEXT_PUBLIC_GRAPHQL_ENDPOINT:-}" ]; then
+            echo "NEXT_PUBLIC_GRAPHQL_ENDPOINT=${NEXT_PUBLIC_GRAPHQL_ENDPOINT}" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          RESPONSE="$(curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain")"
+          SUBDOMAIN="$(node -e 'const data=JSON.parse(process.argv[1]); process.stdout.write(data?.result?.subdomain || "");' "${RESPONSE}")"
+          if [ -z "${SUBDOMAIN}" ]; then
+            echo "Unable to resolve Cloudflare Workers subdomain."
+            echo "${RESPONSE}"
+            exit 1
+          fi
+
+          echo "NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://${API_WORKER_NAME}.${SUBDOMAIN}.workers.dev/graphql" >> "$GITHUB_ENV"
 
       - name: Build web
         if: steps.affected.outputs.web == 'true'
@@ -102,6 +122,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}-testing
       API_WORKER_NAME: ebms-backend-testing
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_TESTING }}
       DEPLOY_BRANCH: testing
     steps:
       - name: Checkout code
@@ -127,6 +148,25 @@ jobs:
           HEAD_SHA="${{ github.event.pull_request.merge_commit_sha }}"
           AFFECTED="$(bunx nx show projects --affected --base="${BASE_SHA}" --head="${HEAD_SHA}" --json)"
           node -e 'const fs=require("node:fs");const out=process.env.GITHUB_OUTPUT;const affected=JSON.parse(process.argv[1]);fs.appendFileSync(out,`web=${affected.includes("ebms-web")}\n`);fs.appendFileSync(out,`api=${affected.includes("ebms-api")}\n`);' "${AFFECTED}"
+
+      - name: Resolve GraphQL endpoint
+        if: steps.affected.outputs.web == 'true'
+        run: |
+          set -euo pipefail
+          if [ -n "${NEXT_PUBLIC_GRAPHQL_ENDPOINT:-}" ]; then
+            echo "NEXT_PUBLIC_GRAPHQL_ENDPOINT=${NEXT_PUBLIC_GRAPHQL_ENDPOINT}" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          RESPONSE="$(curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain")"
+          SUBDOMAIN="$(node -e 'const data=JSON.parse(process.argv[1]); process.stdout.write(data?.result?.subdomain || "");' "${RESPONSE}")"
+          if [ -z "${SUBDOMAIN}" ]; then
+            echo "Unable to resolve Cloudflare Workers subdomain."
+            echo "${RESPONSE}"
+            exit 1
+          fi
+
+          echo "NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://${API_WORKER_NAME}.${SUBDOMAIN}.workers.dev/graphql" >> "$GITHUB_ENV"
 
       - name: Build web
         if: steps.affected.outputs.web == 'true'
@@ -182,6 +222,8 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}
+      API_WORKER_NAME: ebms-backend
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_PROD }}
       DEPLOY_BRANCH: main
     steps:
       - name: Checkout code
@@ -207,6 +249,25 @@ jobs:
           HEAD_SHA="${{ github.event.pull_request.merge_commit_sha }}"
           AFFECTED="$(bunx nx show projects --affected --base="${BASE_SHA}" --head="${HEAD_SHA}" --json)"
           node -e 'const fs=require("node:fs");const out=process.env.GITHUB_OUTPUT;const affected=JSON.parse(process.argv[1]);fs.appendFileSync(out,`web=${affected.includes("ebms-web")}\n`);fs.appendFileSync(out,`api=${affected.includes("ebms-api")}\n`);' "${AFFECTED}"
+
+      - name: Resolve GraphQL endpoint
+        if: steps.affected.outputs.web == 'true'
+        run: |
+          set -euo pipefail
+          if [ -n "${NEXT_PUBLIC_GRAPHQL_ENDPOINT:-}" ]; then
+            echo "NEXT_PUBLIC_GRAPHQL_ENDPOINT=${NEXT_PUBLIC_GRAPHQL_ENDPOINT}" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          RESPONSE="$(curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain")"
+          SUBDOMAIN="$(node -e 'const data=JSON.parse(process.argv[1]); process.stdout.write(data?.result?.subdomain || "");' "${RESPONSE}")"
+          if [ -z "${SUBDOMAIN}" ]; then
+            echo "Unable to resolve Cloudflare Workers subdomain."
+            echo "${RESPONSE}"
+            exit 1
+          fi
+
+          echo "NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://${API_WORKER_NAME}.${SUBDOMAIN}.workers.dev/graphql" >> "$GITHUB_ENV"
 
       - name: Build web
         if: steps.affected.outputs.web == 'true'

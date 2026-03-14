@@ -1,8 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const clerkSecretKey = process.env.CLERK_SECRET_KEY;
-
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/benefits-catalog(.*)",
@@ -20,8 +17,6 @@ export default clerkMiddleware(
     }
   },
   {
-    publishableKey: clerkPublishableKey,
-    secretKey: clerkSecretKey,
     signInUrl: "/auth/login",
   },
 );

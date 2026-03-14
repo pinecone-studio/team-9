@@ -2,8 +2,8 @@
 /* eslint-disable max-lines */
 
 import { gql } from "@apollo/client";
-import { useMutation, useQuery } from "@apollo/client/react";
-import { ChevronDown, Percent, Plus, Trash2 } from "lucide-react";
+import { useMutation } from "@apollo/client/react";
+import { Percent, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import BenefitDialogFieldLabel from "./BenefitDialogFieldLabel";
@@ -42,13 +42,6 @@ type DeleteBenefitVariables = {
   id: string;
 };
 
-type BenefitCategoriesQuery = {
-  benefitCategories?: Array<{
-    id: string;
-    name: string;
-  } | null> | null;
-};
-
 type UpdateBenefitMutation = {
   updateBenefit: UpdatedBenefitPayload;
 };
@@ -67,15 +60,6 @@ type UpdateBenefitVariables = {
 const DELETE_BENEFIT_MUTATION = gql`
   mutation DeleteBenefit($id: ID!) {
     deleteBenefit(id: $id)
-  }
-`;
-
-const BENEFIT_CATEGORIES_QUERY = gql`
-  query BenefitCategoriesForEdit {
-    benefitCategories {
-      id
-      name
-    }
   }
 `;
 
@@ -107,7 +91,6 @@ export default function EditBenefitDialog({
 }: EditBenefitDialogProps) {
   const [name, setName] = useState(benefitName);
   const [benefitDescription, setBenefitDescription] = useState(description);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId);
   const [subsidyPercentValue, setSubsidyPercentValue] = useState(
     String(subsidyPercent),
   );
@@ -121,12 +104,6 @@ export default function EditBenefitDialog({
     UpdateBenefitMutation,
     UpdateBenefitVariables
   >(UPDATE_BENEFIT_MUTATION);
-  const { data: categoryData, loading: categoriesLoading } =
-    useQuery<BenefitCategoriesQuery>(BENEFIT_CATEGORIES_QUERY);
-
-  const categories = (categoryData?.benefitCategories ?? []).flatMap((item) =>
-    item ? [item] : [],
-  );
 
   async function handleDelete() {
     setErrorMessage(null);
@@ -161,11 +138,6 @@ export default function EditBenefitDialog({
       return;
     }
 
-    if (!selectedCategoryId) {
-      setErrorMessage("Please choose a category.");
-      return;
-    }
-
     if (!trimmedDescription) {
       setErrorMessage("Description is required.");
       return;
@@ -185,7 +157,7 @@ export default function EditBenefitDialog({
             id: benefitId,
             name: trimmedName,
             description: trimmedDescription,
-            categoryId: selectedCategoryId,
+            categoryId,
             subsidyPercent: parsedSubsidy,
             vendorName: trimmedVendorName || null,
           },
@@ -204,9 +176,6 @@ export default function EditBenefitDialog({
     }
   }
 
-  const selectedCategoryName =
-    categories.find((item) => item.id === selectedCategoryId)?.name ?? category;
-
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -223,7 +192,9 @@ export default function EditBenefitDialog({
               Edit Benefit
             </h2>
             <div className="flex items-center gap-2 text-[14px] leading-5 font-normal text-[#64748B]">
-              <span>{selectedCategoryName}</span>
+              <span>{category}</span>
+              <span>—</span>
+              <span>{benefitName}</span>
             </div>
           </div>
         </div>
@@ -254,27 +225,7 @@ export default function EditBenefitDialog({
               <h3 className="text-[16px] leading-4 font-semibold text-black">
                 Benefit Value
               </h3>
-              <div className="grid grid-cols-3 gap-[10px]">
-                <label className="flex flex-col gap-[10px]">
-                  <BenefitDialogFieldLabel>Category</BenefitDialogFieldLabel>
-                  <div className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]">
-                    <select
-                      aria-label="Benefit category"
-                      className="w-full bg-transparent text-[12px] leading-4 outline-none"
-                      disabled={categoriesLoading}
-                      onChange={(event) => setSelectedCategoryId(event.target.value)}
-                      value={selectedCategoryId}
-                    >
-                      {categories.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="h-6 w-6 text-black" />
-                  </div>
-                </label>
-
+              <div className="grid grid-cols-2 gap-[10px]">
                 <label className="flex flex-col gap-[10px]">
                   <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
                   <div className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]">
@@ -384,7 +335,7 @@ export default function EditBenefitDialog({
               </button>
               <button
                 className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
-                disabled={updating || deleting || categoriesLoading}
+                disabled={updating || deleting}
                 onClick={handleSave}
                 type="button"
               >

@@ -2,23 +2,29 @@
 /* eslint-disable max-lines */
 
 import { gql } from "@apollo/client";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import { ChevronDown, Percent, Plus, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import BenefitDialogFieldLabel from "./BenefitDialogFieldLabel";
 import BenefitDialogToggle from "./BenefitDialogToggle";
 
-type AddBenefitDialogProps = {
-  onClose: () => void;
-  onCreated?: () => void | Promise<unknown>;
+export type BenefitDraft = {
+  categoryId: string;
+  coreBenefitEnabled: boolean;
+  description: string;
+  name: string;
+  requiresContract: boolean;
+  subsidyPercent: number;
+  vendorName: string;
 };
 
-type BenefitCategoriesQuery = {
-  benefitCategories?: Array<{
-    id: string;
-    name: string;
-  } | null> | null;
+type AddBenefitDialogProps = {
+  defaultCategoryId?: string | null;
+  initialDraft?: BenefitDraft | null;
+  onClose: () => void;
+  onCreated?: () => void | Promise<unknown>;
+  onDraftChange?: (draft: BenefitDraft | null) => void;
 };
 
 type CreateBenefitMutation = {
@@ -39,15 +45,6 @@ type CreateBenefitVariables = {
   };
 };
 
-const BENEFIT_CATEGORIES_QUERY = gql`
-  query BenefitCategoriesForAdd {
-    benefitCategories {
-      id
-      name
-    }
-  }
-`;
-
 const CREATE_BENEFIT_MUTATION = gql`
   mutation CreateBenefit($input: CreateBenefitInput!) {
     createBenefit(input: $input) {
@@ -58,30 +55,71 @@ const CREATE_BENEFIT_MUTATION = gql`
 `;
 
 export default function AddBenefitDialog({
+  defaultCategoryId,
+  initialDraft,
   onClose,
   onCreated,
+  onDraftChange,
 }: AddBenefitDialogProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [subsidyPercent, setSubsidyPercent] = useState("50");
-  const [vendorName, setVendorName] = useState("");
-  const [coreBenefitEnabled, setCoreBenefitEnabled] = useState(false);
-  const [requiresContract, setRequiresContract] = useState(false);
+  const [name, setName] = useState(initialDraft?.name ?? "");
+  const [description, setDescription] = useState(initialDraft?.description ?? "");
+  const [categoryId] = useState(
+    initialDraft?.categoryId ?? defaultCategoryId ?? "",
+  );
+  const [subsidyPercent, setSubsidyPercent] = useState(
+    String(initialDraft?.subsidyPercent ?? 50),
+  );
+  const [vendorName, setVendorName] = useState(initialDraft?.vendorName ?? "");
+  const [coreBenefitEnabled, setCoreBenefitEnabled] = useState(
+    initialDraft?.coreBenefitEnabled ?? false,
+  );
+  const [requiresContract, setRequiresContract] = useState(
+    initialDraft?.requiresContract ?? false,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const errorMessageRef = useRef<HTMLParagraphElement | null>(null);
-  const { data: categoryData, loading: categoriesLoading } =
-    useQuery<BenefitCategoriesQuery>(BENEFIT_CATEGORIES_QUERY);
   const [createBenefit, { loading: saving }] = useMutation<
     CreateBenefitMutation,
     CreateBenefitVariables
   >(CREATE_BENEFIT_MUTATION);
 
-  const categories = (categoryData?.benefitCategories ?? []).flatMap((category) =>
-    category ? [category] : [],
-  );
-  const fallbackCategoryId = categories[0]?.id ?? "";
-  const selectedCategoryId = categoryId || fallbackCategoryId;
+  function buildDraft(): BenefitDraft {
+    const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
+
+    return {
+      name,
+      description,
+      categoryId,
+      subsidyPercent: Number.isInteger(parsedSubsidy) ? parsedSubsidy : 50,
+      vendorName,
+      coreBenefitEnabled,
+      requiresContract,
+    };
+  }
+
+  function hasDraftContent(draft: BenefitDraft) {
+    return (
+      draft.name.trim().length > 0 ||
+      draft.description.trim().length > 0 ||
+      draft.vendorName.trim().length > 0 ||
+      draft.coreBenefitEnabled ||
+      draft.requiresContract ||
+      draft.subsidyPercent !== 50 ||
+      draft.categoryId !== ""
+    );
+  }
+
+  function handleCloseWithDraft() {
+    const draft = buildDraft();
+
+    if (hasDraftContent(draft)) {
+      onDraftChange?.(draft);
+    } else if (initialDraft) {
+      onDraftChange?.(null);
+    }
+
+    onClose();
+  }
 
   useEffect(() => {
     if (!errorMessage) {
@@ -105,8 +143,8 @@ export default function AddBenefitDialog({
       return;
     }
 
-    if (!selectedCategoryId) {
-      setErrorMessage("Please choose a category.");
+    if (!categoryId) {
+      setErrorMessage("Category is missing. Please add from a category section.");
       return;
     }
 
@@ -128,7 +166,7 @@ export default function AddBenefitDialog({
           input: {
             name: trimmedName,
             description: trimmedDescription,
-            categoryId: selectedCategoryId,
+            categoryId,
             subsidyPercent: parsedSubsidy,
             vendorName: trimmedVendorName || null,
             requiresContract,
@@ -136,6 +174,7 @@ export default function AddBenefitDialog({
         },
       });
 
+      onDraftChange?.(null);
       await onCreated?.();
       onClose();
     } catch (error) {
@@ -150,18 +189,18 @@ export default function AddBenefitDialog({
       className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
-          onClose();
+          handleCloseWithDraft();
         }
       }}
     >
-      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[578px] flex-col overflow-hidden rounded-[10px] bg-white">
+      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white">
         <div className="sticky top-0 z-10 shrink-0 border-b border-[#E6EBF0] bg-white px-6 pt-6 pb-4">
           <div className="flex w-full flex-col items-start gap-2">
             <h2 className="w-full text-[18px] leading-7 font-semibold text-[#0F172A]">
               Add a New Benefit
             </h2>
             <p className="w-full text-[14px] leading-5 font-normal text-[#64748B]">
-              Add benefit details and save to publish it in the catalog.
+              Add a benefit and define the requirements employees must meet to receive it.
             </p>
           </div>
         </div>
@@ -190,33 +229,6 @@ export default function AddBenefitDialog({
             </label>
 
             <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center">
-              <label className="flex flex-1 flex-col gap-[10px]">
-                <BenefitDialogFieldLabel>Category</BenefitDialogFieldLabel>
-                <div
-                  className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]"
-                >
-                  <select
-                    aria-label="Benefit category"
-                    className="w-full bg-transparent text-[12px] leading-4 font-normal text-black outline-none"
-                    disabled={categoriesLoading}
-                    onChange={(event) => setCategoryId(event.target.value)}
-                    value={selectedCategoryId}
-                  >
-                    {categories.length === 0 ? (
-                      <option value="">
-                        {categoriesLoading ? "Loading categories..." : "No categories"}
-                      </option>
-                    ) : null}
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="h-6 w-6 text-black" />
-                </div>
-              </label>
-
               <label className="flex flex-1 flex-col gap-[10px]">
                 <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
                 <div className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]">
@@ -333,14 +345,14 @@ export default function AddBenefitDialog({
             <div className="flex items-center gap-[9px]">
               <button
                 className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black"
-                onClick={onClose}
+                onClick={handleCloseWithDraft}
                 type="button"
               >
                 Cancel
               </button>
               <button
                 className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
-                disabled={saving || categoriesLoading}
+                disabled={saving}
                 onClick={handleSave}
                 type="button"
               >

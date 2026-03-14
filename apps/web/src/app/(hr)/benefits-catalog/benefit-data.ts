@@ -42,6 +42,7 @@ export type BenefitCard = {
 };
 
 export type BenefitSection = {
+  categoryId: string;
   cards: readonly BenefitCard[];
   count: string;
   icon: ComponentType<LucideProps>;
@@ -149,6 +150,7 @@ export function buildBenefitSections(
     );
 
     return {
+      categoryId: records[0]?.categoryId ?? "",
       title: category,
       count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
       icon: sectionIcon,

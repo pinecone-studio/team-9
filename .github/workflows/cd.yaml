@@ -21,6 +21,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}-dev
       API_WORKER_NAME: ebms-backend-dev
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_DEV }}
       DEPLOY_BRANCH: develop
     steps:
@@ -122,7 +123,19 @@ jobs:
 
       - name: Deploy API to development
         if: steps.affected.outputs.api == 'true'
-        run: bun run --cwd apps/api deploy -- --name=${{ env.API_WORKER_NAME }}
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+          const base = JSON.parse(fs.readFileSync('apps/api/wrangler.jsonc', 'utf8'));
+          base.name = process.env.API_WORKER_NAME;
+          base.vars = {
+            ...(base.vars ?? {}),
+            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+          };
+          fs.writeFileSync('apps/api/wrangler.deploy.jsonc', `${JSON.stringify(base, null, 2)}\n`);
+          EOF
+          bun run --cwd apps/api deploy -- --config=wrangler.deploy.jsonc --name=${{ env.API_WORKER_NAME }}
+          rm -f apps/api/wrangler.deploy.jsonc
 
   deploy-testing:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'testing'
@@ -133,6 +146,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}-testing
       API_WORKER_NAME: ebms-backend-testing
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_TESTING }}
       DEPLOY_BRANCH: testing
     steps:
@@ -234,7 +248,19 @@ jobs:
 
       - name: Deploy API to testing
         if: steps.affected.outputs.api == 'true'
-        run: bun run --cwd apps/api deploy -- --name=${{ env.API_WORKER_NAME }}
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+          const base = JSON.parse(fs.readFileSync('apps/api/wrangler.jsonc', 'utf8'));
+          base.name = process.env.API_WORKER_NAME;
+          base.vars = {
+            ...(base.vars ?? {}),
+            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+          };
+          fs.writeFileSync('apps/api/wrangler.deploy.jsonc', `${JSON.stringify(base, null, 2)}\n`);
+          EOF
+          bun run --cwd apps/api deploy -- --config=wrangler.deploy.jsonc --name=${{ env.API_WORKER_NAME }}
+          rm -f apps/api/wrangler.deploy.jsonc
 
   deploy-prod:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
@@ -245,6 +271,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}
       API_WORKER_NAME: ebms-backend
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_PROD }}
       DEPLOY_BRANCH: main
     steps:
@@ -346,7 +373,19 @@ jobs:
 
       - name: Deploy API to production
         if: steps.affected.outputs.api == 'true'
-        run: bunx nx run ebms-api:deploy
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+          const base = JSON.parse(fs.readFileSync('apps/api/wrangler.jsonc', 'utf8'));
+          base.name = process.env.API_WORKER_NAME;
+          base.vars = {
+            ...(base.vars ?? {}),
+            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+          };
+          fs.writeFileSync('apps/api/wrangler.deploy.jsonc', `${JSON.stringify(base, null, 2)}\n`);
+          EOF
+          bun run --cwd apps/api deploy -- --config=wrangler.deploy.jsonc --name=${{ env.API_WORKER_NAME }}
+          rm -f apps/api/wrangler.deploy.jsonc
 
   schema-publish-test:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'testing'

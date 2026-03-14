@@ -1,5 +1,7 @@
+import getProvisionUserUrl from "./getProvisionUserUrl";
+
 export default async function ensureClerkAccount(email: string) {
-  const response = await fetch("/api/auth/provision-user", {
+  const response = await fetch(getProvisionUserUrl(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

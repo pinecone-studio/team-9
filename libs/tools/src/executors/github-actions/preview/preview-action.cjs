@@ -2,6 +2,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { getAffectedProjects, getEnv, getPrContext, normalizeName, runCommand } = require('../common.cjs');
 const DEFAULT_GRAPHQL_ENDPOINT = 'https://ebms-backend.b94889340.workers.dev/graphql';
+const API_WRANGLER_CONFIG = path.resolve(__dirname, '../../../../../../apps/api/wrangler.jsonc');
+const PREVIEW_API_WRANGLER_CONFIG = path.resolve(
+  __dirname,
+  '../../../../../../apps/api/wrangler.preview.jsonc',
+);
 const WEB_WRANGLER_CONFIG = path.resolve(__dirname, '../../../../../../apps/web/wrangler.jsonc');
 const PREVIEW_WEB_WRANGLER_CONFIG = path.resolve(
   __dirname,
@@ -54,15 +59,34 @@ const extractWorkersDevUrl = (output, workerName) => {
   return previewUrl || primaryUrl || matches[0];
 };
 
-const createPreviewWebWranglerConfig = ({ workerName, vars }) => {
-  const baseConfig = JSON.parse(fs.readFileSync(WEB_WRANGLER_CONFIG, 'utf8'));
+const createPreviewWranglerConfig = ({ baseConfigPath, outputPath, workerName, vars }) => {
+  const baseConfig = JSON.parse(fs.readFileSync(baseConfigPath, 'utf8'));
   const previewConfig = {
     ...baseConfig,
     name: workerName,
     vars,
   };
 
-  fs.writeFileSync(PREVIEW_WEB_WRANGLER_CONFIG, `${JSON.stringify(previewConfig, null, 2)}\n`);
+  fs.writeFileSync(outputPath, `${JSON.stringify(previewConfig, null, 2)}\n`);
+};
+
+const createPreviewApiWranglerConfig = ({ workerName, vars }) => {
+  createPreviewWranglerConfig({
+    baseConfigPath: API_WRANGLER_CONFIG,
+    outputPath: PREVIEW_API_WRANGLER_CONFIG,
+    workerName,
+    vars,
+  });
+  return 'apps/api/wrangler.preview.jsonc';
+};
+
+const createPreviewWebWranglerConfig = ({ workerName, vars }) => {
+  createPreviewWranglerConfig({
+    baseConfigPath: WEB_WRANGLER_CONFIG,
+    outputPath: PREVIEW_WEB_WRANGLER_CONFIG,
+    workerName,
+    vars,
+  });
   return 'wrangler.preview.jsonc';
 };
 
@@ -131,14 +155,26 @@ const main = async () => {
   const webWorkerName = normalizeName(`${webWorkerBaseName}-${branch}`, 63);
 
   if (apiAffected) {
-    const uploadOutput = runCommand(
-      `bunx wrangler versions upload --config apps/api/wrangler.jsonc --name=${apiWorkerName}`,
-      { capture: true },
-    );
-    process.stdout.write(uploadOutput);
-    apiUrl =
-      extractWorkersDevUrl(uploadOutput, apiWorkerName) ||
-      (await resolveWorkersDevUrl(apiWorkerName));
+    const clerkSecretKey = requireEnv('CLERK_SECRET_KEY');
+    const apiPreviewConfig = createPreviewApiWranglerConfig({
+      workerName: apiWorkerName,
+      vars: {
+        CLERK_SECRET_KEY: clerkSecretKey,
+      },
+    });
+
+    try {
+      const uploadOutput = runCommand(
+        `bunx wrangler versions upload --config ${apiPreviewConfig} --name=${apiWorkerName}`,
+        { capture: true },
+      );
+      process.stdout.write(uploadOutput);
+      apiUrl =
+        extractWorkersDevUrl(uploadOutput, apiWorkerName) ||
+        (await resolveWorkersDevUrl(apiWorkerName));
+    } finally {
+      fs.rmSync(PREVIEW_API_WRANGLER_CONFIG, { force: true });
+    }
   } else if (webAffected) {
     apiUrl = await resolveWorkersDevUrl(apiWorkerName);
   }

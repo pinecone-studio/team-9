@@ -135,6 +135,7 @@ const main = async () => {
   if (webAffected) {
     const fallbackGraphqlEndpoint = getEnv('NEXT_PUBLIC_GRAPHQL_ENDPOINT') || DEFAULT_GRAPHQL_ENDPOINT;
     const graphqlEndpoint = apiUrl !== 'N/A' ? `${apiUrl}/graphql` : fallbackGraphqlEndpoint;
+    runCommand('bunx nx run ebms-web:codegen --skip-nx-cache');
     const previewConfig = createPreviewWebWranglerConfig({
       workerName: webWorkerName,
       vars: {

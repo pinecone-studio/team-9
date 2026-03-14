@@ -1,56 +1,44 @@
-"use client";
-
-import { useState } from "react";
-
-import EmployeeRequestCard from "./EmployeeRequestCard";
-import RequestStatusTabs from "./RequestStatusTabs";
+import BenefitRequestsTable from "./BenefitRequestsTable";
+import ConfigurationApprovalsTable from "./ConfigurationApprovalsTable";
+import { SectionTab, SummaryMetricCard } from "./RequestsUi";
+import {
+  benefitRequestRows,
+  configurationRows,
+  summaryCards,
+} from "./requests-data";
 
 export default function RequestsBoard() {
-  const [activeTab, setActiveTab] = useState<"pending" | "processed">("pending");
-
   return (
-    <>
-      <RequestStatusTabs activeTab={activeTab} onTabChange={setActiveTab} />
-      {activeTab === "pending" ? (
-        <section className="mt-[49px] flex flex-col gap-7">
-          <EmployeeRequestCard
-            benefit="Gym Membership"
-            initials="SC"
-            name="Sarah Chen"
-            submittedLabel="Submitted 2 days ago"
+    <section className="mx-auto mt-7 flex w-full max-w-[1300px] flex-col gap-4">
+      <header className="flex flex-col items-start gap-3">
+        <h1 className="text-[24px] leading-8 font-semibold text-[#0A0A0A]">
+          Requests
+        </h1>
+        <p className="text-[14px] leading-5 font-normal text-[#737373]">
+          Review employee benefit requests and configuration changes.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {summaryCards.map((item) => (
+          <SummaryMetricCard
+            key={item.label}
+            icon={item.icon}
+            label={item.label}
+            value={item.value}
           />
-          <EmployeeRequestCard
-            benefit="Gym Membership"
-            initials="SC"
-            name="Sarah Chen"
-            submittedLabel="Submitted 2 days ago"
-          />
-        </section>
-      ) : (
-        <section className="mt-[49px] flex flex-col gap-7">
-          <EmployeeRequestCard
-            benefit="Ux Tools"
-            initials="MJ"
-            name="Marcus Johnson"
-            status="processed"
-            submittedLabel="Submitted 6 days ago"
-          />
-          <EmployeeRequestCard
-            benefit="Ux Tools"
-            initials="MJ"
-            name="Marcus Johnson"
-            status="processed"
-            submittedLabel="Submitted 6 days ago"
-          />
-          <EmployeeRequestCard
-            benefit="Gym Membership"
-            initials="SC"
-            name="Sarah Chen"
-            status="rejected"
-            submittedLabel="Submitted 2 days ago"
-          />
-        </section>
-      )}
-    </>
+        ))}
+      </div>
+
+      <section className="mt-1 flex flex-col gap-3">
+        <SectionTab count={3} label="Configuration Approvals" />
+        <ConfigurationApprovalsTable rows={configurationRows} />
+      </section>
+
+      <section className="mt-1 flex flex-col gap-3">
+        <SectionTab count={3} label="Benefit Requests" />
+        <BenefitRequestsTable rows={benefitRequestRows} />
+      </section>
+    </section>
   );
 }

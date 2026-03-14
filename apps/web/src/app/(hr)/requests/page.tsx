@@ -6,7 +6,7 @@ export default function RequestsPage() {
     <HrPageShell
       activeKey="requests"
       hideHeader
-      subtitle="Approve, reject, and monitor employee benefit request queues."
+      subtitle="Review employee benefit requests and configuration changes."
       title="Requests"
     >
       <RequestsBoard />

@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.4",
+    "@opennextjs/cloudflare": "^1.17.1",
     "geist": "^1.7.0"
   },
   "devDependencies": {

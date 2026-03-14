@@ -6,12 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "build:pages": "next build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@apollo/client": "^4.1.6",
+    "@opennextjs/cloudflare": "^1.17.1",
     "graphql": "^16.13.1",
     "lucide-react": "^0.564.0",
     "next": "16.1.6",
@@ -28,6 +32,7 @@
     "eslint-config-next": "16.1.6",
     "eslint-plugin-unused-imports": "^4.4.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.73.0"
   }
 }

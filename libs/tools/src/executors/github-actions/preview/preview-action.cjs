@@ -66,6 +66,17 @@ const createPreviewWebWranglerConfig = ({ workerName, vars }) => {
   return 'wrangler.preview.jsonc';
 };
 
+const requireEnv = (name) => {
+  const value = getEnv(name);
+  if (!value) {
+    throw new Error(
+      `Missing required GitHub Actions secret/env: ${name}. Add it in GitHub repository Settings > Secrets and variables > Actions.`,
+    );
+  }
+
+  return value;
+};
+
 const commentPreview = async ({ webAffected, apiAvailable, webUrl, apiUrl }) => {
   const token = getEnv('GITHUB_TOKEN');
   const { owner, repo, number } = getPrContext();
@@ -135,14 +146,16 @@ const main = async () => {
   if (webAffected) {
     const fallbackGraphqlEndpoint = getEnv('NEXT_PUBLIC_GRAPHQL_ENDPOINT') || DEFAULT_GRAPHQL_ENDPOINT;
     const graphqlEndpoint = apiUrl !== 'N/A' ? `${apiUrl}/graphql` : fallbackGraphqlEndpoint;
+    const clerkPublishableKey = requireEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
+    const clerkSecretKey = requireEnv('CLERK_SECRET_KEY');
     runCommand('bunx nx run ebms-web:codegen --skip-nx-cache');
     const previewConfig = createPreviewWebWranglerConfig({
       workerName: webWorkerName,
       vars: {
         GRAPHQL_ENDPOINT: graphqlEndpoint,
         NEXT_PUBLIC_GRAPHQL_ENDPOINT: graphqlEndpoint,
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: getEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'),
-        CLERK_SECRET_KEY: getEnv('CLERK_SECRET_KEY'),
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkPublishableKey,
+        CLERK_SECRET_KEY: clerkSecretKey,
       },
     });
 

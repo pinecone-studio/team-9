@@ -6,7 +6,7 @@ export default function DashboardPage() {
     <HrPageShell
       activeKey="dashboard"
       subtitle="Manage employee benefits and eligibility"
-      title="Good Evening, HR person"
+      title="Good Morning, HR person!"
     >
       <DashboardContent />
     </HrPageShell>

@@ -1,6 +1,10 @@
+import { countActiveContracts } from './count-active-contracts';
+import { countPendingBenefitRequests } from './count-pending-benefit-requests';
 import { getEmployeeById } from './get-employee-by-id';
+import { listAuditLogEntries } from './list-audit-log-entries';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
+import { listBenefitEligibilitySummary } from './list-benefit-eligibility-summary';
 import { listEmployeeEligibilityRecords } from './list-employee-eligibility-records';
 import { listEligibilityRules } from './list-eligibility-rules';
 import { listRuleCategories } from './list-rule-categories';
@@ -11,6 +15,7 @@ import type {
 	QueryRuleDefinitionsArgs,
 	QueryEmployeeArgs,
 	QueryEmployeeEligibilityArgs,
+	QueryListAuditLogEntriesArgs,
 } from '../../generated/resolvers-types';
 
 type GraphQLContext = {
@@ -38,4 +43,13 @@ export const queryResolvers = {
 
 	employeeEligibility: (_: unknown, { employeeId }: QueryEmployeeEligibilityArgs, { DB }: GraphQLContext) =>
 		listEmployeeEligibilityRecords(DB, employeeId),
+
+	countPendingBenefitRequests: (_: unknown, __: unknown, { DB }: GraphQLContext) => countPendingBenefitRequests(DB),
+
+	countActiveContracts: (_: unknown, __: unknown, { DB }: GraphQLContext) => countActiveContracts(DB),
+
+	listAuditLogEntries: (_: unknown, { limit }: QueryListAuditLogEntriesArgs, { DB }: GraphQLContext) =>
+		listAuditLogEntries(DB, limit ?? 5),
+
+	listBenefitEligibilitySummary: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitEligibilitySummary(DB),
 };

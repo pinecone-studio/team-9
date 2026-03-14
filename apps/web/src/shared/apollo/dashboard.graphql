@@ -1,0 +1,36 @@
+query DashboardPageData {
+  employees {
+    id
+  }
+  allBenefits {
+    id
+  }
+  countActiveContracts
+  countPendingBenefitRequests
+  listBenefitEligibilitySummary {
+    benefitId
+    benefitName
+    category
+    subsidyPercent
+    rulesApplied
+    eligibleEmployees
+    blockedEmployees
+    pendingEmployees
+    status
+  }
+  listAuditLogEntries(limit: 5) {
+    id
+    action
+    entityType
+    entityId
+    metadata
+    createdAt
+  }
+  ruleDefinitions {
+    id
+    name
+    value_type
+    default_value
+    usage_count
+  }
+}

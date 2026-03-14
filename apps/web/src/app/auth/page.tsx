@@ -1,11 +1,6 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getDefaultAppPath } from "@/shared/auth/get-current-user-access";
 
-export default function AuthPage() {
-  return (
-    <div>
-      <Link href="/auth/login">Login</Link>
-      {" | "}
-      <Link href="/auth/sign-up">Sign Up</Link>
-    </div>
-  );
+export default async function AuthPage() {
+  redirect(await getDefaultAppPath());
 }

@@ -29,7 +29,6 @@ export default function BenefitCard({
         <div className="flex h-6 items-center justify-between gap-[22px]">
           <div className="flex h-6 flex-1 items-center">
             <div className="flex items-center gap-1">
-              <Icon className="h-5 w-5 text-black" />
               <h3 className="text-[16px] leading-[18px] font-semibold text-[#060B10]">
                 {title}
               </h3>
@@ -73,12 +72,11 @@ export default function BenefitCard({
         </div>
 
         <div className="flex flex-wrap items-start gap-2">
-          {badges.map(({ icon: BadgeIcon, label, weight = "medium" }) => (
+          {badges.map(({ label, weight = "medium" }) => (
             <span
               key={label}
               className="inline-flex h-6 items-center justify-center gap-1 rounded-[6px] bg-[#EFF2F5] px-[6px]"
             >
-              <BadgeIcon className="h-4 w-4 text-black" />
               <span
                 className={`text-[10px] leading-[15px] text-[#1C2229] ${
                   weight === "semibold" ? "font-semibold" : "font-medium"
@@ -97,9 +95,8 @@ export default function BenefitCard({
 
       <div className="flex h-[30px] items-end border-t border-[#EDEFF0] pt-[14px]">
         <div className="flex items-center gap-5">
-          {stats.map(({ icon: StatIcon, label }) => (
+          {stats.map(({ label }) => (
             <span key={label} className="flex items-center gap-1">
-              <StatIcon className="h-4 w-4 text-[#51565B]" />
               <span className="text-[12px] leading-4 font-medium text-[#51565B]">
                 {label}
               </span>

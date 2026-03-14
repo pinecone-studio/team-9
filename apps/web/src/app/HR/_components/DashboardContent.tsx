@@ -33,8 +33,8 @@ const attendanceAlerts = [
 export default function DashboardContent() {
   return (
     <div className="flex w-full flex-col gap-5">
-      <div className="grid w-[1300px] grid-cols-[360px_360px_540px] gap-5">
-        <article className="flex h-[250px] w-[360px] flex-col justify-between rounded-[16px] bg-[#0A0A0A] p-5 text-white">
+      <div className="grid w-full gap-5 xl:grid-cols-[360px_360px_minmax(0,1fr)]">
+        <article className="flex min-h-[250px] w-full flex-col justify-between rounded-[16px] bg-[#0A0A0A] p-5 text-white">
           <p className="text-[14px] font-semibold leading-[20px] text-[#FAFAFA]">
             Employees Overall
           </p>
@@ -72,7 +72,7 @@ export default function DashboardContent() {
             ))}
           </div>
         </article>
-        <article className="h-62.5 w-90 rounded-2xl border border-[#F3F3F3] bg-white/50 p-5 backdrop-blur-[8px]">
+        <article className="min-h-[250px] w-full rounded-2xl border border-[#F3F3F3] bg-white/50 p-5 backdrop-blur-[8px]">
           <div className="flex items-start justify-between">
             <h2 className="text-[16px] font-semibold leading-6 text-[#0A0A0A]">
               Eligibility Distribution
@@ -106,7 +106,7 @@ export default function DashboardContent() {
             </div>
           </div>
         </article> 
-        <article className="flex h-[250px] w-[540px] flex-col rounded-[16px] border border-[#F3F3F3] bg-white/50 p-4 backdrop-blur-[8px]">
+        <article className="flex min-h-[250px] w-full flex-col rounded-[16px] border border-[#F3F3F3] bg-white/50 p-4 backdrop-blur-[8px]">
           <div className="flex items-center justify-between">
               <h2 className="text-[16px] font-semibold leading-[24px] text-[#0A0A0A]">
                 Recent Activity
@@ -139,8 +139,8 @@ export default function DashboardContent() {
 </article>
 
       </div>
-      <div className="flex w-325 justify-end">
-        <article className="h-52.5 w-90 rounded-2xl border border-[#F3F3F3] bg-white/50 p-5 backdrop-blur-[8px]">
+      <div className="flex w-full justify-end">
+        <article className="min-h-[210px] w-full max-w-[360px] rounded-2xl border border-[#F3F3F3] bg-white/50 p-5 backdrop-blur-[8px]">
           <div className="flex items-center gap-1.5">
             <WarningIcon className="h-5 w-5" />
             <h2 className="text-[16px] font-semibold leading-6 text-[#0A0A0A]">

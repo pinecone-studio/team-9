@@ -1,3 +1,4 @@
+import { getEmployeeByEmail } from './get-employee-by-email';
 import { getEmployeeById } from './get-employee-by-id';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
@@ -22,6 +23,8 @@ export const queryResolvers = {
 	employees: (_: unknown, __: unknown, { DB }: GraphQLContext) => listEmployees(DB),
 
 	employee: (_: unknown, { id }: QueryEmployeeArgs, { DB }: GraphQLContext) => getEmployeeById(DB, id),
+
+	employeeByEmail: (_: unknown, { email }: { email: string }, { DB }: GraphQLContext) => getEmployeeByEmail(DB, email),
 
 	benefitCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCategories(DB),
 

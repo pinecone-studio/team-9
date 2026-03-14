@@ -3,11 +3,13 @@
 
 import { gql } from "@apollo/client";
 import { useMutation, useQuery } from "@apollo/client/react";
+import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
 import AddBenefitCard from "./AddBenefitCard";
-import AddBenefitDialog from "./AddBenefitDialog";
+import AddBenefitDialog, { type BenefitDraft } from "./AddBenefitDialog";
 import BenefitCard from "./BenefitCard";
+import DraftBenefitCard from "./DraftBenefitCard";
 import EditBenefitDialog from "./EditBenefitDialog";
 import {
   buildBenefitSections,
@@ -75,6 +77,9 @@ export default function WellnessSection({
   searchQuery = "",
 }: WellnessSectionProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [draftBenefit, setDraftBenefit] = useState<BenefitDraft | null>(null);
+  const [dialogCategoryId, setDialogCategoryId] = useState<string | null>(null);
+  const [dialogDraft, setDialogDraft] = useState<BenefitDraft | null>(null);
   const [benefitOverrides, setBenefitOverrides] = useState<
     Record<string, Partial<BenefitCatalogRecord>>
   >({});
@@ -106,6 +111,18 @@ export default function WellnessSection({
   });
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const shouldShowDraftCard =
+    !!draftBenefit &&
+    (normalizedSearchQuery.length === 0 ||
+      [
+        draftBenefit.name,
+        draftBenefit.description,
+        draftBenefit.vendorName,
+        `${draftBenefit.subsidyPercent}`,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearchQuery));
   const filteredBenefitRecords =
     normalizedSearchQuery.length === 0
       ? benefitCatalogRecords
@@ -125,6 +142,30 @@ export default function WellnessSection({
 
   const benefitSections = buildBenefitSections(filteredBenefitRecords);
 
+  function formatCategoryLabel(value: string) {
+    return value
+      .split(" ")
+      .filter((part) => part.length > 0)
+      .map((part) => part[0].toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  function openNewBenefitDialog(defaultCategoryId?: string | null) {
+    setDialogCategoryId(defaultCategoryId ?? benefitSections[0]?.categoryId ?? null);
+    setDialogDraft(null);
+    setIsAddDialogOpen(true);
+  }
+
+  function openDraftBenefitDialog() {
+    if (!draftBenefit) {
+      return;
+    }
+
+    setDialogCategoryId(draftBenefit.categoryId);
+    setDialogDraft(draftBenefit);
+    setIsAddDialogOpen(true);
+  }
+
   return (
     <>
       {loading ? (
@@ -143,7 +184,7 @@ export default function WellnessSection({
         </section>
       ) : null}
 
-      {!loading && !error && benefitSections.length === 0 ? (
+      {!loading && !error && benefitSections.length === 0 && !shouldShowDraftCard ? (
         <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
           <div className="rounded-[8px] border border-dashed border-[#DBDEE1] bg-white p-6 text-[14px] text-[#51565B]">
             No benefits found in the catalog.
@@ -151,23 +192,44 @@ export default function WellnessSection({
         </section>
       ) : null}
 
+      {!loading && !error && benefitSections.length === 0 && shouldShowDraftCard ? (
+        <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0">
+          <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            <DraftBenefitCard
+              description={draftBenefit.description.trim() || "No description yet."}
+              onContinueEditing={openDraftBenefitDialog}
+              onDeleteDraft={() => setDraftBenefit(null)}
+              title={draftBenefit.name.trim() || "Untitled Benefit"}
+            />
+            <AddBenefitCard
+              onClick={() => openNewBenefitDialog(draftBenefit.categoryId)}
+            />
+          </div>
+        </section>
+      ) : null}
+
       {!loading &&
         !error &&
-        benefitSections.map(({ cards, count, icon: Icon, stats, title }) => (
+        benefitSections.map(({ cards, categoryId, count, icon: SectionIcon, stats, title }) => (
           <section
             className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0"
             key={title}
           >
-            <div className="flex h-6 w-full items-center gap-[10px]">
-              <div className="flex h-6 items-center gap-2">
-                <Icon className="h-6 w-6 text-black" />
-                <h2 className="text-[16px] leading-[21px] font-semibold text-[#060B10]">
-                  {title}
-                </h2>
+            <div className="flex h-6 w-full items-center justify-between gap-[10px]">
+              <div className="flex h-6 items-center gap-[10px]">
+                <div className="flex h-6 items-center gap-2">
+                  <SectionIcon className="h-6 w-6 text-black" />
+                  <h2 className="text-[16px] leading-[21px] font-semibold text-[#060B10]">
+                    {formatCategoryLabel(title)}
+                  </h2>
+                </div>
+                <span className="flex h-6 items-center justify-center rounded-[6px] border border-[#DBDEE1] px-[6px] text-[10px] leading-[15px] font-normal text-[#51565B]">
+                  {count}
+                </span>
               </div>
-              <span className="flex h-6 items-center justify-center rounded-[6px] border border-[#DBDEE1] px-[6px] text-[10px] leading-[15px] font-normal text-[#51565B]">
-                {count}
-              </span>
+              <button className="flex h-6 w-6 items-center justify-center" type="button">
+                <MoreHorizontal className="h-6 w-6 text-black" />
+              </button>
             </div>
 
             <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
@@ -220,15 +282,32 @@ export default function WellnessSection({
                   stats={stats}
                 />
               ))}
-              <AddBenefitCard onClick={() => setIsAddDialogOpen(true)} />
+              {shouldShowDraftCard &&
+              draftBenefit &&
+              draftBenefit.categoryId === categoryId ? (
+                <DraftBenefitCard
+                  description={draftBenefit.description.trim() || "No description yet."}
+                  onContinueEditing={openDraftBenefitDialog}
+                  onDeleteDraft={() => setDraftBenefit(null)}
+                  title={draftBenefit.name.trim() || "Untitled Benefit"}
+                />
+              ) : null}
+              <AddBenefitCard onClick={() => openNewBenefitDialog(categoryId)} />
             </div>
           </section>
         ))}
 
       {isAddDialogOpen && (
         <AddBenefitDialog
-          onClose={() => setIsAddDialogOpen(false)}
+          defaultCategoryId={dialogCategoryId}
+          initialDraft={dialogDraft}
+          onClose={() => {
+            setDialogCategoryId(null);
+            setDialogDraft(null);
+            setIsAddDialogOpen(false);
+          }}
           onCreated={() => refetch()}
+          onDraftChange={setDraftBenefit}
         />
       )}
       {selectedBenefit && (

@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getCloudflareD1Config } from "@/shared/auth/get-cloudflare-d1-config";
+const DEFAULT_GRAPHQL_ENDPOINT =
+  "https://ebms-backend.b94889340.workers.dev/graphql";
 
 export type EmployeeRecord = {
   department: string;
@@ -22,21 +23,12 @@ type EmployeeByEmailResponse = {
   }>;
 };
 
-type D1QueryResponse = {
+type EmployeesResponse = {
+  data?: {
+    employees: EmployeeRecord[];
+  };
   errors?: Array<{
-    message?: string;
-  }>;
-  result?: Array<{
-    results?: Array<{
-      department: string;
-      email: string;
-      employmentStatus: string;
-      hireDate: string;
-      id: string;
-      name: string;
-      responsibilityLevel: number | null;
-      role: string;
-    }>;
+    message: string;
   }>;
 };
 
@@ -44,10 +36,10 @@ function getGraphqlEndpoint() {
   const endpoint =
     process.env.GRAPHQL_ENDPOINT ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT;
 
-  return endpoint ?? "http://localhost:8787/graphql";
+  return endpoint ?? DEFAULT_GRAPHQL_ENDPOINT;
 }
 
-async function fetchEmployeeRecordFromGraphql(email: string) {
+async function postGraphql<T>(query: string, variables: Record<string, string>) {
   const response = await fetch(getGraphqlEndpoint(), {
     method: "POST",
     headers: {
@@ -55,23 +47,8 @@ async function fetchEmployeeRecordFromGraphql(email: string) {
     },
     cache: "no-store",
     body: JSON.stringify({
-      query: `
-        query EmployeeByEmail($email: String!) {
-          employeeByEmail(email: $email) {
-            id
-            name
-            email
-            department
-            employmentStatus
-            hireDate
-            position
-            responsibilityLevel
-          }
-        }
-      `,
-      variables: {
-        email,
-      },
+      query,
+      variables,
     }),
   });
 
@@ -79,85 +56,71 @@ async function fetchEmployeeRecordFromGraphql(email: string) {
     throw new Error(`Failed to load employee access (${response.status}).`);
   }
 
-  const payload = (await response.json()) as EmployeeByEmailResponse;
+  return (await response.json()) as T;
+}
+
+async function fetchEmployeeRecordFromGraphql(email: string) {
+  const payload = await postGraphql<EmployeeByEmailResponse>(
+    `
+      query EmployeeByEmail($email: String!) {
+        employeeByEmail(email: $email) {
+          id
+          name
+          email
+          department
+          employmentStatus
+          hireDate
+          position
+          responsibilityLevel
+        }
+      }
+    `,
+    { email },
+  );
 
   if (payload.errors?.length) {
-    throw new Error(payload.errors[0]?.message ?? "Failed to load employee.");
+    throw new Error(
+      payload.errors[0]?.message ?? "Failed to load employee.",
+    );
   }
 
   return payload.data?.employeeByEmail ?? null;
 }
 
-async function fetchEmployeeRecordFromD1(email: string) {
-  const config = await getCloudflareD1Config();
-
-  if (!config) {
-    throw new Error("Cloudflare D1 access is not configured.");
-  }
-
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${config.accountId}/d1/database/${config.databaseId}/query`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.apiToken}`,
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-      body: JSON.stringify({
-        sql: `
-          SELECT
-            id,
-            email,
-            name,
-            role,
-            department,
-            employment_status AS employmentStatus,
-            hire_date AS hireDate,
-            responsibility_level AS responsibilityLevel
-          FROM employees
-          WHERE lower(email) = lower(?)
-          LIMIT 1
-        `,
-        params: [email],
-      }),
-    },
+async function fetchEmployeeRecordFromEmployeesQuery(email: string) {
+  const payload = await postGraphql<EmployeesResponse>(
+    `
+      query Employees {
+        employees {
+          id
+          name
+          email
+          department
+          employmentStatus
+          hireDate
+          position
+          responsibilityLevel
+        }
+      }
+    `,
+    { email },
   );
 
-  if (!response.ok) {
-    throw new Error(`Failed to load employee access (${response.status}).`);
-  }
-
-  const payload = (await response.json()) as D1QueryResponse;
-
   if (payload.errors?.length) {
-    throw new Error(
-      payload.errors[0]?.message ?? "Failed to load employee from D1.",
-    );
+    throw new Error(payload.errors[0]?.message ?? "Failed to load employee.");
   }
 
-  const record = payload.result?.[0]?.results?.[0];
-
-  if (!record) {
-    return null;
-  }
-
-  return {
-    department: record.department,
-    email: record.email,
-    employmentStatus: record.employmentStatus,
-    hireDate: record.hireDate,
-    id: record.id,
-    name: record.name,
-    position: record.role,
-    responsibilityLevel: record.responsibilityLevel ?? 1,
-  } satisfies EmployeeRecord;
+  return (
+    payload.data?.employees.find(
+      (employee) => employee.email.trim().toLowerCase() === email,
+    ) ?? null
+  );
 }
 
 export async function getEmployeeRecordByEmail(email: string) {
   try {
     return await fetchEmployeeRecordFromGraphql(email);
   } catch {
-    return fetchEmployeeRecordFromD1(email);
+    return fetchEmployeeRecordFromEmployeesQuery(email);
   }
 }

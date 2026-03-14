@@ -87,11 +87,10 @@ export async function POST(request: Request) {
       userExists: false,
     });
   } catch (error) {
-    const rawMessage =
-      error instanceof Error ? error.message : "We couldn't prepare your account.";
-    const message = rawMessage.includes("(403)")
-      ? "Start the API backend at http://localhost:8787/graphql. The current Cloudflare token cannot query D1 directly."
-      : rawMessage;
+    const message =
+      error instanceof Error
+        ? error.message
+        : "We couldn't prepare your account.";
 
     return NextResponse.json(
       {

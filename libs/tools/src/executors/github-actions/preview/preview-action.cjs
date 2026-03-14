@@ -148,7 +148,7 @@ const main = async () => {
 
     try {
       const deployOutput = runCommand(
-        `bun run --cwd apps/web deploy -- --config=${previewConfig} --keep-vars`,
+        `bun run --cwd apps/web deploy -- --config=${previewConfig}`,
         { capture: true },
       );
       process.stdout.write(deployOutput);

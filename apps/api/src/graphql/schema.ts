@@ -173,6 +173,27 @@ export const typeDefs = /* GraphQL */ `
     linked_benefits_json: String!
   }
 
+  type AuditLogEntry {
+    id: ID!
+    action: String!
+    entityType: String!
+    entityId: ID
+    metadata: String
+    createdAt: String!
+  }
+
+  type BenefitEligibilitySummary {
+    benefitId: ID!
+    benefitName: String!
+    category: String!
+    subsidyPercent: Int
+    rulesApplied: [String!]!
+    eligibleEmployees: Int!
+    blockedEmployees: Int!
+    pendingEmployees: Int!
+    status: String!
+  }
+
   input CreateRuleCategoryInput {
     name: String!
     description: String
@@ -239,6 +260,10 @@ export const typeDefs = /* GraphQL */ `
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
+    countPendingBenefitRequests: Int!
+    countActiveContracts: Int!
+    listAuditLogEntries(limit: Int): [AuditLogEntry!]!
+    listBenefitEligibilitySummary: [BenefitEligibilitySummary!]!
   }
 
   type Mutation {

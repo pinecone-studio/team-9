@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import CodeStep from "./CodeStep";
 import EmailStep from "./EmailStep";
+import ensureClerkAccount from "./ensureClerkAccount";
 import getErrorMessage from "./getErrorMessage";
 
 type Step = "email" | "code";
@@ -42,24 +43,6 @@ export default function LoginForm() {
         router.push(url);
       },
     });
-  };
-
-  const ensureClerkAccount = async (email: string) => {
-    const response = await fetch("/api/auth/provision-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-
-      throw new Error(payload?.error ?? "We couldn't prepare your account.");
-    }
   };
 
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {

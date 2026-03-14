@@ -39,8 +39,16 @@ function getGraphqlEndpoint() {
   return endpoint ?? DEFAULT_GRAPHQL_ENDPOINT;
 }
 
-async function postGraphql<T>(query: string, variables: Record<string, string>) {
-  const response = await fetch(getGraphqlEndpoint(), {
+function getGraphqlEndpoints() {
+  return [...new Set([getGraphqlEndpoint(), DEFAULT_GRAPHQL_ENDPOINT])];
+}
+
+async function postGraphql<T>(
+  endpoint: string,
+  query: string,
+  variables: Record<string, string>,
+) {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -59,8 +67,12 @@ async function postGraphql<T>(query: string, variables: Record<string, string>) 
   return (await response.json()) as T;
 }
 
-async function fetchEmployeeRecordFromGraphql(email: string) {
+async function fetchEmployeeRecordFromGraphql(
+  endpoint: string,
+  email: string,
+) {
   const payload = await postGraphql<EmployeeByEmailResponse>(
+    endpoint,
     `
       query EmployeeByEmail($email: String!) {
         employeeByEmail(email: $email) {
@@ -87,8 +99,12 @@ async function fetchEmployeeRecordFromGraphql(email: string) {
   return payload.data?.employeeByEmail ?? null;
 }
 
-async function fetchEmployeeRecordFromEmployeesQuery(email: string) {
+async function fetchEmployeeRecordFromEmployeesQuery(
+  endpoint: string,
+  email: string,
+) {
   const payload = await postGraphql<EmployeesResponse>(
+    endpoint,
     `
       query Employees {
         employees {
@@ -118,9 +134,17 @@ async function fetchEmployeeRecordFromEmployeesQuery(email: string) {
 }
 
 export async function getEmployeeRecordByEmail(email: string) {
-  try {
-    return await fetchEmployeeRecordFromGraphql(email);
-  } catch {
-    return fetchEmployeeRecordFromEmployeesQuery(email);
+  for (const endpoint of getGraphqlEndpoints()) {
+    try {
+      return await fetchEmployeeRecordFromGraphql(endpoint, email);
+    } catch {
+      try {
+        return await fetchEmployeeRecordFromEmployeesQuery(endpoint, email);
+      } catch {
+        continue;
+      }
+    }
   }
+
+  throw new Error("Failed to load employee access.");
 }

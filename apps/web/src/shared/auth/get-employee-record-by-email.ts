@@ -1,6 +1,8 @@
 /* eslint-disable max-lines */
 import "server-only";
 
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 const DEFAULT_GRAPHQL_ENDPOINT =
   "https://ebms-backend.b94889340.workers.dev/graphql";
 
@@ -31,6 +33,14 @@ type EmployeesResponse = {
   errors?: Array<{
     message: string;
   }>;
+};
+
+type D1Like = {
+  prepare: (query: string) => {
+    bind: (...values: unknown[]) => {
+      first: <T>() => Promise<T | null>;
+    };
+  };
 };
 
 function getGraphqlEndpoint() {
@@ -66,6 +76,43 @@ async function postGraphql<T>(
   }
 
   return (await response.json()) as T;
+}
+
+async function fetchEmployeeRecordFromD1(email: string) {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    const db = (env as CloudflareEnv & { DB?: D1Like }).DB;
+
+    if (!db) {
+      return null;
+    }
+
+    return await db
+      .prepare(
+        `
+          SELECT
+            id,
+            name,
+            email,
+            department,
+            employment_status AS employmentStatus,
+            hire_date AS hireDate,
+            role AS position,
+            responsibility_level AS responsibilityLevel
+          FROM employees
+          WHERE lower(email) = ?
+          LIMIT 1
+        `,
+      )
+      .bind(email)
+      .first<EmployeeRecord>();
+  } catch (error) {
+    console.warn("[auth] D1 lookup unavailable, falling back to GraphQL.", {
+      email,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 async function fetchEmployeeRecordFromGraphql(endpoint: string, email: string) {
@@ -131,6 +178,11 @@ async function fetchEmployeeRecordFromEmployeesQuery(
 
 export async function getEmployeeRecordByEmail(email: string) {
   const normalizedEmail = email.trim().toLowerCase();
+  const employeeFromD1 = await fetchEmployeeRecordFromD1(normalizedEmail);
+
+  if (employeeFromD1) {
+    return employeeFromD1;
+  }
 
   for (const endpoint of getGraphqlEndpoints()) {
     try {

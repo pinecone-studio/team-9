@@ -1,4 +1,4 @@
-import type { Benefit, Employee } from '../graphql/generated/resolvers-types';
+import { ApprovalRole, type Benefit, type Employee } from '../graphql/generated/resolvers-types';
 
 type EmployeeRow = {
 	department: string;
@@ -16,7 +16,10 @@ type BenefitRow = {
 	name: string;
 	categoryId: string | null;
 	category: string | null;
+	approval_role?: string | null;
+	requires_contract?: boolean | null;
 	is_active?: boolean | null;
+	is_core?: boolean | null;
 	subsidy_percent?: number | null;
 	vendor_name?: string | null;
 	description?: string | null;
@@ -61,6 +64,9 @@ export function mapBenefitRecord(record: BenefitRow): Benefit {
 		category: record.category ?? 'General',
 		subsidyPercent: record.subsidy_percent ?? null,
 		vendorName,
+		requiresContract: record.requires_contract ?? false,
+		approvalRole: record.approval_role === 'finance_manager' ? ApprovalRole.FinanceManager : ApprovalRole.HrAdmin,
 		isActive: record.is_active ?? true,
+		isCore: record.is_core ?? false,
 	};
 }

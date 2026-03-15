@@ -131,6 +131,7 @@ export function buildBenefitSections(
       ],
       cards: records.map((record) => ({
         id: record.id,
+        approvalRole: record.approvalRole,
         category,
         categoryId: record.categoryId,
         title: record.title,
@@ -140,6 +141,8 @@ export function buildBenefitSections(
           DEFAULT_CARD_ICON,
         ),
         enabled: record.isActive,
+        isCore: record.isCore,
+        requiresContract: record.requiresContract,
         subsidyPercent: record.subsidyPercent,
         vendorName: record.vendorName ?? null,
         badges: buildBadges(record),

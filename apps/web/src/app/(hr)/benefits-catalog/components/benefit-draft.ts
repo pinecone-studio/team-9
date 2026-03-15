@@ -1,4 +1,5 @@
 export type BenefitDraft = {
+  approvalRole: "finance_manager" | "hr_admin";
   categoryId: string;
   coreBenefitEnabled: boolean;
   description: string;
@@ -9,6 +10,7 @@ export type BenefitDraft = {
 };
 
 type BuildDraftInput = {
+  approvalRole: "finance_manager" | "hr_admin";
   categoryId: string;
   coreBenefitEnabled: boolean;
   description: string;
@@ -22,6 +24,7 @@ export function buildBenefitDraft(input: BuildDraftInput): BenefitDraft {
   const parsedSubsidy = Number.parseInt(input.subsidyPercent, 10);
 
   return {
+    approvalRole: input.approvalRole,
     name: input.name,
     description: input.description,
     categoryId: input.categoryId,
@@ -37,6 +40,7 @@ export function hasBenefitDraftContent(draft: BenefitDraft) {
     draft.name.trim().length > 0 ||
     draft.description.trim().length > 0 ||
     draft.vendorName.trim().length > 0 ||
+    draft.approvalRole !== "hr_admin" ||
     draft.coreBenefitEnabled ||
     draft.requiresContract ||
     draft.subsidyPercent !== 50 ||

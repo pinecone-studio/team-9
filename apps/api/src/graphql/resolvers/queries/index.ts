@@ -1,7 +1,9 @@
 import { countActiveContracts } from './count-active-contracts';
 import { countPendingBenefitRequests } from './count-pending-benefit-requests';
+import { getApprovalRequestById } from './get-approval-request-by-id';
 import { getEmployeeById } from './get-employee-by-id';
 import { listAuditLogEntries } from './list-audit-log-entries';
+import { listApprovalRequests } from './list-approval-requests';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
 import { listBenefitEligibilitySummary } from './list-benefit-eligibility-summary';
@@ -13,9 +15,11 @@ import { listEmployees } from './list-employees';
 import type {
 	QueryEligibilityRulesArgs,
 	QueryRuleDefinitionsArgs,
+	QueryApprovalRequestArgs,
 	QueryEmployeeArgs,
 	QueryEmployeeEligibilityArgs,
 	QueryListAuditLogEntriesArgs,
+	QueryApprovalRequestsArgs,
 } from '../../generated/resolvers-types';
 
 type GraphQLContext = {
@@ -33,6 +37,12 @@ export const queryResolvers = {
 	benefitCatalog: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCatalog(DB),
 
 	allBenefits: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCatalog(DB),
+
+	approvalRequests: (_: unknown, args: QueryApprovalRequestsArgs, { DB }: GraphQLContext) =>
+		listApprovalRequests(DB, args),
+
+	approvalRequest: (_: unknown, { id }: QueryApprovalRequestArgs, { DB }: GraphQLContext) =>
+		getApprovalRequestById(DB, id),
 
 	ruleCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listRuleCategories(DB),
 

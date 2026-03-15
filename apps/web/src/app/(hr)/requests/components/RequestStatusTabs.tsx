@@ -2,18 +2,22 @@ import { CheckCircle2, Clock3 } from "lucide-react";
 
 type RequestStatusTabsProps = {
   activeTab: "pending" | "processed";
+  pendingCount: number;
+  processedCount: number;
   onTabChange: (tab: "pending" | "processed") => void;
 };
 
 export default function RequestStatusTabs({
   activeTab,
+  pendingCount,
+  processedCount,
   onTabChange,
 }: RequestStatusTabsProps) {
   return (
-    <section className="mt-[48px] ml-[70px] w-[213px] rounded-[8px] bg-[#F0F2F5] p-[3px]">
+    <section className="mt-[48px] ml-[70px] w-[240px] rounded-[8px] bg-[#F0F2F5] p-[3px]">
       <div className="relative flex h-[25px] items-center">
         <button
-          className={`flex h-[25px] w-[112px] items-center gap-[10px] rounded-[8px] px-[7px] py-1 ${
+          className={`flex h-[25px] w-[122px] items-center gap-[10px] rounded-[8px] px-[7px] py-1 ${
             activeTab === "pending" ? "bg-white" : "bg-transparent"
           }`}
           onClick={() => onTabChange("pending")}
@@ -26,7 +30,7 @@ export default function RequestStatusTabs({
             </span>
           </span>
           <span className="flex h-[19px] w-5 items-center justify-center rounded-[6px] bg-[#F5F6F7] text-[10px] leading-[13px] font-semibold text-black">
-            1
+            {pendingCount}
           </span>
         </button>
 
@@ -40,6 +44,9 @@ export default function RequestStatusTabs({
           <CheckCircle2 className="h-4 w-4 text-black" />
           <span className="text-[12px] leading-4 font-semibold text-black">
             Processed
+          </span>
+          <span className="flex h-[19px] min-w-5 items-center justify-center rounded-[6px] bg-[#F5F6F7] px-1 text-[10px] leading-[13px] font-semibold text-black">
+            {processedCount}
           </span>
         </button>
       </div>

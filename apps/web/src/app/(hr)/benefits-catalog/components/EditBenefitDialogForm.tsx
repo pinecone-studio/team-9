@@ -1,34 +1,73 @@
-import { Percent, Plus } from "lucide-react";
-
 import BenefitDialogFieldLabel from "./BenefitDialogFieldLabel";
 import BenefitDialogToggle from "./BenefitDialogToggle";
+import EditBenefitApprovalSection from "./EditBenefitApprovalSection";
+import EditBenefitAuditSection from "./EditBenefitAuditSection";
 import EditBenefitContractPanel from "./EditBenefitContractPanel";
-import EditBenefitEligibilityRuleCard from "./EditBenefitEligibilityRuleCard";
+import EditBenefitRulesSection from "./EditBenefitRulesSection";
+import type { ApprovalRoleValue } from "./edit-benefit-dialog.graphql";
+import type { AssignedBenefitRule, RuleOption } from "./edit-benefit-dialog.types";
 
 type EditBenefitDialogFormProps = {
+  approvalRole: ApprovalRoleValue;
+  assignedRules: AssignedBenefitRule[];
+  availableRules: RuleOption[];
   benefitDescription: string;
+  benefitName: string;
+  category: string;
+  isCore: boolean;
   name: string;
+  onAddRule: () => void;
+  onApprovalRoleChange: (value: ApprovalRoleValue) => void;
   onBenefitDescriptionChange: (value: string) => void;
+  onDeleteRule: (ruleId: string) => void;
+  onIsCoreChange: (checked: boolean) => void;
   onNameChange: (value: string) => void;
+  onRequiresContractChange: (checked: boolean) => void;
+  onSelectedRuleIdChange: (value: string) => void;
   onSubsidyPercentChange: (value: string) => void;
   onVendorNameChange: (value: string) => void;
+  requiresContract: boolean;
+  selectedRuleId: string;
   subsidyPercentValue: string;
   vendorNameValue: string;
 };
 
 export default function EditBenefitDialogForm({
+  approvalRole,
+  assignedRules,
+  availableRules,
   benefitDescription,
+  benefitName,
+  category,
+  isCore,
   name,
+  onAddRule,
+  onApprovalRoleChange,
   onBenefitDescriptionChange,
+  onDeleteRule,
+  onIsCoreChange,
   onNameChange,
+  onRequiresContractChange,
+  onSelectedRuleIdChange,
   onSubsidyPercentChange,
   onVendorNameChange,
+  requiresContract,
+  selectedRuleId,
   subsidyPercentValue,
   vendorNameValue,
 }: EditBenefitDialogFormProps) {
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex flex-col gap-8 px-[2px] py-[2px]">
+    <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-col gap-8 px-[2px]">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-[18px] leading-7 font-semibold text-[#0F172A]">Edit Benefit</h2>
+          <div className="flex items-center gap-2 text-[14px] leading-5 text-[#64748B]">
+            <span>{category}</span>
+            <span className="inline-block h-px w-2 bg-[#64748B]" />
+            <span>{benefitName}</span>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between gap-4">
           <BenefitDialogFieldLabel>Benefit Name</BenefitDialogFieldLabel>
           <input
@@ -47,24 +86,22 @@ export default function EditBenefitDialogForm({
             value={benefitDescription}
           />
         </label>
+
         <div className="border-t border-[#DBDEE1]" />
 
-        <div className="flex flex-col gap-5">
+        <section className="flex flex-col gap-5">
           <h3 className="text-[16px] leading-4 font-semibold text-black">Benefit Value</h3>
-          <div className="grid grid-cols-2 gap-[10px]">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-[10px]">
               <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
-              <div className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]">
-                <input
-                  className="w-full text-[12px] leading-4 outline-none"
-                  max={100}
-                  min={0}
-                  onChange={(event) => onSubsidyPercentChange(event.target.value)}
-                  type="number"
-                  value={subsidyPercentValue}
-                />
-                <Percent className="h-4 w-4 text-black" />
-              </div>
+              <input
+                className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 outline-none"
+                max={100}
+                min={0}
+                onChange={(event) => onSubsidyPercentChange(event.target.value)}
+                type="number"
+                value={subsidyPercentValue}
+              />
             </label>
 
             <label className="flex flex-col gap-[10px]">
@@ -77,43 +114,19 @@ export default function EditBenefitDialogForm({
               />
             </label>
           </div>
-        </div>
+        </section>
 
         <div className="border-t border-[#DBDEE1]" />
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-[5px]">
-            <h3 className="text-[16px] leading-4 font-semibold text-black">Eligibility Rules</h3>
-            <p className="text-[12px] leading-4 font-normal text-[#5B6470]">
-              All rules must pass for employees to become eligible.
-            </p>
-          </div>
-          <EditBenefitEligibilityRuleCard
-            explanation="You must be an active employee to access this benefit."
-            operator="is"
-            ruleType="Employment Status"
-            value="Active"
-          />
-          <EditBenefitEligibilityRuleCard
-            explanation="Please submit your OKRs to unlock this benefit."
-            operator="is"
-            ruleType="OKR Submitted"
-            value="True"
-          />
-          <EditBenefitEligibilityRuleCard
-            explanation="You must have fewer than 3 late arrivals this quarter."
-            operator="less than"
-            ruleType="Late Arrivals"
-            value="3"
-          />
-          <button
-            className="flex h-9 items-center justify-center gap-2 rounded-[8px] border border-[#CBD5E1] bg-white text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-            type="button"
-          >
-            <Plus className="h-4 w-4" />
-            Add Another Rule
-          </button>
-        </div>
+        <EditBenefitRulesSection
+          assignedRules={assignedRules}
+          availableRules={availableRules}
+          isCore={isCore}
+          onAddRule={onAddRule}
+          onDeleteRule={onDeleteRule}
+          onSelectedRuleIdChange={onSelectedRuleIdChange}
+          selectedRuleId={selectedRuleId}
+        />
 
         <div className="border-t border-[#DBDEE1]" />
 
@@ -124,10 +137,20 @@ export default function EditBenefitDialogForm({
               Available to all employees
             </span>
           </div>
-          <BenefitDialogToggle />
+          <BenefitDialogToggle checked={isCore} onCheckedChange={onIsCoreChange} />
         </div>
 
-        <EditBenefitContractPanel />
+        <EditBenefitContractPanel
+          checked={requiresContract}
+          onCheckedChange={onRequiresContractChange}
+        />
+
+        <EditBenefitAuditSection benefitName={benefitName} />
+
+        <EditBenefitApprovalSection
+          approvalRole={approvalRole}
+          onApprovalRoleChange={onApprovalRoleChange}
+        />
       </div>
     </div>
   );

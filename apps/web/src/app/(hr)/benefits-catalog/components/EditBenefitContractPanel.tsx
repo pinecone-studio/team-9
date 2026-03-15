@@ -2,7 +2,15 @@ import { FileText } from "lucide-react";
 
 import BenefitDialogToggle from "./BenefitDialogToggle";
 
-export default function EditBenefitContractPanel() {
+type EditBenefitContractPanelProps = {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+};
+
+export default function EditBenefitContractPanel({
+  checked,
+  onCheckedChange,
+}: EditBenefitContractPanelProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex w-full items-center justify-between">
@@ -12,7 +20,7 @@ export default function EditBenefitContractPanel() {
             Employee must sign an agreement
           </span>
         </div>
-        <BenefitDialogToggle checked />
+        <BenefitDialogToggle checked={checked} onCheckedChange={onCheckedChange} />
       </div>
 
       <div className="flex w-full items-center justify-between rounded-[10px] border border-[#CBD5E1] bg-[rgba(245,245,245,0.3)] p-4">

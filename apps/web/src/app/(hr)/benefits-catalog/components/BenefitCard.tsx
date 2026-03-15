@@ -9,6 +9,7 @@ type BenefitCardProps = BenefitCardData & {
 };
 
 export default function BenefitCard({
+  approvalRole,
   badges,
   category,
   categoryId,
@@ -16,8 +17,10 @@ export default function BenefitCard({
   enabled,
   id,
   icon: Icon,
+  isCore,
   onEdit,
   onToggle,
+  requiresContract,
   stats,
   subsidyPercent,
   title,
@@ -37,6 +40,7 @@ export default function BenefitCard({
               className="ml-2 flex h-6 items-center justify-center gap-1 rounded-[2px] px-[13px] pr-[13px] pl-2 text-[#5D5D5D]"
               onClick={() =>
                 onEdit?.({
+                  approvalRole,
                   badges,
                   category,
                   categoryId,
@@ -44,6 +48,8 @@ export default function BenefitCard({
                   enabled,
                   icon: Icon,
                   id,
+                  isCore,
+                  requiresContract,
                   subsidyPercent,
                   title,
                   vendorName,

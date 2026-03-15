@@ -45,7 +45,18 @@ export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string)
 				.innerJoin(rules, eq(rules.id, benefitRules.ruleId))
 				.where(eq(benefitRules.benefitId, benefit.id));
 
-			const orderedRules = assignedRules.sort((a, b) => a.priority - b.priority);
+			const orderedRules =
+				assignedRules.length === 0 && benefit.isCore
+					? [
+							{
+								id: `core-${benefit.id}`,
+								ruleType: 'employment_status',
+								operator: 'neq',
+								value: JSON.stringify('terminated'),
+								priority: 1,
+							},
+						]
+					: assignedRules.sort((a, b) => a.priority - b.priority);
 
 			const evaluation = evaluateBenefit(
 				orderedRules.map((rule) => ({

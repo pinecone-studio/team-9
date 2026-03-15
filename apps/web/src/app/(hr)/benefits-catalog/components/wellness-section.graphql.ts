@@ -28,7 +28,10 @@ export const BENEFIT_CATALOG_QUERY = gql`
       description
       category
       categoryId
+      approvalRole
       isActive
+      isCore
+      requiresContract
       subsidyPercent
       vendorName
     }

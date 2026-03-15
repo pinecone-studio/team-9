@@ -13,6 +13,7 @@ export type BenefitStat = {
 };
 
 export type BenefitCard = {
+  approvalRole: "finance_manager" | "hr_admin";
   badges: readonly BenefitBadge[];
   category: string;
   categoryId: string;
@@ -20,6 +21,8 @@ export type BenefitCard = {
   enabled: boolean;
   id: string;
   icon: ComponentType<LucideProps>;
+  isCore: boolean;
+  requiresContract: boolean;
   subsidyPercent?: number | null;
   title: string;
   titleIcon?: ComponentType<LucideProps>;
@@ -36,11 +39,14 @@ export type BenefitSection = {
 };
 
 export type BenefitCatalogRecord = {
+  approvalRole: "finance_manager" | "hr_admin";
   category: string;
   categoryId: string;
   description: string;
   id: string;
   isActive: boolean;
+  isCore: boolean;
+  requiresContract: boolean;
   subsidyPercent?: number | null;
   title: string;
   vendorName?: string | null;

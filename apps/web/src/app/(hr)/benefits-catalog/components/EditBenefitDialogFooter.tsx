@@ -32,7 +32,7 @@ export default function EditBenefitDialogFooter({
           type="button"
         >
           <Trash2 className="h-[18px] w-[18px]" />
-          {deleting ? "Deleting..." : "Delete"}
+          {deleting ? "Archiving..." : "Archive"}
         </button>
         <div className="flex items-center gap-[9px]">
           <button
@@ -48,7 +48,7 @@ export default function EditBenefitDialogFooter({
             onClick={onSave}
             type="button"
           >
-            {updating ? "Saving..." : "Save Changes"}
+            {updating ? "Submitting..." : "Save Changes"}
           </button>
         </div>
       </div>

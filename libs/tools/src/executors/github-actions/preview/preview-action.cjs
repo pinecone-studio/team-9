@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getAffectedProjects, getEnv, getPrContext, normalizeName, runCommand } = require('../common.cjs');
+
 const DEFAULT_GRAPHQL_ENDPOINT = 'https://ebms-backend.b94889340.workers.dev/graphql';
 const API_WRANGLER_CONFIG = path.resolve(__dirname, '../../../../../../apps/api/wrangler.jsonc');
 const PREVIEW_API_WRANGLER_CONFIG = path.resolve(
@@ -13,9 +14,26 @@ const PREVIEW_WEB_WRANGLER_CONFIG = path.resolve(
   '../../../../../../apps/web/wrangler.preview.jsonc',
 );
 
+const readWranglerName = (configPath) => {
+  try {
+    const source = fs.readFileSync(configPath, 'utf8');
+    const match = source.match(/"name"\s*:\s*"([^"]+)"/);
+    if (match?.[1]) {
+      return normalizeName(match[1], 63);
+    }
+  } catch {
+    // Fall back to hard-coded defaults.
+  }
+
+  return '';
+};
+
 const getDefaultWorkerName = () => {
   const explicitName = getEnv('CF_API_WORKER_NAME') || getEnv('CF_WORKER_NAME');
   if (explicitName) return normalizeName(explicitName, 63);
+
+  const wranglerName = readWranglerName(API_WRANGLER_CONFIG);
+  if (wranglerName) return wranglerName;
 
   return 'ebms-backend';
 };
@@ -23,6 +41,9 @@ const getDefaultWorkerName = () => {
 const getDefaultWebWorkerName = () => {
   const explicitName = getEnv('CF_WEB_WORKER_NAME') || getEnv('WEB_WORKER_NAME');
   if (explicitName) return normalizeName(explicitName, 63);
+
+  const wranglerName = readWranglerName(WEB_WRANGLER_CONFIG);
+  if (wranglerName) return wranglerName;
 
   const repository = getEnv('GITHUB_REPOSITORY').split('/')[1] || 'team-9';
   return normalizeName(`${repository}-web`, 63);
@@ -155,6 +176,8 @@ const main = async () => {
   const webWorkerName = normalizeName(`${webWorkerBaseName}-${branch}`, 63);
 
   if (apiAffected) {
+    runCommand('bunx nx run ebms-api:codegen --skip-nx-cache');
+
     const clerkSecretKey = requireEnv('CLERK_SECRET_KEY');
     const apiPreviewConfig = createPreviewApiWranglerConfig({
       workerName: apiWorkerName,
@@ -185,6 +208,7 @@ const main = async () => {
     const clerkPublishableKey = requireEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
     const clerkSecretKey = requireEnv('CLERK_SECRET_KEY');
     const clerkEncryptionKey = getEnv('CLERK_ENCRYPTION_KEY') || clerkSecretKey;
+
     runCommand('bunx nx run ebms-web:codegen --skip-nx-cache');
     const previewConfig = createPreviewWebWranglerConfig({
       workerName: webWorkerName,

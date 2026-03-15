@@ -7,7 +7,7 @@ export default function DashboardPage() {
       activeKey="dashboard"
       lockViewport
       subtitle="Manage employee benefits and eligibility"
-      title="Good Evening, HR person"
+      title="Good Morning, HR person!"
     >
       <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden">
         <DashboardContent />

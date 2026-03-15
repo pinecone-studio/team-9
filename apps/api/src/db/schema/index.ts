@@ -1,3 +1,4 @@
+export * from "./approval-requests";
 export * from "./audit-log";
 export * from "./benefit-categories";
 export * from "./benefit-eligibility";

@@ -1,7 +1,3 @@
-/* eslint-disable max-lines */
-
-import type { ComponentType } from "react";
-import type { LucideProps } from "lucide-react";
 import {
   BadgePercent,
   CircleCheck,
@@ -16,50 +12,19 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type BenefitBadge = {
-  icon: ComponentType<LucideProps>;
-  label: string;
-  weight?: "medium" | "semibold";
-};
+import type {
+  BenefitBadge,
+  BenefitCatalogRecord,
+  BenefitSection,
+} from "./benefit-types";
 
-export type BenefitStat = {
-  icon: ComponentType<LucideProps>;
-  label: string;
-};
-
-export type BenefitCard = {
-  badges: readonly BenefitBadge[];
-  category: string;
-  categoryId: string;
-  description: string;
-  enabled: boolean;
-  id: string;
-  icon: ComponentType<LucideProps>;
-  subsidyPercent?: number | null;
-  title: string;
-  titleIcon?: ComponentType<LucideProps>;
-  vendorName?: string | null;
-};
-
-export type BenefitSection = {
-  categoryId: string;
-  cards: readonly BenefitCard[];
-  count: string;
-  icon: ComponentType<LucideProps>;
-  stats: readonly BenefitStat[];
-  title: string;
-};
-
-export type BenefitCatalogRecord = {
-  category: string;
-  categoryId: string;
-  description: string;
-  id: string;
-  isActive: boolean;
-  subsidyPercent?: number | null;
-  title: string;
-  vendorName?: string | null;
-};
+export type {
+  BenefitBadge,
+  BenefitCard,
+  BenefitCatalogRecord,
+  BenefitSection,
+  BenefitStat,
+} from "./benefit-types";
 
 const DEFAULT_SECTION_ICON = Heart;
 const DEFAULT_CARD_ICON = Dumbbell;
@@ -166,6 +131,7 @@ export function buildBenefitSections(
       ],
       cards: records.map((record) => ({
         id: record.id,
+        approvalRole: record.approvalRole,
         category,
         categoryId: record.categoryId,
         title: record.title,
@@ -175,6 +141,8 @@ export function buildBenefitSections(
           DEFAULT_CARD_ICON,
         ),
         enabled: record.isActive,
+        isCore: record.isCore,
+        requiresContract: record.requiresContract,
         subsidyPercent: record.subsidyPercent,
         vendorName: record.vendorName ?? null,
         badges: buildBadges(record),

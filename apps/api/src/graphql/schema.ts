@@ -19,7 +19,10 @@ export const typeDefs = /* GraphQL */ `
     categoryId: ID!
     subsidyPercent: Int
     vendorName: String
+    requiresContract: Boolean!
+    approvalRole: ApprovalRole!
     isActive: Boolean!
+    isCore: Boolean!
   }
 
   type BenefitCategory {
@@ -52,6 +55,44 @@ export const typeDefs = /* GraphQL */ `
     expiresAt: String!
   }
 
+  enum ApprovalRole {
+    hr_admin
+    finance_manager
+  }
+
+  enum ApprovalEntityType {
+    rule
+    benefit
+  }
+
+  enum ApprovalActionType {
+    create
+    update
+  }
+
+  enum ApprovalRequestStatus {
+    pending
+    approved
+    rejected
+  }
+
+  type ApprovalRequest {
+    id: ID!
+    entity_type: ApprovalEntityType!
+    entity_id: ID
+    action_type: ApprovalActionType!
+    status: ApprovalRequestStatus!
+    target_role: ApprovalRole!
+    requested_by: String!
+    reviewed_by: String
+    review_comment: String
+    payload_json: String!
+    snapshot_json: String
+    created_at: String!
+    reviewed_at: String
+    is_active: Boolean!
+  }
+
   input ContractInput {
     benefitId: String!
     vendorName: String!
@@ -69,6 +110,8 @@ export const typeDefs = /* GraphQL */ `
     subsidyPercent: Int!
     vendorName: String
     requiresContract: Boolean
+    isCore: Boolean
+    approvalRole: ApprovalRole
   }
 
   input UpdateBenefitInput {
@@ -79,6 +122,8 @@ export const typeDefs = /* GraphQL */ `
     subsidyPercent: Int!
     vendorName: String
     requiresContract: Boolean
+    isCore: Boolean
+    approvalRole: ApprovalRole
   }
 
   input SetBenefitStatusInput {
@@ -173,6 +218,27 @@ export const typeDefs = /* GraphQL */ `
     linked_benefits_json: String!
   }
 
+  type AuditLogEntry {
+    id: ID!
+    action: String!
+    entityType: String!
+    entityId: ID
+    metadata: String
+    createdAt: String!
+  }
+
+  type BenefitEligibilitySummary {
+    benefitId: ID!
+    benefitName: String!
+    category: String!
+    subsidyPercent: Int
+    rulesApplied: [String!]!
+    eligibleEmployees: Int!
+    blockedEmployees: Int!
+    pendingEmployees: Int!
+    status: String!
+  }
+
   input CreateRuleCategoryInput {
     name: String!
     description: String
@@ -227,6 +293,54 @@ export const typeDefs = /* GraphQL */ `
     isActive: Boolean
   }
 
+  input CreateApprovalRequestInput {
+    entityType: ApprovalEntityType!
+    entityId: ID
+    actionType: ApprovalActionType!
+    targetRole: ApprovalRole!
+    requestedBy: String!
+    payloadJson: String!
+    snapshotJson: String
+  }
+
+  input SubmitRuleDefinitionCreateRequestInput {
+    requestedBy: String!
+    rule: CreateRuleDefinitionInput!
+  }
+
+  input SubmitRuleDefinitionUpdateRequestInput {
+    requestedBy: String!
+    rule: UpdateRuleDefinitionInput!
+  }
+
+  input BenefitRuleAssignmentInput {
+    ruleId: ID!
+    operator: Operator!
+    value: String!
+    errorMessage: String!
+    priority: Int
+    isActive: Boolean
+  }
+
+  input SubmitBenefitCreateRequestInput {
+    requestedBy: String!
+    benefit: CreateBenefitInput!
+    ruleAssignments: [BenefitRuleAssignmentInput!]
+  }
+
+  input SubmitBenefitUpdateRequestInput {
+    requestedBy: String!
+    benefit: UpdateBenefitInput!
+    ruleAssignments: [BenefitRuleAssignmentInput!]
+  }
+
+  input ReviewApprovalRequestInput {
+    id: ID!
+    approved: Boolean!
+    reviewedBy: String!
+    reviewComment: String
+  }
+
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
@@ -234,18 +348,30 @@ export const typeDefs = /* GraphQL */ `
     benefitCategories: [BenefitCategory!]!
     benefitCatalog: [Benefit]
     allBenefits: [Benefit]
+    approvalRequests(status: ApprovalRequestStatus, targetRole: ApprovalRole): [ApprovalRequest!]!
+    approvalRequest(id: ID!): ApprovalRequest
     ruleCategories: [RuleCategory!]!
     ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!
     eligibilityRules(benefitId: ID): [EligibilityRule!]!
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
+    countPendingBenefitRequests: Int!
+    countActiveContracts: Int!
+    listAuditLogEntries(limit: Int): [AuditLogEntry!]!
+    listBenefitEligibilitySummary: [BenefitEligibilitySummary!]!
   }
 
   type Mutation {
     createEmployee(name: String!, email: String!, position: String!): Employee
     createBenefit(input: CreateBenefitInput!): Benefit!
     updateBenefit(input: UpdateBenefitInput!): Benefit!
+    createApprovalRequest(input: CreateApprovalRequestInput!): ApprovalRequest!
+    submitBenefitCreateRequest(input: SubmitBenefitCreateRequestInput!): ApprovalRequest!
+    submitBenefitUpdateRequest(input: SubmitBenefitUpdateRequestInput!): ApprovalRequest!
+    submitRuleDefinitionCreateRequest(input: SubmitRuleDefinitionCreateRequestInput!): ApprovalRequest!
+    submitRuleDefinitionUpdateRequest(input: SubmitRuleDefinitionUpdateRequestInput!): ApprovalRequest!
+    reviewApprovalRequest(input: ReviewApprovalRequestInput!): ApprovalRequest!
     setBenefitStatus(input: SetBenefitStatusInput!): Benefit!
     deleteBenefit(id: ID!): Boolean!
     createBenefitCategory(name: String!): BenefitCategory!

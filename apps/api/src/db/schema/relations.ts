@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 
+import { approvalRequests } from "./approval-requests";
 import { benefitEligibility } from "./benefit-eligibility";
 import { benefitRules } from "./benefit-rules";
 import { benefitRequests } from "./benefit-requests";
@@ -89,3 +90,5 @@ export const benefitRequestsRelations = relations(benefitRequests, ({ one }) => 
     references: [benefits.id],
   }),
 }));
+
+export const approvalRequestsRelations = relations(approvalRequests, () => ({}));

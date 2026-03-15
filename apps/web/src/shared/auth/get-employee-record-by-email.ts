@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import "server-only";
 
 const DEFAULT_GRAPHQL_ENDPOINT =
@@ -67,10 +68,7 @@ async function postGraphql<T>(
   return (await response.json()) as T;
 }
 
-async function fetchEmployeeRecordFromGraphql(
-  endpoint: string,
-  email: string,
-) {
+async function fetchEmployeeRecordFromGraphql(endpoint: string, email: string) {
   const payload = await postGraphql<EmployeeByEmailResponse>(
     endpoint,
     `
@@ -91,9 +89,7 @@ async function fetchEmployeeRecordFromGraphql(
   );
 
   if (payload.errors?.length) {
-    throw new Error(
-      payload.errors[0]?.message ?? "Failed to load employee.",
-    );
+    throw new Error(payload.errors[0]?.message ?? "Failed to load employee.");
   }
 
   return payload.data?.employeeByEmail ?? null;

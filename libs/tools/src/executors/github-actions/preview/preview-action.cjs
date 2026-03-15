@@ -189,7 +189,7 @@ const main = async () => {
 
     try {
       const deployOutput = runCommand(
-        `bun run --cwd apps/api deploy -- --config=${apiPreviewConfig}`,
+        `bunx wrangler deploy --config ${apiPreviewConfig}`,
         { capture: true },
       );
       process.stdout.write(deployOutput);

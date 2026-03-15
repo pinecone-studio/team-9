@@ -11,14 +11,17 @@ type EditBenefitDialogFormProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
   availableRules: RuleOption[];
+  benefitId: string;
   benefitDescription: string;
   benefitName: string;
   category: string;
+  contractFile: File | null;
   isCore: boolean;
   name: string;
   onAddRule: () => void;
   onApprovalRoleChange: (value: ApprovalRoleValue) => void;
   onBenefitDescriptionChange: (value: string) => void;
+  onContractFileChange: (file: File | null) => void;
   onDeleteRule: (ruleId: string) => void;
   onIsCoreChange: (checked: boolean) => void;
   onNameChange: (value: string) => void;
@@ -36,14 +39,17 @@ export default function EditBenefitDialogForm({
   approvalRole,
   assignedRules,
   availableRules,
+  benefitId,
   benefitDescription,
   benefitName,
   category,
+  contractFile,
   isCore,
   name,
   onAddRule,
   onApprovalRoleChange,
   onBenefitDescriptionChange,
+  onContractFileChange,
   onDeleteRule,
   onIsCoreChange,
   onNameChange,
@@ -141,7 +147,10 @@ export default function EditBenefitDialogForm({
         </div>
 
         <EditBenefitContractPanel
+          benefitId={benefitId}
           checked={requiresContract}
+          contractFile={contractFile}
+          onContractFileChange={onContractFileChange}
           onCheckedChange={onRequiresContractChange}
         />
 

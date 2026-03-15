@@ -50,6 +50,7 @@ export default function EditBenefitDialog({
   const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(initialApprovalRole);
   const [isCore, setIsCore] = useState(initialIsCore);
   const [requiresContract, setRequiresContract] = useState(initialRequiresContract);
+  const [contractFile, setContractFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data } = useQuery<BenefitEditRulesQuery, BenefitEditRulesVariables>(
@@ -75,6 +76,8 @@ export default function EditBenefitDialog({
     benefitDescription,
     benefitId,
     categoryId,
+    contractFile,
+    initialRequiresContract,
     isCore,
     name,
     onClose,
@@ -83,6 +86,13 @@ export default function EditBenefitDialog({
     subsidyPercentValue,
     vendorNameValue,
   });
+
+  function handleRequiresContractChange(value: boolean) {
+    setRequiresContract(value);
+    if (!value) {
+      setContractFile(null);
+    }
+  }
 
   return (
     <div
@@ -98,18 +108,21 @@ export default function EditBenefitDialog({
           approvalRole={approvalRole}
           assignedRules={assignedRules}
           availableRules={availableRules}
+          benefitId={benefitId}
           benefitDescription={benefitDescription}
           benefitName={benefitName}
           category={category}
+          contractFile={contractFile}
           isCore={isCore}
           name={name}
           onAddRule={handleAddRule}
           onApprovalRoleChange={setApprovalRole}
           onBenefitDescriptionChange={setBenefitDescription}
+          onContractFileChange={setContractFile}
           onDeleteRule={handleDeleteRule}
           onIsCoreChange={setIsCore}
           onNameChange={setName}
-          onRequiresContractChange={setRequiresContract}
+          onRequiresContractChange={handleRequiresContractChange}
           onSelectedRuleIdChange={setSelectedRuleId}
           onSubsidyPercentChange={setSubsidyPercentValue}
           onVendorNameChange={setVendorNameValue}

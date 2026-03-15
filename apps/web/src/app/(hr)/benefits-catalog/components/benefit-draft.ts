@@ -47,3 +47,16 @@ export function hasBenefitDraftContent(draft: BenefitDraft) {
     draft.categoryId !== ""
   );
 }
+
+export function areBenefitDraftsEqual(left: BenefitDraft, right: BenefitDraft) {
+  return (
+    left.approvalRole === right.approvalRole &&
+    left.name === right.name &&
+    left.description === right.description &&
+    left.categoryId === right.categoryId &&
+    left.subsidyPercent === right.subsidyPercent &&
+    left.vendorName === right.vendorName &&
+    left.coreBenefitEnabled === right.coreBenefitEnabled &&
+    left.requiresContract === right.requiresContract
+  );
+}

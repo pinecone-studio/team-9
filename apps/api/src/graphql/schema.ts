@@ -103,6 +103,14 @@ export const typeDefs = /* GraphQL */ `
     fileName: String!
   }
 
+  input BenefitContractUploadInput {
+    version: String!
+    effectiveDate: String!
+    expiryDate: String!
+    fileBase64: String!
+    fileName: String!
+  }
+
   input CreateBenefitInput {
     name: String!
     description: String!
@@ -326,12 +334,14 @@ export const typeDefs = /* GraphQL */ `
     requestedBy: String!
     benefit: CreateBenefitInput!
     ruleAssignments: [BenefitRuleAssignmentInput!]
+    contractUpload: BenefitContractUploadInput
   }
 
   input SubmitBenefitUpdateRequestInput {
     requestedBy: String!
     benefit: UpdateBenefitInput!
     ruleAssignments: [BenefitRuleAssignmentInput!]
+    contractUpload: BenefitContractUploadInput
   }
 
   input ReviewApprovalRequestInput {
@@ -355,6 +365,7 @@ export const typeDefs = /* GraphQL */ `
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
+    contractSignedUrlByBenefit(benefitId: ID!): ContractSignedUrl!
     countPendingBenefitRequests: Int!
     countActiveContracts: Int!
     listAuditLogEntries(limit: Int): [AuditLogEntry!]!

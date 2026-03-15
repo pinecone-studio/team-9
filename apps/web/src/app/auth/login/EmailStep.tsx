@@ -43,7 +43,7 @@ export default function EmailStep({
         disabled={disabled}
         type="submit"
       >
-        {disabled ? "Loading..." : "Log in"}
+        {disabled ? "Loading..." : "Continue"}
       </button>
     </form>
   );

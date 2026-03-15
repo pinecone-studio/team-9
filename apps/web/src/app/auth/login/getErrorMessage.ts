@@ -5,7 +5,7 @@ export default function getErrorMessage(error: unknown) {
     return (
       error.errors[0]?.longMessage ??
       error.errors[0]?.message ??
-      "We couldn't complete your sign in."
+      "We couldn't continue with this email."
     );
   }
 
@@ -13,5 +13,5 @@ export default function getErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "We couldn't complete your sign in.";
+  return "We couldn't continue with this email.";
 }

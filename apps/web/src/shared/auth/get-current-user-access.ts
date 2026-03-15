@@ -48,7 +48,16 @@ export const getCurrentUserAccess = cache(
       user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ??
       user?.emailAddresses[0]?.emailAddress?.trim().toLowerCase() ??
       null;
-    const employee = email ? await getEmployeeRecordByEmail(email) : null;
+    let employee: EmployeeRecord | null = null;
+
+    if (email) {
+      try {
+        employee = await getEmployeeRecordByEmail(email);
+      } catch (error) {
+        console.error("Failed to resolve employee access.", error);
+      }
+    }
+
     const role = normalizeRole(employee?.position);
 
     return {

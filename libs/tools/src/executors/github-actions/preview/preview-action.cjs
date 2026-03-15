@@ -208,23 +208,27 @@ const main = async () => {
     const clerkPublishableKey = requireEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
     const clerkSecretKey = requireEnv('CLERK_SECRET_KEY');
     const clerkEncryptionKey = getEnv('CLERK_ENCRYPTION_KEY') || clerkSecretKey;
+    const previewWebEnv = {
+      CLERK_ENCRYPTION_KEY: clerkEncryptionKey,
+      CLERK_SECRET_KEY: clerkSecretKey,
+      GRAPHQL_ENDPOINT: graphqlEndpoint,
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkPublishableKey,
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: graphqlEndpoint,
+    };
 
     runCommand('bunx nx run ebms-web:codegen --skip-nx-cache');
     const previewConfig = createPreviewWebWranglerConfig({
       workerName: webWorkerName,
-      vars: {
-        CLERK_ENCRYPTION_KEY: clerkEncryptionKey,
-        GRAPHQL_ENDPOINT: graphqlEndpoint,
-        NEXT_PUBLIC_GRAPHQL_ENDPOINT: graphqlEndpoint,
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkPublishableKey,
-        CLERK_SECRET_KEY: clerkSecretKey,
-      },
+      vars: previewWebEnv,
     });
 
     try {
       const deployOutput = runCommand(
         `bun run --cwd apps/web deploy -- --config=${previewConfig}`,
-        { capture: true },
+        {
+          capture: true,
+          env: previewWebEnv,
+        },
       );
       process.stdout.write(deployOutput);
 

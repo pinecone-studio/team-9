@@ -1,5 +1,5 @@
+/* eslint-disable max-lines */
 import type { ReactNode } from "react";
-
 import EligibilityDistributionIcon from "../_icons/EligibilityDistribution";
 import PaperIcon from "../_icons/Paper";
 import RefreshIcon from "../_icons/Refresh";

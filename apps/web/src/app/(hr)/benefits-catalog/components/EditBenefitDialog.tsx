@@ -52,7 +52,6 @@ export default function EditBenefitDialog({
   const [requiresContract, setRequiresContract] = useState(initialRequiresContract);
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const { data } = useQuery<BenefitEditRulesQuery, BenefitEditRulesVariables>(
     BENEFIT_EDIT_RULES_QUERY,
     {
@@ -131,7 +130,6 @@ export default function EditBenefitDialog({
           subsidyPercentValue={subsidyPercentValue}
           vendorNameValue={vendorNameValue}
         />
-
         <EditBenefitDialogFooter
           deleting={deleting}
           errorMessage={errorMessage}

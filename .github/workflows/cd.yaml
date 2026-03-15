@@ -21,6 +21,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}-dev
       API_WORKER_NAME: ebms-backend-dev
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_DEV }}
       DEPLOY_BRANCH: develop
     steps:
@@ -71,8 +72,19 @@ jobs:
         if: steps.affected.outputs.web == 'true'
         run: bunx nx run ebms-web:build-pages
 
-      - name: Resolve deploy target
+      - name: Detect static export output
         if: steps.affected.outputs.web == 'true'
+        id: web_export
+        run: |
+          if [ -d apps/web/out ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Cloudflare Pages deploy because apps/web/out was not generated."
+          fi
+
+      - name: Resolve deploy target
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         run: |
           set -euo pipefail
           normalize() {
@@ -86,7 +98,7 @@ jobs:
           echo "DEPLOY_PROJECT_NAME=$(normalize "${CF_PAGES_PROJECT_NAME}")" >> "$GITHUB_ENV"
 
       - name: Ensure Cloudflare Pages project exists
-        if: steps.affected.outputs.web == 'true'
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         run: |
           set -euo pipefail
           PROJECT="${DEPLOY_PROJECT_NAME}"
@@ -102,7 +114,7 @@ jobs:
           fi
 
       - name: Deploy web to development
-        if: steps.affected.outputs.web == 'true'
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -111,7 +123,19 @@ jobs:
 
       - name: Deploy API to development
         if: steps.affected.outputs.api == 'true'
-        run: bun run --cwd apps/api deploy -- --name=${{ env.API_WORKER_NAME }}
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+          const base = JSON.parse(fs.readFileSync('apps/api/wrangler.jsonc', 'utf8'));
+          base.name = process.env.API_WORKER_NAME;
+          base.vars = {
+            ...(base.vars ?? {}),
+            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+          };
+          fs.writeFileSync('apps/api/wrangler.deploy.jsonc', `${JSON.stringify(base, null, 2)}\n`);
+          EOF
+          bun run --cwd apps/api deploy -- --config=wrangler.deploy.jsonc --name=${{ env.API_WORKER_NAME }}
+          rm -f apps/api/wrangler.deploy.jsonc
 
   deploy-testing:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'testing'
@@ -122,6 +146,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}-testing
       API_WORKER_NAME: ebms-backend-testing
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_TESTING }}
       DEPLOY_BRANCH: testing
     steps:
@@ -172,8 +197,19 @@ jobs:
         if: steps.affected.outputs.web == 'true'
         run: bunx nx run ebms-web:build-pages
 
-      - name: Resolve deploy target
+      - name: Detect static export output
         if: steps.affected.outputs.web == 'true'
+        id: web_export
+        run: |
+          if [ -d apps/web/out ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Cloudflare Pages deploy because apps/web/out was not generated."
+          fi
+
+      - name: Resolve deploy target
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         run: |
           set -euo pipefail
           normalize() {
@@ -187,7 +223,7 @@ jobs:
           echo "DEPLOY_PROJECT_NAME=$(normalize "${CF_PAGES_PROJECT_NAME}")" >> "$GITHUB_ENV"
 
       - name: Ensure Cloudflare Pages project exists
-        if: steps.affected.outputs.web == 'true'
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         run: |
           set -euo pipefail
           PROJECT="${DEPLOY_PROJECT_NAME}"
@@ -203,7 +239,7 @@ jobs:
           fi
 
       - name: Deploy web to testing
-        if: steps.affected.outputs.web == 'true'
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -212,7 +248,19 @@ jobs:
 
       - name: Deploy API to testing
         if: steps.affected.outputs.api == 'true'
-        run: bun run --cwd apps/api deploy -- --name=${{ env.API_WORKER_NAME }}
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+          const base = JSON.parse(fs.readFileSync('apps/api/wrangler.jsonc', 'utf8'));
+          base.name = process.env.API_WORKER_NAME;
+          base.vars = {
+            ...(base.vars ?? {}),
+            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+          };
+          fs.writeFileSync('apps/api/wrangler.deploy.jsonc', `${JSON.stringify(base, null, 2)}\n`);
+          EOF
+          bun run --cwd apps/api deploy -- --config=wrangler.deploy.jsonc --name=${{ env.API_WORKER_NAME }}
+          rm -f apps/api/wrangler.deploy.jsonc
 
   deploy-prod:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
@@ -223,6 +271,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_PAGES_PROJECT_NAME: ${{ github.event.repository.name }}
       API_WORKER_NAME: ebms-backend
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.NEXT_PUBLIC_GRAPHQL_ENDPOINT_PROD }}
       DEPLOY_BRANCH: main
     steps:
@@ -273,8 +322,19 @@ jobs:
         if: steps.affected.outputs.web == 'true'
         run: bunx nx run ebms-web:build-pages
 
-      - name: Resolve deploy target
+      - name: Detect static export output
         if: steps.affected.outputs.web == 'true'
+        id: web_export
+        run: |
+          if [ -d apps/web/out ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Cloudflare Pages deploy because apps/web/out was not generated."
+          fi
+
+      - name: Resolve deploy target
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         run: |
           set -euo pipefail
           normalize() {
@@ -288,7 +348,7 @@ jobs:
           echo "DEPLOY_PROJECT_NAME=$(normalize "${CF_PAGES_PROJECT_NAME}")" >> "$GITHUB_ENV"
 
       - name: Ensure Cloudflare Pages project exists
-        if: steps.affected.outputs.web == 'true'
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         run: |
           set -euo pipefail
           PROJECT="${DEPLOY_PROJECT_NAME}"
@@ -304,7 +364,7 @@ jobs:
           fi
 
       - name: Deploy web to production
-        if: steps.affected.outputs.web == 'true'
+        if: steps.affected.outputs.web == 'true' && steps.web_export.outputs.available == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -313,7 +373,19 @@ jobs:
 
       - name: Deploy API to production
         if: steps.affected.outputs.api == 'true'
-        run: bunx nx run ebms-api:deploy
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+          const base = JSON.parse(fs.readFileSync('apps/api/wrangler.jsonc', 'utf8'));
+          base.name = process.env.API_WORKER_NAME;
+          base.vars = {
+            ...(base.vars ?? {}),
+            CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+          };
+          fs.writeFileSync('apps/api/wrangler.deploy.jsonc', `${JSON.stringify(base, null, 2)}\n`);
+          EOF
+          bun run --cwd apps/api deploy -- --config=wrangler.deploy.jsonc --name=${{ env.API_WORKER_NAME }}
+          rm -f apps/api/wrangler.deploy.jsonc
 
   schema-publish-test:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'testing'

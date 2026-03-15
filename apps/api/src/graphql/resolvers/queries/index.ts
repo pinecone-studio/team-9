@@ -1,3 +1,4 @@
+import { getEmployeeByEmail } from './get-employee-by-email';
 import { countActiveContracts } from './count-active-contracts';
 import { countPendingBenefitRequests } from './count-pending-benefit-requests';
 import { getApprovalRequestById } from './get-approval-request-by-id';
@@ -18,7 +19,9 @@ import type {
 	QueryEligibilityRulesArgs,
 	QueryRuleDefinitionsArgs,
 	QueryApprovalRequestArgs,
+	QueryApprovalRequestsArgs,
 	QueryEmployeeArgs,
+	QueryEmployeeByEmailArgs,
 	QueryEmployeeEligibilityArgs,
 	QueryListAuditLogEntriesArgs,
 	QueryApprovalRequestsArgs,
@@ -36,6 +39,9 @@ export const queryResolvers = {
 
 	employee: (_: unknown, { id }: QueryEmployeeArgs, { DB }: GraphQLContext) => getEmployeeById(DB, id),
 
+	employeeByEmail: (_: unknown, { email }: QueryEmployeeByEmailArgs, { DB }: GraphQLContext) =>
+		getEmployeeByEmail(DB, email),
+
 	benefitCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCategories(DB),
 
 	benefitCatalog: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCatalog(DB),
@@ -50,7 +56,8 @@ export const queryResolvers = {
 
 	ruleCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listRuleCategories(DB),
 
-	ruleDefinitions: (_: unknown, args: QueryRuleDefinitionsArgs, { DB }: GraphQLContext) => listRuleDefinitions(DB, args),
+	ruleDefinitions: (_: unknown, args: QueryRuleDefinitionsArgs, { DB }: GraphQLContext) =>
+		listRuleDefinitions(DB, args),
 
 	eligibilityRules: (_: unknown, { benefitId }: QueryEligibilityRulesArgs, { DB }: GraphQLContext) =>
 		listEligibilityRules(DB, benefitId),
@@ -74,5 +81,6 @@ export const queryResolvers = {
 	listAuditLogEntries: (_: unknown, { limit }: QueryListAuditLogEntriesArgs, { DB }: GraphQLContext) =>
 		listAuditLogEntries(DB, limit ?? 5),
 
-	listBenefitEligibilitySummary: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitEligibilitySummary(DB),
+	listBenefitEligibilitySummary: (_: unknown, __: unknown, { DB }: GraphQLContext) =>
+		listBenefitEligibilitySummary(DB),
 };

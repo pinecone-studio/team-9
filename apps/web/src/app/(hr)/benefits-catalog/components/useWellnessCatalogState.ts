@@ -10,7 +10,6 @@ import {
 } from "./wellness-section.graphql";
 import { buildBenefitSections } from "../benefit-data";
 import type { BenefitCard, BenefitCatalogRecord } from "../benefit-types";
-import type { UpdatedBenefitPayload } from "./edit-benefit-dialog.graphql";
 import type { BenefitDraft } from "./benefit-draft";
 
 type UseWellnessCatalogStateProps = {
@@ -35,6 +34,11 @@ export function useWellnessCatalogState({
   >(SET_BENEFIT_STATUS_MUTATION);
   const { data, error, loading, refetch } = useQuery<BenefitCatalogQuery>(
     BENEFIT_CATALOG_QUERY,
+    {
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+      notifyOnNetworkStatusChange: true,
+    },
   );
 
   const benefitCatalogRecords = (data?.allBenefits ?? []).flatMap((benefit) => {
@@ -126,20 +130,6 @@ export function useWellnessCatalogState({
     }
   }
 
-  function handleBenefitUpdated(benefit: UpdatedBenefitPayload) {
-    setBenefitOverrides((prev) => ({
-      ...prev,
-      [benefit.id]: {
-        category: benefit.category,
-        categoryId: benefit.categoryId,
-        description: benefit.description,
-        subsidyPercent: benefit.subsidyPercent,
-        title: benefit.title,
-        vendorName: benefit.vendorName,
-      },
-    }));
-  }
-
   function handleBenefitDeleted(benefitId: string) {
     setDeletedBenefitIds((prev) => {
       const next = new Set(prev);
@@ -155,7 +145,6 @@ export function useWellnessCatalogState({
     error,
     handleBenefitDeleted,
     handleBenefitToggle,
-    handleBenefitUpdated,
     isAddDialogOpen,
     loading,
     openDraftBenefitDialog,

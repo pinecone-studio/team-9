@@ -1,3 +1,4 @@
+import { createApprovalRequest } from './create-approval-request';
 import { createBenefit } from './create-benefit';
 import { createBenefitCategory } from './create-benefit-category';
 import { createEligibilityRule } from './create-eligibility-rule';
@@ -9,12 +10,18 @@ import { deleteBenefitCategory } from './delete-benefit-category';
 import { deleteEligibilityRule } from './delete-eligibility-rule';
 import { deleteRuleDefinition } from './delete-rule-definition';
 import { recalculateEmployeeEligibility } from './recalculate-employee-eligibility';
+import { reviewApprovalRequest } from './review-approval-request';
 import { setBenefitStatus } from './set-benefit-status';
+import { submitBenefitCreateRequest } from './submit-benefit-create-request';
+import { submitBenefitUpdateRequest } from './submit-benefit-update-request';
+import { submitRuleDefinitionCreateRequest } from './submit-rule-definition-create-request';
+import { submitRuleDefinitionUpdateRequest } from './submit-rule-definition-update-request';
 import { updateBenefit } from './update-benefit';
 import { updateEligibilityRule } from './update-eligibility-rule';
 import { updateRuleDefinition } from './update-rule-definition';
 import type {
 	MutationCreateBenefitArgs,
+	MutationCreateApprovalRequestArgs,
 	MutationCreateBenefitCategoryArgs,
 	MutationCreateEligibilityRuleArgs,
 	MutationCreateEmployeeArgs,
@@ -25,7 +32,12 @@ import type {
 	MutationDeleteEligibilityRuleArgs,
 	MutationDeleteRuleDefinitionArgs,
 	MutationRecalculateEmployeeEligibilityArgs,
+	MutationReviewApprovalRequestArgs,
 	MutationSetBenefitStatusArgs,
+	MutationSubmitBenefitCreateRequestArgs,
+	MutationSubmitBenefitUpdateRequestArgs,
+	MutationSubmitRuleDefinitionCreateRequestArgs,
+	MutationSubmitRuleDefinitionUpdateRequestArgs,
 	MutationUpdateBenefitArgs,
 	MutationUpdateEligibilityRuleArgs,
 	MutationUpdateRuleDefinitionArgs,
@@ -39,6 +51,27 @@ type GraphQLContext = {
 
 export const mutationResolvers = {
 	createEmployee: (_: unknown, args: MutationCreateEmployeeArgs, { DB }: GraphQLContext) => createEmployeeRecord(DB, args),
+
+	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, { DB }: GraphQLContext) =>
+		createApprovalRequest(DB, args),
+
+	submitBenefitCreateRequest: (_: unknown, args: MutationSubmitBenefitCreateRequestArgs, { DB }: GraphQLContext) =>
+		submitBenefitCreateRequest(DB, args),
+
+	submitBenefitUpdateRequest: (_: unknown, args: MutationSubmitBenefitUpdateRequestArgs, { DB }: GraphQLContext) =>
+		submitBenefitUpdateRequest(DB, args),
+
+	submitRuleDefinitionCreateRequest: (
+		_: unknown,
+		args: MutationSubmitRuleDefinitionCreateRequestArgs,
+		{ DB }: GraphQLContext,
+	) => submitRuleDefinitionCreateRequest(DB, args),
+
+	submitRuleDefinitionUpdateRequest: (
+		_: unknown,
+		args: MutationSubmitRuleDefinitionUpdateRequestArgs,
+		{ DB }: GraphQLContext,
+	) => submitRuleDefinitionUpdateRequest(DB, args),
 
 	createBenefit: (_: unknown, args: MutationCreateBenefitArgs, { DB }: GraphQLContext) => createBenefit(DB, args),
 
@@ -82,6 +115,9 @@ export const mutationResolvers = {
 		{ DB }: GraphQLContext,
 	) =>
 		recalculateEmployeeEligibility(DB, employeeId),
+
+	reviewApprovalRequest: (_: unknown, args: MutationReviewApprovalRequestArgs, { DB }: GraphQLContext) =>
+		reviewApprovalRequest(DB, args),
 
 	uploadContract: (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
 		uploadContract({ DB, CONTRACTS_BUCKET }, input),

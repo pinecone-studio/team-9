@@ -1,16 +1,18 @@
 "use client";
 
-import { useMutation } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { useEffect, useRef, useState } from "react";
 
 import AddBenefitDialogFooter from "./AddBenefitDialogFooter";
 import AddBenefitDialogForm from "./AddBenefitDialogForm";
 import {
-  CREATE_BENEFIT_MUTATION,
-  type CreateBenefitMutation,
-  type CreateBenefitVariables,
+  ADD_BENEFIT_RULES_QUERY,
+  type AddBenefitRulesQuery,
+  type ApprovalRoleValue,
 } from "./add-benefit-dialog.graphql";
-import { buildBenefitDraft, hasBenefitDraftContent, type BenefitDraft } from "./benefit-draft";
+import type { BenefitDraft } from "./benefit-draft";
+import { useBenefitRuleAssignments } from "./useBenefitRuleAssignments";
+import { useAddBenefitDialogActions } from "./useAddBenefitDialogActions";
 
 type AddBenefitDialogProps = {
   defaultCategoryId?: string | null;
@@ -34,6 +36,9 @@ export default function AddBenefitDialog({
     String(initialDraft?.subsidyPercent ?? 50),
   );
   const [vendorName, setVendorName] = useState(initialDraft?.vendorName ?? "");
+  const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(
+    initialDraft?.approvalRole ?? "hr_admin",
+  );
   const [coreBenefitEnabled, setCoreBenefitEnabled] = useState(
     initialDraft?.coreBenefitEnabled ?? false,
   );
@@ -42,30 +47,34 @@ export default function AddBenefitDialog({
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const errorMessageRef = useRef<HTMLParagraphElement | null>(null);
-  const [createBenefit, { loading: saving }] = useMutation<
-    CreateBenefitMutation,
-    CreateBenefitVariables
-  >(CREATE_BENEFIT_MUTATION);
 
-  function handleCloseWithDraft() {
-    const draft = buildBenefitDraft({
-      name,
-      description,
-      categoryId,
-      subsidyPercent,
-      vendorName,
-      coreBenefitEnabled,
-      requiresContract,
-    });
-
-    if (hasBenefitDraftContent(draft)) {
-      onDraftChange?.(draft);
-    } else if (initialDraft) {
-      onDraftChange?.(null);
-    }
-
-    onClose();
-  }
+  const { data } = useQuery<AddBenefitRulesQuery>(ADD_BENEFIT_RULES_QUERY);
+  const {
+    assignedRules,
+    availableRules,
+    handleAddRule,
+    handleDeleteRule,
+    selectedRuleId,
+    setSelectedRuleId,
+  } = useBenefitRuleAssignments({
+    initialRules: [],
+    ruleDefinitions: data?.ruleDefinitions,
+  });
+  const { handleCloseWithDraft, handleSave, saving } = useAddBenefitDialogActions({
+    approvalRole,
+    assignedRules,
+    categoryId,
+    coreBenefitEnabled,
+    description,
+    initialDraft,
+    name,
+    onClose,
+    onCreated,
+    onDraftChange,
+    requiresContract,
+    subsidyPercent,
+    vendorName,
+  });
 
   useEffect(() => {
     if (!errorMessage) {
@@ -78,58 +87,6 @@ export default function AddBenefitDialog({
     });
   }, [errorMessage]);
 
-  async function handleSave() {
-    const trimmedName = name.trim();
-    const trimmedDescription = description.trim();
-    const trimmedVendorName = vendorName.trim();
-    const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
-
-    if (!trimmedName) {
-      setErrorMessage("Benefit name is required.");
-      return;
-    }
-
-    if (!categoryId) {
-      setErrorMessage("Category is missing. Please add from a category section.");
-      return;
-    }
-
-    if (!trimmedDescription) {
-      setErrorMessage("Description is required.");
-      return;
-    }
-
-    if (!Number.isInteger(parsedSubsidy) || parsedSubsidy < 0 || parsedSubsidy > 100) {
-      setErrorMessage("Subsidy percent must be a whole number between 0 and 100.");
-      return;
-    }
-
-    setErrorMessage(null);
-
-    try {
-      await createBenefit({
-        variables: {
-          input: {
-            name: trimmedName,
-            description: trimmedDescription,
-            categoryId,
-            subsidyPercent: parsedSubsidy,
-            vendorName: trimmedVendorName || null,
-            requiresContract,
-          },
-        },
-      });
-
-      onDraftChange?.(null);
-      await onCreated?.();
-      onClose();
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Benefit could not be created.",
-      );
-    }
-  }
-
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -140,37 +97,43 @@ export default function AddBenefitDialog({
       }}
     >
       <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white">
-        <div className="sticky top-0 z-10 shrink-0 border-b border-[#E6EBF0] bg-white px-6 pt-6 pb-4">
-          <div className="flex w-full flex-col items-start gap-2">
-            <h2 className="w-full text-[18px] leading-7 font-semibold text-[#0F172A]">
-              Add a New Benefit
-            </h2>
-            <p className="w-full text-[14px] leading-5 font-normal text-[#64748B]">
-              Add a benefit and define the requirements employees must meet to receive it.
-            </p>
-          </div>
-        </div>
-
         <AddBenefitDialogForm
+          approvalRole={approvalRole}
+          assignedRules={assignedRules}
+          availableRules={availableRules}
           coreBenefitEnabled={coreBenefitEnabled}
           description={description}
-          errorMessage={errorMessage}
-          errorMessageRef={errorMessageRef}
           name={name}
+          onAddRule={handleAddRule}
+          onApprovalRoleChange={setApprovalRole}
           onCoreBenefitEnabledChange={setCoreBenefitEnabled}
           onDescriptionChange={setDescription}
           onNameChange={setName}
           onRequiresContractChange={setRequiresContract}
+          onRuleDelete={handleDeleteRule}
+          onSelectedRuleIdChange={setSelectedRuleId}
           onSubsidyPercentChange={setSubsidyPercent}
           onVendorNameChange={setVendorName}
           requiresContract={requiresContract}
+          selectedRuleId={selectedRuleId}
           subsidyPercent={subsidyPercent}
           vendorName={vendorName}
         />
 
+        {errorMessage ? (
+          <div className="px-6 pb-3">
+            <p
+              className="w-full rounded-[6px] border border-[#F3C7C7] bg-[#FFF7F7] px-3 py-2 text-[13px] leading-5 text-[#B42318]"
+              ref={errorMessageRef}
+            >
+              {errorMessage}
+            </p>
+          </div>
+        ) : null}
+
         <AddBenefitDialogFooter
           onCancel={handleCloseWithDraft}
-          onSave={handleSave}
+          onSave={() => handleSave(setErrorMessage)}
           saving={saving}
         />
       </div>

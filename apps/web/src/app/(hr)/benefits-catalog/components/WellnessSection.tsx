@@ -32,7 +32,6 @@ export default function WellnessSection({
     error,
     handleBenefitDeleted,
     handleBenefitToggle,
-    handleBenefitUpdated,
     isAddDialogOpen,
     loading,
     openDraftBenefitDialog,
@@ -113,14 +112,16 @@ export default function WellnessSection({
 
       {selectedBenefit ? (
         <EditBenefitDialog
+          approvalRole={selectedBenefit.approvalRole}
           benefitId={selectedBenefit.id}
           benefitName={selectedBenefit.title}
           category={selectedBenefit.category}
           categoryId={selectedBenefit.categoryId}
           description={selectedBenefit.description}
+          isCore={selectedBenefit.isCore}
           onClose={() => setSelectedBenefit(null)}
           onDeleted={handleBenefitDeleted}
-          onUpdated={handleBenefitUpdated}
+          requiresContract={selectedBenefit.requiresContract}
           subsidyPercent={selectedBenefit.subsidyPercent ?? 0}
           vendorName={selectedBenefit.vendorName ?? ""}
         />

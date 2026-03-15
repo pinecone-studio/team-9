@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "team-9-web",
+  "compatibility_date": "2026-03-14",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_compat_populate_process_env"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "team9_pinequest_dev",
+      "database_id": "4cb7fad9-625c-4540-a076-a0a2ea44b572",
+      "migrations_dir": "../api/drizzle"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

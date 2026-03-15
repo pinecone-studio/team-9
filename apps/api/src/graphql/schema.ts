@@ -344,6 +344,7 @@ export const typeDefs = /* GraphQL */ `
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
+    employeeByEmail(email: String!): Employee
     benefitCategories: [BenefitCategory!]!
     benefitCatalog: [Benefit]
     allBenefits: [Benefit]

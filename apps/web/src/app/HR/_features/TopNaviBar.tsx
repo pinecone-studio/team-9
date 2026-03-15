@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 
 import AuditLogsIcon from "../_icons/AuditLogs";
-import AvatarIcon from "../_icons/AvatarIcon";
 import BenefitsCatalogIcon from "../_icons/Benefits_catalog";
 import DashboardIcon from "../_icons/Dashboard";
 import EligibilityRulesIcon from "../_icons/EligibilityRules";
@@ -69,7 +69,7 @@ type TopNaviBarProps = {
 
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
   return (
-    <div className="h-[78px] w-[860px] rounded-2xl border border-[#e6e1e1] bg-white px-6 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+    <div className="h-[78px] w-full max-w-[860px] rounded-2xl border border-[#e6e1e1] bg-white px-6 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
       <div className="flex h-full items-center gap-6">
         <nav
           aria-label="HR sections"
@@ -99,7 +99,9 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
                         }`}
                       />
                     </span>
-                    <span className={isActive ? "font-semibold" : "font-medium"}>
+                    <span
+                      className={isActive ? "font-semibold" : "font-medium"}
+                    >
                       {label}
                     </span>
                   </Link>
@@ -113,13 +115,30 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
           <div className="h-11 w-px bg-[#e6e1e1]" />
         </div>
 
-        <button
-          aria-label="Profile"
-          className="shrink-0 rounded-full transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
-          type="button"
-        >
-          <AvatarIcon className="h-11 w-11" />
-        </button>
+        <div className="top-nav-user-button shrink-0">
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button
+                className="inline-flex h-11 items-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] px-4 text-[13px] font-medium text-slate-700 transition-colors hover:bg-white"
+                type="button"
+              >
+                Sign in
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <div className="rounded-full transition-transform hover:scale-[1.02]">
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "!h-11 !w-11",
+                    userButtonTrigger: "!h-11 !w-11",
+                  },
+                }}
+              />
+            </div>
+          </Show>
+        </div>
       </div>
     </div>
   );

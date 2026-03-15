@@ -1,0 +1,6 @@
+
+# clerk configuration (can include secrets)
+/.clerk/
+/.open-next/
+/.wrangler/
+cloudflare-env.d.ts

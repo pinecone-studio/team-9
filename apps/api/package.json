@@ -1,33 +1,32 @@
 {
-  "name": "@ebms/api",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "wrangler dev --remote --config wrangler.jsonc",
-    "start": "wrangler dev --config wrangler.jsonc",
-    "deploy": "wrangler deploy --config wrangler.jsonc",
-    "test": "vitest run",
-    "cf-typegen": "wrangler types --config wrangler.jsonc",
-    "type-check": "tsc --noEmit",
-    "build": "npm run type-check",
-
-    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "db:migrate:local": "wrangler d1 migrations apply DB --local --config wrangler.jsonc",
-    "db:migrate:remote": "wrangler d1 migrations apply DB --remote --config wrangler.jsonc",
-    "db:list": "wrangler d1 list --config wrangler.jsonc",
-    "db:tables:remote": "wrangler d1 execute DB --remote --config wrangler.jsonc --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\""
-  },
-  "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.12.4",
-    "@cloudflare/workers-types": "^4.20260310.1",
-    "drizzle-kit": "^0.30.0",
-    "typescript": "^5.5.2",
-    "vitest": "~3.2.0",
-    "wrangler": "^3.101.0"
-  },
-  "dependencies": {
-    "drizzle-orm": "^0.45.1",
-    "graphql-yoga": "^5.18.1",
-    "hono": "^4.12.6"
-  }
+	"name": "@ebms/api",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "wrangler dev --remote --config wrangler.jsonc",
+		"start": "wrangler dev --config wrangler.jsonc",
+		"deploy": "wrangler deploy --config wrangler.jsonc",
+		"test": "vitest run",
+		"cf-typegen": "wrangler types --config wrangler.jsonc",
+		"type-check": "tsc --noEmit",
+		"build": "npm run type-check",
+		"db:generate": "drizzle-kit generate --config drizzle.config.ts",
+		"db:migrate:local": "wrangler d1 migrations apply DB --local --config wrangler.jsonc",
+		"db:migrate:remote": "wrangler d1 migrations apply DB --remote --config wrangler.jsonc",
+		"db:list": "wrangler d1 list --config wrangler.jsonc",
+		"db:tables:remote": "wrangler d1 execute DB --remote --config wrangler.jsonc --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\""
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@cloudflare/workers-types": "^4.20260310.1",
+		"drizzle-kit": "^0.30.0",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^3.101.0"
+	},
+	"dependencies": {
+		"drizzle-orm": "^0.45.1",
+		"graphql-yoga": "^5.18.1",
+		"hono": "^4.12.6"
+	}
 }

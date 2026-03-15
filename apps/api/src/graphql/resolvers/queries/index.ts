@@ -1,3 +1,4 @@
+import { getEmployeeByEmail } from './get-employee-by-email';
 import { countActiveContracts } from './count-active-contracts';
 import { countPendingBenefitRequests } from './count-pending-benefit-requests';
 import { getApprovalRequestById } from './get-approval-request-by-id';
@@ -16,10 +17,11 @@ import type {
 	QueryEligibilityRulesArgs,
 	QueryRuleDefinitionsArgs,
 	QueryApprovalRequestArgs,
+	QueryApprovalRequestsArgs,
 	QueryEmployeeArgs,
+	QueryEmployeeByEmailArgs,
 	QueryEmployeeEligibilityArgs,
 	QueryListAuditLogEntriesArgs,
-	QueryApprovalRequestsArgs,
 } from '../../generated/resolvers-types';
 
 type GraphQLContext = {
@@ -31,6 +33,9 @@ export const queryResolvers = {
 	employees: (_: unknown, __: unknown, { DB }: GraphQLContext) => listEmployees(DB),
 
 	employee: (_: unknown, { id }: QueryEmployeeArgs, { DB }: GraphQLContext) => getEmployeeById(DB, id),
+
+	employeeByEmail: (_: unknown, { email }: QueryEmployeeByEmailArgs, { DB }: GraphQLContext) =>
+		getEmployeeByEmail(DB, email),
 
 	benefitCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCategories(DB),
 
@@ -46,7 +51,8 @@ export const queryResolvers = {
 
 	ruleCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listRuleCategories(DB),
 
-	ruleDefinitions: (_: unknown, args: QueryRuleDefinitionsArgs, { DB }: GraphQLContext) => listRuleDefinitions(DB, args),
+	ruleDefinitions: (_: unknown, args: QueryRuleDefinitionsArgs, { DB }: GraphQLContext) =>
+		listRuleDefinitions(DB, args),
 
 	eligibilityRules: (_: unknown, { benefitId }: QueryEligibilityRulesArgs, { DB }: GraphQLContext) =>
 		listEligibilityRules(DB, benefitId),
@@ -54,12 +60,14 @@ export const queryResolvers = {
 	employeeEligibility: (_: unknown, { employeeId }: QueryEmployeeEligibilityArgs, { DB }: GraphQLContext) =>
 		listEmployeeEligibilityRecords(DB, employeeId),
 
-	countPendingBenefitRequests: (_: unknown, __: unknown, { DB }: GraphQLContext) => countPendingBenefitRequests(DB),
+	countPendingBenefitRequests: (_: unknown, __: unknown, { DB }: GraphQLContext) =>
+		countPendingBenefitRequests(DB),
 
 	countActiveContracts: (_: unknown, __: unknown, { DB }: GraphQLContext) => countActiveContracts(DB),
 
 	listAuditLogEntries: (_: unknown, { limit }: QueryListAuditLogEntriesArgs, { DB }: GraphQLContext) =>
 		listAuditLogEntries(DB, limit ?? 5),
 
-	listBenefitEligibilitySummary: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitEligibilitySummary(DB),
+	listBenefitEligibilitySummary: (_: unknown, __: unknown, { DB }: GraphQLContext) =>
+		listBenefitEligibilitySummary(DB),
 };

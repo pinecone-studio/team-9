@@ -60,6 +60,15 @@ export const getCurrentUserAccess = cache(
 
     const role = normalizeRole(employee?.position);
 
+    console.log({
+      email,
+      employee,
+      hasHrAccess: isHrRole(role),
+      isAuthenticated: true,
+      role,
+      userId,
+    });
+
     return {
       email,
       employee,
@@ -73,6 +82,8 @@ export const getCurrentUserAccess = cache(
 
 export async function getDefaultAppPath() {
   const access = await getCurrentUserAccess();
+
+  console.log("Determining default app path with access:", access);
 
   if (!access.isAuthenticated) {
     return "/auth/login";

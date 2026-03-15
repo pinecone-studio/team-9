@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import yoga from './graphql';
-import { handleProvisionUser } from './routes/provision-user';
 
 type Bindings = {
 	DB: D1Database;
@@ -21,8 +20,6 @@ app.options('/auth/*', authCors);
 app.get('/', () => {
 	return new Response('EBMS backend running');
 });
-
-app.post('/auth/provision-user', handleProvisionUser);
 
 app.all('/graphql', (c) => {
 	return yoga.fetch(c.req.raw, c.env, c.executionCtx);

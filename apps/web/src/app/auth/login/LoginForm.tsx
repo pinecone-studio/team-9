@@ -6,7 +6,6 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import CodeStep from "./CodeStep";
 import EmailStep from "./EmailStep";
-import ensureClerkAccount from "./ensureClerkAccount";
 import getErrorMessage from "./getErrorMessage";
 
 type Step = "email" | "code";
@@ -63,8 +62,6 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      await ensureClerkAccount(normalizedEmail);
-
       const result = (await signIn.create({
         identifier: normalizedEmail,
       })) as { error?: unknown };

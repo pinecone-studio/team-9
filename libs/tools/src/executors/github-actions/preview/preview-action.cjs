@@ -159,6 +159,7 @@ const main = async () => {
   const workerName = getDefaultWorkerName();
 
   if (apiAffected) {
+    runCommand('bunx nx run ebms-api:codegen --skip-nx-cache');
     const uploadOutput = runCommand(
       `bunx wrangler versions upload --config apps/api/wrangler.jsonc --name=${workerName}`,
       { capture: true },

@@ -57,11 +57,25 @@ export async function getCurrentUserAccess(): Promise<CurrentUserAccess> {
   }
 
   const role = normalizeRole(employee?.position);
+  const hasHrAccess = isHrRole(role);
+
+  if (!employee) {
+    console.warn("[auth] No employee record resolved for authenticated user.", {
+      email,
+      userId,
+    });
+  } else if (!hasHrAccess) {
+    console.info("[auth] Authenticated user resolved without HR dashboard access.", {
+      email,
+      role,
+      userId,
+    });
+  }
 
   return {
     email,
     employee,
-    hasHrAccess: isHrRole(role),
+    hasHrAccess,
     isAuthenticated: true,
     role,
     userId,

@@ -170,12 +170,13 @@ const main = async () => {
   let webUrl = 'N/A';
   let apiUrl = 'N/A';
 
-  const apiWorkerName = getDefaultWorkerName();
-  const webWorkerBaseName = getDefaultWebWorkerName();
   const branch = getEnv('GITHUB_HEAD_REF') || getEnv('GITHUB_REF_NAME') || 'preview';
+  const apiWorkerBaseName = getDefaultWorkerName();
+  const apiWorkerName = normalizeName(`${apiWorkerBaseName}-${branch}`, 63);
+  const webWorkerBaseName = getDefaultWebWorkerName();
   const webWorkerName = normalizeName(`${webWorkerBaseName}-${branch}`, 63);
 
-  if (apiAffected) {
+  if (apiAffected || webAffected) {
     runCommand('bunx nx run ebms-api:codegen --skip-nx-cache');
 
     const clerkSecretKey = requireEnv('CLERK_SECRET_KEY');
@@ -187,19 +188,17 @@ const main = async () => {
     });
 
     try {
-      const uploadOutput = runCommand(
-        `bunx wrangler versions upload --config ${apiPreviewConfig} --name=${apiWorkerName}`,
+      const deployOutput = runCommand(
+        `bun run --cwd apps/api deploy -- --config=${apiPreviewConfig}`,
         { capture: true },
       );
-      process.stdout.write(uploadOutput);
+      process.stdout.write(deployOutput);
       apiUrl =
-        extractWorkersDevUrl(uploadOutput, apiWorkerName) ||
+        extractWorkersDevUrl(deployOutput, apiWorkerName) ||
         (await resolveWorkersDevUrl(apiWorkerName));
     } finally {
       fs.rmSync(PREVIEW_API_WRANGLER_CONFIG, { force: true });
     }
-  } else if (webAffected) {
-    apiUrl = await resolveWorkersDevUrl(apiWorkerName);
   }
 
   if (webAffected) {

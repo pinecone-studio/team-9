@@ -134,13 +134,51 @@ async function fetchEmployeeRecordFromEmployeesQuery(
 }
 
 export async function getEmployeeRecordByEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+
   for (const endpoint of getGraphqlEndpoints()) {
     try {
-      return await fetchEmployeeRecordFromGraphql(endpoint, email);
-    } catch {
+      const employee = await fetchEmployeeRecordFromGraphql(
+        endpoint,
+        normalizedEmail,
+      );
+
+      if (employee) {
+        return employee;
+      }
+
+      console.warn("[auth] employeeByEmail returned no match.", {
+        email: normalizedEmail,
+        endpoint,
+      });
+    } catch (graphqlError) {
       try {
-        return await fetchEmployeeRecordFromEmployeesQuery(endpoint, email);
-      } catch {
+        const employee = await fetchEmployeeRecordFromEmployeesQuery(
+          endpoint,
+          normalizedEmail,
+        );
+
+        if (employee) {
+          return employee;
+        }
+
+        console.warn("[auth] employees query returned no match.", {
+          email: normalizedEmail,
+          endpoint,
+        });
+      } catch (employeesError) {
+        console.error("[auth] Employee lookup failed for endpoint.", {
+          email: normalizedEmail,
+          endpoint,
+          employeesError:
+            employeesError instanceof Error
+              ? employeesError.message
+              : String(employeesError),
+          graphqlError:
+            graphqlError instanceof Error
+              ? graphqlError.message
+              : String(graphqlError),
+        });
         continue;
       }
     }

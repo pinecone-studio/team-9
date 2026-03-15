@@ -55,11 +55,17 @@ export const mutationResolvers = {
 	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, { DB }: GraphQLContext) =>
 		createApprovalRequest(DB, args),
 
-	submitBenefitCreateRequest: (_: unknown, args: MutationSubmitBenefitCreateRequestArgs, { DB }: GraphQLContext) =>
-		submitBenefitCreateRequest(DB, args),
+	submitBenefitCreateRequest: (
+		_: unknown,
+		args: MutationSubmitBenefitCreateRequestArgs,
+		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
+	) => submitBenefitCreateRequest({ DB, CONTRACTS_BUCKET }, args),
 
-	submitBenefitUpdateRequest: (_: unknown, args: MutationSubmitBenefitUpdateRequestArgs, { DB }: GraphQLContext) =>
-		submitBenefitUpdateRequest(DB, args),
+	submitBenefitUpdateRequest: (
+		_: unknown,
+		args: MutationSubmitBenefitUpdateRequestArgs,
+		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
+	) => submitBenefitUpdateRequest({ DB, CONTRACTS_BUCKET }, args),
 
 	submitRuleDefinitionCreateRequest: (
 		_: unknown,
@@ -116,8 +122,11 @@ export const mutationResolvers = {
 	) =>
 		recalculateEmployeeEligibility(DB, employeeId),
 
-	reviewApprovalRequest: (_: unknown, args: MutationReviewApprovalRequestArgs, { DB }: GraphQLContext) =>
-		reviewApprovalRequest(DB, args),
+	reviewApprovalRequest: (
+		_: unknown,
+		args: MutationReviewApprovalRequestArgs,
+		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
+	) => reviewApprovalRequest({ DB, CONTRACTS_BUCKET }, args),
 
 	uploadContract: (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
 		uploadContract({ DB, CONTRACTS_BUCKET }, input),

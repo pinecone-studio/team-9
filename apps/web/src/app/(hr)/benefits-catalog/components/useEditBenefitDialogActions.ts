@@ -1,5 +1,6 @@
 import { useMutation } from "@apollo/client/react";
 
+import { buildContractUploadInput } from "./contract-upload-client";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
 import {
   DELETE_BENEFIT_MUTATION,
@@ -19,6 +20,8 @@ type UseEditBenefitDialogActionsProps = {
   benefitDescription: string;
   benefitId: string;
   categoryId: string;
+  contractFile: File | null;
+  initialRequiresContract: boolean;
   isCore: boolean;
   name: string;
   onClose: () => void;
@@ -34,6 +37,8 @@ export function useEditBenefitDialogActions({
   benefitDescription,
   benefitId,
   categoryId,
+  contractFile,
+  initialRequiresContract,
   isCore,
   name,
   onClose,
@@ -92,6 +97,11 @@ export function useEditBenefitDialogActions({
       return;
     }
 
+    if (requiresContract && !initialRequiresContract && !contractFile) {
+      setErrorMessage("Please upload a contract file.");
+      return;
+    }
+
     if (!isCore && assignedRules.length === 0) {
       setErrorMessage("Please attach at least one eligibility rule or enable Core Benefit.");
       return;
@@ -100,6 +110,8 @@ export function useEditBenefitDialogActions({
     setErrorMessage(null);
 
     try {
+      const contractUpload = contractFile ? await buildContractUploadInput(contractFile) : null;
+
       await submitBenefitUpdateRequest({
         variables: {
           input: {
@@ -115,6 +127,7 @@ export function useEditBenefitDialogActions({
               isCore,
               approvalRole,
             },
+            contractUpload,
             ruleAssignments: isCore
               ? []
               : assignedRules.map((rule, index) => ({

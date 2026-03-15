@@ -1,3 +1,4 @@
+import AddBenefitContractUpload from "./AddBenefitContractUpload";
 import BenefitDialogFieldLabel from "./BenefitDialogFieldLabel";
 import BenefitDialogToggle from "./BenefitDialogToggle";
 import EditBenefitApprovalSection from "./EditBenefitApprovalSection";
@@ -9,11 +10,13 @@ type AddBenefitDialogFormProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
   availableRules: AvailableRuleDefinition[];
+  contractFile: File | null;
   coreBenefitEnabled: boolean;
   description: string;
   name: string;
   onAddRule: () => void;
   onApprovalRoleChange: (value: ApprovalRoleValue) => void;
+  onContractFileChange: (file: File | null) => void;
   onCoreBenefitEnabledChange: (value: boolean) => void;
   onDescriptionChange: (value: string) => void;
   onNameChange: (value: string) => void;
@@ -32,11 +35,13 @@ export default function AddBenefitDialogForm({
   approvalRole,
   assignedRules,
   availableRules,
+  contractFile,
   coreBenefitEnabled,
   description,
   name,
   onAddRule,
   onApprovalRoleChange,
+  onContractFileChange,
   onCoreBenefitEnabledChange,
   onDescriptionChange,
   onNameChange,
@@ -53,7 +58,7 @@ export default function AddBenefitDialogForm({
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex w-full flex-col items-start gap-8 px-[2px]">
-        <div className="flex w-full flex-col items-start gap-2">
+        <div className="sticky top-0 z-10 flex w-full flex-col items-start gap-2 bg-white pb-2">
           <h2 className="w-full text-[18px] leading-7 font-semibold text-[#0F172A]">
             Add a New Benefit
           </h2>
@@ -157,13 +162,11 @@ export default function AddBenefitDialogForm({
             />
           </div>
 
-          <button
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-[#CBD5E1] bg-white text-[14px] leading-5 font-medium text-[#BFBFBF] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-            disabled
-            type="button"
-          >
-            Upload Contract
-          </button>
+          <AddBenefitContractUpload
+            contractFile={contractFile}
+            onContractFileChange={onContractFileChange}
+            requiresContract={requiresContract}
+          />
         </div>
 
         <EditBenefitApprovalSection

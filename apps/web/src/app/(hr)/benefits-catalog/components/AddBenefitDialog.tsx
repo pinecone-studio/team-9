@@ -45,6 +45,7 @@ export default function AddBenefitDialog({
   const [requiresContract, setRequiresContract] = useState(
     initialDraft?.requiresContract ?? false,
   );
+  const [contractFile, setContractFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const errorMessageRef = useRef<HTMLParagraphElement | null>(null);
 
@@ -64,6 +65,7 @@ export default function AddBenefitDialog({
     approvalRole,
     assignedRules,
     categoryId,
+    contractFile,
     coreBenefitEnabled,
     description,
     initialDraft,
@@ -87,6 +89,24 @@ export default function AddBenefitDialog({
     });
   }, [errorMessage]);
 
+  const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
+  const saveDisabled =
+    !categoryId ||
+    name.trim().length === 0 ||
+    description.trim().length === 0 ||
+    vendorName.trim().length === 0 ||
+    !Number.isInteger(parsedSubsidy) ||
+    parsedSubsidy < 0 ||
+    parsedSubsidy > 100 ||
+    (requiresContract && !contractFile);
+
+  function handleRequiresContractChange(value: boolean) {
+    setRequiresContract(value);
+    if (!value) {
+      setContractFile(null);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -101,15 +121,17 @@ export default function AddBenefitDialog({
           approvalRole={approvalRole}
           assignedRules={assignedRules}
           availableRules={availableRules}
+          contractFile={contractFile}
           coreBenefitEnabled={coreBenefitEnabled}
           description={description}
           name={name}
           onAddRule={handleAddRule}
           onApprovalRoleChange={setApprovalRole}
+          onContractFileChange={setContractFile}
           onCoreBenefitEnabledChange={setCoreBenefitEnabled}
           onDescriptionChange={setDescription}
           onNameChange={setName}
-          onRequiresContractChange={setRequiresContract}
+          onRequiresContractChange={handleRequiresContractChange}
           onRuleDelete={handleDeleteRule}
           onSelectedRuleIdChange={setSelectedRuleId}
           onSubsidyPercentChange={setSubsidyPercent}
@@ -134,6 +156,7 @@ export default function AddBenefitDialog({
         <AddBenefitDialogFooter
           onCancel={handleCloseWithDraft}
           onSave={() => handleSave(setErrorMessage)}
+          saveDisabled={saveDisabled}
           saving={saving}
         />
       </div>

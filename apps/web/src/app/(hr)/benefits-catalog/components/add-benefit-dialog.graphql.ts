@@ -37,6 +37,13 @@ export type CreateBenefitVariables = {
       subsidyPercent: number;
       vendorName?: string | null;
     };
+    contractUpload?: {
+      effectiveDate: string;
+      expiryDate: string;
+      fileBase64: string;
+      fileName: string;
+      version: string;
+    } | null;
     ruleAssignments?: Array<{
       errorMessage: string;
       isActive?: boolean;

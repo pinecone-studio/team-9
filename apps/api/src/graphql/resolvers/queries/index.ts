@@ -19,7 +19,6 @@ import type {
 	QueryEligibilityRulesArgs,
 	QueryRuleDefinitionsArgs,
 	QueryApprovalRequestArgs,
-	QueryApprovalRequestsArgs,
 	QueryEmployeeArgs,
 	QueryEmployeeByEmailArgs,
 	QueryEmployeeEligibilityArgs,

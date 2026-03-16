@@ -15,7 +15,7 @@ import {
   type ReviewApprovalRequestVariables,
 } from "./approval-requests.graphql";
 import {
-  formatApprovalAction,
+  formatApprovalRequestAction,
   formatApprovalRequestName,
   formatApprovalRole,
   formatApprovalStatus,
@@ -58,7 +58,7 @@ export default function ApprovalRequestReviewDialog({
       return "Review Request";
     }
 
-    return `${formatApprovalAction(request.action_type)} ${
+    return `${formatApprovalRequestAction(request)} ${
       request.entity_type === "benefit" ? "Benefit" : "Rule"
     }`;
   }, [request]);

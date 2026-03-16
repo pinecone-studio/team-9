@@ -12,6 +12,14 @@ type BenefitPayload = {
     subsidyPercent?: number;
     vendorName?: string | null;
   };
+  employeeRequest?: {
+    benefitId?: string;
+    employeeEmail?: string | null;
+    employeeId?: string;
+    employeeName?: string;
+    previousStatus?: string;
+    requestedStatus?: string;
+  };
   ruleAssignments?: Array<{
     errorMessage?: string;
     operator?: string;
@@ -42,6 +50,7 @@ export type ParsedApprovalRequest =
   | {
       entityType: "benefit";
       benefit: NonNullable<BenefitPayload["benefit"]> | null;
+      employeeRequest: NonNullable<BenefitPayload["employeeRequest"]> | null;
       ruleAssignments: NonNullable<BenefitPayload["ruleAssignments"]>;
     }
   | {
@@ -69,6 +78,7 @@ export function parseApprovalPayload(
     return {
       entityType: "benefit",
       benefit: payload?.benefit ?? null,
+      employeeRequest: payload?.employeeRequest ?? null,
       ruleAssignments: payload?.ruleAssignments ?? [],
     };
   }

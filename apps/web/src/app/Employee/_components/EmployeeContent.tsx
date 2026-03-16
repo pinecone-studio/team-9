@@ -1,54 +1,77 @@
-import { bottomBenefits, topBenefits } from "./benefit-data";
+import { Geist } from "next/font/google";
 import { BenefitsGroup } from "./BenefitsGroup";
+import { EmployeeDashboardAutoRefresh } from "./EmployeeDashboardAutoRefresh";
 import { EligibilitySignals } from "./EligibilitySignals";
 import { EmployeeNav } from "./EmployeeNav";
 import { RecentRequests } from "./RecentRequests";
 import { SummaryCards } from "./SummaryCards";
+import type { EmployeeDashboardViewData } from "./employee-types";
 
 type EmployeeContentProps = {
+  currentUserIdentifier: string;
+  dashboardData: EmployeeDashboardViewData;
+  employeeEmail: string | null;
+  employeeId: string;
   employeeName: string;
 };
 
-export function EmployeeContent({ employeeName }: EmployeeContentProps) {
+const geist = Geist({
+  subsets: ["latin"],
+});
+
+export function EmployeeContent({
+  currentUserIdentifier,
+  dashboardData,
+  employeeEmail,
+  employeeId,
+  employeeName,
+}: EmployeeContentProps) {
+  const shouldAutoRefresh = dashboardData.requests.some(
+    (request) => request.status === "Pending",
+  );
+
   return (
-    <main className="min-h-screen bg-[#F4F5F7]">
-      <div className="relative mx-auto min-h-[1700px] w-[1440px]">
+    <main className={`${geist.className} min-h-screen bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8`}>
+      <EmployeeDashboardAutoRefresh enabled={shouldAutoRefresh} />
+      <div className="mx-auto flex w-full max-w-[1300px] flex-col">
         <EmployeeNav employeeName={employeeName} />
 
-        <header
-          className={[
-            "absolute left-1/2 top-[120px] flex h-[54px] w-[560px]",
-            "-translate-x-1/2 flex-col items-center gap-1",
-          ].join(" ")}
-        >
-          <h1 className="text-[18px] font-semibold text-[#111827]">
+        <header className="mt-8 flex flex-col items-center gap-[5px] text-center sm:mt-10">
+          <h1 className="text-[24px] font-semibold leading-[31px] text-black">
             Welcome back, {employeeName}
           </h1>
-          <p className="text-xs text-[#6B7280]">
+          <p className="text-[14px] leading-[18px] text-[#555555]">
             View your benefits, request new ones, and track your eligibility.
           </p>
         </header>
 
-        <SummaryCards />
+        <SummaryCards cards={dashboardData.summaryCards} className="mt-8" />
 
         <section
-          className={[
-            "absolute left-1/2 top-[378px] flex h-[323px] w-[1300px]",
-            "-translate-x-1/2 items-start gap-5",
-          ].join(" ")}
+          id="my-requests"
+          className="mt-6 grid scroll-mt-32 gap-5 xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]"
         >
-          <RecentRequests />
-          <EligibilitySignals />
+          <RecentRequests requests={dashboardData.requests} />
+          <EligibilitySignals signals={dashboardData.signals} />
         </section>
 
-        <section
-          className={[
-            "absolute left-1/2 top-[735px] flex w-[1300px]",
-            "-translate-x-1/2 flex-col gap-[28px]",
-          ].join(" ")}
-        >
-          <BenefitsGroup items={topBenefits} />
-          <BenefitsGroup items={bottomBenefits} />
+        <section className="mt-7 flex flex-col gap-[28px] pb-16">
+          {dashboardData.sections.length === 0 ? (
+            <article className="rounded-[14px] border border-dashed border-[#d7d3d3] bg-white px-6 py-10 text-center text-[15px] text-slate-500">
+              Benefits data is not available yet.
+            </article>
+          ) : (
+            dashboardData.sections.map((section) => (
+              <BenefitsGroup
+                currentUserIdentifier={currentUserIdentifier}
+                employeeEmail={employeeEmail}
+                employeeId={employeeId}
+                employeeName={employeeName}
+                key={section.id}
+                section={section}
+              />
+            ))
+          )}
         </section>
       </div>
     </main>

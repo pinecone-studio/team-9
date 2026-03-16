@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { getDb } from '../../../db';
 import { approvalRequests } from '../../../db/schema/approval-requests';
+import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
 import { benefits } from '../../../db/schema/benefits';
 import { contracts } from '../../../db/schema/contracts';
 import { deleteFromR2 } from '../../../lib/r2';
@@ -34,6 +35,15 @@ type ContractUploadPayload = {
 	version: string;
 };
 
+type EmployeeBenefitRequestPayload = {
+	benefitId?: unknown;
+	employeeId?: unknown;
+	requestedStatus?: unknown;
+};
+
+const EMPLOYEE_REQUEST_ACTIVE_STATUS = 'active';
+const EMPLOYEE_REQUEST_DEFAULT_RESTORE_STATUS = 'eligible';
+
 function isContractUploadPayload(value: unknown): value is ContractUploadPayload {
 	if (!value || typeof value !== 'object') {
 		return false;
@@ -48,6 +58,41 @@ function isContractUploadPayload(value: unknown): value is ContractUploadPayload
 		typeof candidate.sha256Hash === 'string' &&
 		typeof candidate.version === 'string'
 	);
+}
+
+function readTrimmedString(value: unknown): string | null {
+	return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function normalizeEligibilityStatus(value: unknown): 'active' | 'eligible' | 'locked' | 'pending' | null {
+	if (typeof value !== 'string') {
+		return null;
+	}
+
+	const normalized = value.trim().toLowerCase();
+	if (
+		normalized === 'active' ||
+		normalized === 'eligible' ||
+		normalized === 'locked' ||
+		normalized === 'pending'
+	) {
+		return normalized;
+	}
+
+	return null;
+}
+
+function parseEmployeeBenefitRequestPayload(payload: unknown): EmployeeBenefitRequestPayload | null {
+	if (!payload || typeof payload !== 'object') {
+		return null;
+	}
+
+	const employeeRequest = (payload as Record<string, unknown>).employeeRequest;
+	if (!employeeRequest || typeof employeeRequest !== 'object') {
+		return null;
+	}
+
+	return employeeRequest as EmployeeBenefitRequestPayload;
 }
 
 async function createBenefitContractRecord(
@@ -105,68 +150,166 @@ export async function reviewApprovalRequest(
   const reviewComment = input.reviewComment?.trim() || null;
   const reviewedAt = new Date().toISOString();
   let entityId = existing.entityId;
+  const payload = JSON.parse(existing.payloadJson) as Record<string, unknown>;
+  const snapshot = existing.snapshotJson
+    ? (JSON.parse(existing.snapshotJson) as Record<string, unknown>)
+    : null;
+  const employeeRequest = parseEmployeeBenefitRequestPayload(payload);
 
   if (input.approved) {
     if (existing.entityType === ApprovalEntityType.Rule) {
-      const payload = JSON.parse(existing.payloadJson) as {
+      const rulePayload = payload as {
         rule?: CreateRuleDefinitionInput | UpdateRuleDefinitionInput;
       };
 
-      if (!payload.rule) {
+      if (!rulePayload.rule) {
         throw new Error("Approval request payload is missing rule data");
       }
 
       if (existing.actionType === "create") {
-        const created = await applyCreateRuleDefinition(env.DB, payload.rule as CreateRuleDefinitionInput);
+        const created = await applyCreateRuleDefinition(env.DB, rulePayload.rule as CreateRuleDefinitionInput);
         entityId = created.id;
       } else if (existing.actionType === "update") {
-        const updated = await applyUpdateRuleDefinition(env.DB, payload.rule as UpdateRuleDefinitionInput);
+        const updated = await applyUpdateRuleDefinition(env.DB, rulePayload.rule as UpdateRuleDefinitionInput);
         entityId = updated.id;
       }
     }
 
     if (existing.entityType === ApprovalEntityType.Benefit) {
-      const payload = JSON.parse(existing.payloadJson) as {
+      const benefitPayload = payload as {
         benefit?: CreateBenefitInput | UpdateBenefitInput;
         contractUpload?: unknown;
         ruleAssignments?: BenefitRuleAssignmentInput[];
       };
+      const employeeId = readTrimmedString(employeeRequest?.employeeId);
+      const payloadBenefitId = readTrimmedString(employeeRequest?.benefitId);
+      const requestedStatus = readTrimmedString(employeeRequest?.requestedStatus);
+      const requestedBenefitId = payloadBenefitId ?? existing.entityId;
+      const isEmployeeActivationRequest =
+        existing.actionType === "update" && employeeId && requestedBenefitId;
 
-      if (!payload.benefit) {
-        throw new Error("Approval request payload is missing benefit data");
-      }
-
-      if (existing.actionType === "create") {
-        const created = await applyCreateBenefit(
-          env.DB,
-          payload.benefit as CreateBenefitInput,
-          payload.ruleAssignments ?? [],
-        );
-        entityId = created.id;
-      } else if (existing.actionType === "update") {
-        const updated = await applyUpdateBenefit(
-          env.DB,
-          payload.benefit as UpdateBenefitInput,
-          payload.ruleAssignments ?? [],
-        );
-        entityId = updated.id;
-      }
-
-      if (entityId && isContractUploadPayload(payload.contractUpload)) {
-        const vendorName = payload.benefit.vendorName?.trim();
-        if (!vendorName) {
-          throw new Error('Benefit vendorName is required to persist contract metadata');
+      if (isEmployeeActivationRequest) {
+        if (
+          requestedStatus &&
+          requestedStatus.toLowerCase() !== EMPLOYEE_REQUEST_ACTIVE_STATUS
+        ) {
+          throw new Error("Employee request can only activate a benefit");
         }
-        await createBenefitContractRecord(env.DB, entityId, vendorName, payload.contractUpload);
+
+        const [eligibility] = await db
+          .select({
+            status: benefitEligibility.status,
+          })
+          .from(benefitEligibility)
+          .where(
+            and(
+              eq(benefitEligibility.employeeId, employeeId),
+              eq(benefitEligibility.benefitId, requestedBenefitId),
+            ),
+          )
+          .limit(1);
+
+        if (!eligibility) {
+          throw new Error("Employee eligibility record not found for this request");
+        }
+
+        if (eligibility.status !== "pending") {
+          throw new Error("Only pending employee benefit requests can be approved");
+        }
+
+        await db
+          .update(benefitEligibility)
+          .set({
+            computedAt: reviewedAt,
+            overrideBy: null,
+            overrideExpiresAt: null,
+            overrideReason:
+              reviewComment ?? "Approved employee benefit activation request",
+            status: EMPLOYEE_REQUEST_ACTIVE_STATUS,
+          })
+          .where(
+            and(
+              eq(benefitEligibility.employeeId, employeeId),
+              eq(benefitEligibility.benefitId, requestedBenefitId),
+            ),
+          );
+
+        entityId = requestedBenefitId;
+      } else if (!benefitPayload.benefit) {
+        throw new Error("Approval request payload is missing benefit data");
+      } else {
+        if (existing.actionType === "create") {
+          const created = await applyCreateBenefit(
+            env.DB,
+            benefitPayload.benefit as CreateBenefitInput,
+            benefitPayload.ruleAssignments ?? [],
+          );
+          entityId = created.id;
+        } else if (existing.actionType === "update") {
+          const updated = await applyUpdateBenefit(
+            env.DB,
+            benefitPayload.benefit as UpdateBenefitInput,
+            benefitPayload.ruleAssignments ?? [],
+          );
+          entityId = updated.id;
+        }
+
+        if (entityId && isContractUploadPayload(benefitPayload.contractUpload)) {
+          const vendorName = benefitPayload.benefit.vendorName?.trim();
+          if (!vendorName) {
+            throw new Error('Benefit vendorName is required to persist contract metadata');
+          }
+          await createBenefitContractRecord(env.DB, entityId, vendorName, benefitPayload.contractUpload);
+        }
       }
     }
   } else if (existing.entityType === ApprovalEntityType.Benefit) {
-    const payload = JSON.parse(existing.payloadJson) as {
+    const benefitPayload = payload as {
       contractUpload?: unknown;
     };
+    const employeeId = readTrimmedString(employeeRequest?.employeeId);
+    const payloadBenefitId = readTrimmedString(employeeRequest?.benefitId);
+    const requestedBenefitId = payloadBenefitId ?? existing.entityId;
+    const isEmployeeActivationRequest =
+      existing.actionType === "update" && employeeId && requestedBenefitId;
 
-    if (isContractUploadPayload(payload.contractUpload)) {
-      await deleteFromR2(env.CONTRACTS_BUCKET, payload.contractUpload.r2ObjectKey);
+    if (isEmployeeActivationRequest) {
+      const snapshotEmployeeRequest =
+        snapshot &&
+        typeof snapshot.employeeRequest === "object" &&
+        snapshot.employeeRequest !== null
+          ? (snapshot.employeeRequest as Record<string, unknown>)
+          : null;
+      const restoreStatus =
+        normalizeEligibilityStatus(snapshotEmployeeRequest?.previousStatus) ??
+        normalizeEligibilityStatus(snapshot?.previousStatus) ??
+        EMPLOYEE_REQUEST_DEFAULT_RESTORE_STATUS;
+      const nextEligibilityStatus =
+        restoreStatus === "pending"
+          ? EMPLOYEE_REQUEST_DEFAULT_RESTORE_STATUS
+          : restoreStatus;
+
+      await db
+        .update(benefitEligibility)
+        .set({
+          computedAt: reviewedAt,
+          overrideBy: null,
+          overrideExpiresAt: null,
+          overrideReason:
+            reviewComment ?? "Rejected employee benefit activation request",
+          status: nextEligibilityStatus,
+        })
+        .where(
+          and(
+            eq(benefitEligibility.employeeId, employeeId),
+            eq(benefitEligibility.benefitId, requestedBenefitId),
+          ),
+        );
+      entityId = requestedBenefitId;
+    }
+
+    if (isContractUploadPayload(benefitPayload.contractUpload)) {
+      await deleteFromR2(env.CONTRACTS_BUCKET, benefitPayload.contractUpload.r2ObjectKey);
     }
   }
 

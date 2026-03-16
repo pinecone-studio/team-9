@@ -12,7 +12,9 @@ export type EmployeeRecord = {
   employmentStatus: string;
   hireDate: string;
   id: string;
+  lateArrivalCount30Days?: number | null;
   name: string;
+  okrSubmitted?: boolean | null;
   position: string;
   responsibilityLevel: number;
 };
@@ -97,7 +99,9 @@ async function fetchEmployeeRecordFromD1(email: string) {
             department,
             employment_status AS employmentStatus,
             hire_date AS hireDate,
+            late_arrival_count AS lateArrivalCount30Days,
             role AS position,
+            okr_submitted AS okrSubmitted,
             responsibility_level AS responsibilityLevel
           FROM employees
           WHERE lower(email) = ?

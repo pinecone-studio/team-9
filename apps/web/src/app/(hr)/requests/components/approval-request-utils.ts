@@ -5,6 +5,7 @@ export {
 } from "./approval-request-parsers";
 export {
   formatApprovalAction,
+  formatApprovalRequestAction,
   formatApprovalRequestName,
   formatApprovalRequestTitle,
   formatApprovalRole,

@@ -12,6 +12,23 @@ export function formatApprovalAction(
   return action === "create" ? "Create" : "Update";
 }
 
+function isEmployeeBenefitActivationRequest(request: ApprovalRequestRecord) {
+  if (request.entity_type !== "benefit") {
+    return false;
+  }
+
+  const payload = parseApprovalPayload(request);
+  return payload.entityType === "benefit" && Boolean(payload.employeeRequest);
+}
+
+export function formatApprovalRequestAction(request: ApprovalRequestRecord) {
+  if (isEmployeeBenefitActivationRequest(request)) {
+    return "Activate";
+  }
+
+  return formatApprovalAction(request.action_type);
+}
+
 export function formatApprovalStatus(
   status: ApprovalRequestRecord["status"],
 ) {
@@ -27,7 +44,7 @@ export function formatApprovalStatus(
 }
 
 export function formatApprovalRequestTitle(request: ApprovalRequestRecord) {
-  return `${formatApprovalAction(request.action_type)} ${
+  return `${formatApprovalRequestAction(request)} ${
     request.entity_type === "benefit" ? "Benefit" : "Rule"
   }`;
 }
@@ -74,6 +91,10 @@ export function formatRequestChangeSummary(request: ApprovalRequestRecord) {
     return "New benefit creation";
   }
 
+  if (isEmployeeBenefitActivationRequest(request)) {
+    return "Employee benefit activation request";
+  }
+
   const previousSubsidy =
     typeof snapshot?.subsidyPercent === "number"
       ? snapshot.subsidyPercent
@@ -105,6 +126,10 @@ export function formatProgressLabel(request: ApprovalRequestRecord) {
     return request.reviewed_at
       ? `Rejected ${formatShortDateTime(request.reviewed_at)}`
       : "Rejected";
+  }
+
+  if (isEmployeeBenefitActivationRequest(request)) {
+    return `Waiting for ${formatApprovalRole(request.target_role)} approval`;
   }
 
   return `Waiting for ${formatApprovalRole(request.target_role)}`;

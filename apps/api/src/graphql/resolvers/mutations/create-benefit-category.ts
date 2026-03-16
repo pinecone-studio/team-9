@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 import { getDb } from '../../../db';
 import { benefitCategories } from '../../../db/schema/benefit-categories';
@@ -9,7 +9,7 @@ export async function createBenefitCategory(
 	args: MutationCreateBenefitCategoryArgs,
 ): Promise<BenefitCategory> {
 	const db = getDb({ DB });
-	const name = args.name.trim();
+	const name = args.name.replace(/\s+/g, ' ').trim();
 
 	if (!name) {
 		throw new Error('Category name is required');
@@ -21,7 +21,7 @@ export async function createBenefitCategory(
 			name: benefitCategories.name,
 		})
 		.from(benefitCategories)
-		.where(eq(benefitCategories.name, name))
+		.where(sql`lower(${benefitCategories.name}) = lower(${name})`)
 		.limit(1);
 
 	if (existing) {

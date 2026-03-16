@@ -131,6 +131,7 @@ export const typeDefs = /* GraphQL */ `
     vendorName: String
     requiresContract: Boolean
     isCore: Boolean
+    isActive: Boolean
     approvalRole: ApprovalRole
   }
 
@@ -241,6 +242,7 @@ export const typeDefs = /* GraphQL */ `
     category: String!
     subsidyPercent: Int
     rulesApplied: [String!]!
+    activeEmployees: Int!
     eligibleEmployees: Int!
     blockedEmployees: Int!
     pendingEmployees: Int!

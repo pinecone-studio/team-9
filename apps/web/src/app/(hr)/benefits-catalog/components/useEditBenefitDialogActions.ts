@@ -1,6 +1,12 @@
 import { useMutation } from "@apollo/client/react";
 
 import { buildContractUploadInput } from "./contract-upload-client";
+import {
+  buildBenefitInput,
+  buildRuleAssignments,
+  isMissingIsActiveFieldError,
+  validateBenefitSaveInput,
+} from "./useEditBenefitDialogActions.helpers";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
 import {
   DELETE_BENEFIT_MUTATION,
@@ -21,11 +27,14 @@ type UseEditBenefitDialogActionsProps = {
   benefitId: string;
   categoryId: string;
   contractFile: File | null;
+  initialIsActive: boolean;
   initialRequiresContract: boolean;
+  isActive: boolean;
   isCore: boolean;
   name: string;
   onClose: () => void;
   onDeleted?: (benefitId: string) => void | Promise<unknown>;
+  onSaved?: () => void | Promise<unknown>;
   requiresContract: boolean;
   subsidyPercentValue: string;
   vendorNameValue: string;
@@ -38,11 +47,14 @@ export function useEditBenefitDialogActions({
   benefitId,
   categoryId,
   contractFile,
+  initialIsActive,
   initialRequiresContract,
+  isActive,
   isCore,
   name,
   onClose,
   onDeleted,
+  onSaved,
   requiresContract,
   subsidyPercentValue,
   vendorNameValue,
@@ -77,33 +89,20 @@ export function useEditBenefitDialogActions({
   }
 
   async function handleSave(setErrorMessage: (value: string | null) => void) {
-    const trimmedName = name.trim();
-    const trimmedDescription = benefitDescription.trim();
-    const trimmedVendorName = vendorNameValue.trim();
-    const parsedSubsidy = Number.parseInt(subsidyPercentValue, 10);
+    const validation = validateBenefitSaveInput({
+      name,
+      benefitDescription,
+      vendorNameValue,
+      subsidyPercentValue,
+      requiresContract,
+      initialRequiresContract,
+      contractFile,
+      isCore,
+      assignedRules,
+    });
 
-    if (!trimmedName) {
-      setErrorMessage("Benefit name is required.");
-      return;
-    }
-
-    if (!trimmedDescription) {
-      setErrorMessage("Description is required.");
-      return;
-    }
-
-    if (!Number.isInteger(parsedSubsidy) || parsedSubsidy < 0 || parsedSubsidy > 100) {
-      setErrorMessage("Subsidy percent must be a whole number between 0 and 100.");
-      return;
-    }
-
-    if (requiresContract && !initialRequiresContract && !contractFile) {
-      setErrorMessage("Please upload a contract file.");
-      return;
-    }
-
-    if (!isCore && assignedRules.length === 0) {
-      setErrorMessage("Please attach at least one eligibility rule or enable Core Benefit.");
+    if ("errorMessage" in validation) {
+      setErrorMessage(validation.errorMessage);
       return;
     }
 
@@ -111,39 +110,45 @@ export function useEditBenefitDialogActions({
 
     try {
       const contractUpload = contractFile ? await buildContractUploadInput(contractFile) : null;
+      const benefitInput = buildBenefitInput({
+        approvalRole,
+        benefitId,
+        categoryId,
+        initialIsActive,
+        isActive,
+        isCore,
+        parsedSubsidy: validation.parsedSubsidy,
+        requiresContract,
+        trimmedDescription: validation.trimmedDescription,
+        trimmedName: validation.trimmedName,
+        trimmedVendorName: validation.trimmedVendorName,
+      });
 
       await submitBenefitUpdateRequest({
         variables: {
           input: {
             requestedBy: FALLBACK_REQUESTED_BY,
-            benefit: {
-              id: benefitId,
-              name: trimmedName,
-              description: trimmedDescription,
-              categoryId,
-              subsidyPercent: parsedSubsidy,
-              vendorName: trimmedVendorName || null,
-              requiresContract,
-              isCore,
-              approvalRole,
-            },
+            benefit: benefitInput,
             contractUpload,
-            ruleAssignments: isCore
-              ? []
-              : assignedRules.map((rule, index) => ({
-                  ruleId: rule.ruleId,
-                  operator: rule.operator,
-                  value: rule.value,
-                  errorMessage: rule.errorMessage,
-                  priority: index + 1,
-                  isActive: true,
-                })),
+            ruleAssignments: buildRuleAssignments(assignedRules, isCore),
           },
         },
       });
 
+      try {
+        await onSaved?.();
+      } catch {
+        // Save already succeeded; ignore refresh callback failures.
+      }
       onClose();
     } catch (error) {
+      if (isMissingIsActiveFieldError(error)) {
+        setErrorMessage(
+          "Status request ilgeehiin tuld backend schema deploy hiih shaardlagatai (UpdateBenefitInput.isActive).",
+        );
+        return;
+      }
+
       setErrorMessage(
         error instanceof Error
           ? error.message

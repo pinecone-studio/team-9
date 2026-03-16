@@ -4,6 +4,8 @@ import EditBenefitApprovalSection from "./EditBenefitApprovalSection";
 import EditBenefitAuditSection from "./EditBenefitAuditSection";
 import EditBenefitContractPanel from "./EditBenefitContractPanel";
 import EditBenefitRulesSection from "./EditBenefitRulesSection";
+import EditBenefitStatusSection from "./EditBenefitStatusSection";
+import EditBenefitValueSection from "./EditBenefitValueSection";
 import type { ApprovalRoleValue } from "./edit-benefit-dialog.graphql";
 import type { AssignedBenefitRule, RuleOption } from "./edit-benefit-dialog.types";
 
@@ -23,12 +25,14 @@ type EditBenefitDialogFormProps = {
   onBenefitDescriptionChange: (value: string) => void;
   onContractFileChange: (file: File | null) => void;
   onDeleteRule: (ruleId: string) => void;
+  onIsActiveChange: (value: boolean) => void;
   onIsCoreChange: (checked: boolean) => void;
   onNameChange: (value: string) => void;
   onRequiresContractChange: (checked: boolean) => void;
   onSelectedRuleIdChange: (value: string) => void;
   onSubsidyPercentChange: (value: string) => void;
   onVendorNameChange: (value: string) => void;
+  isActive: boolean;
   requiresContract: boolean;
   selectedRuleId: string;
   subsidyPercentValue: string;
@@ -51,12 +55,14 @@ export default function EditBenefitDialogForm({
   onBenefitDescriptionChange,
   onContractFileChange,
   onDeleteRule,
+  onIsActiveChange,
   onIsCoreChange,
   onNameChange,
   onRequiresContractChange,
   onSelectedRuleIdChange,
   onSubsidyPercentChange,
   onVendorNameChange,
+  isActive,
   requiresContract,
   selectedRuleId,
   subsidyPercentValue,
@@ -95,32 +101,19 @@ export default function EditBenefitDialogForm({
 
         <div className="border-t border-[#DBDEE1]" />
 
-        <section className="flex flex-col gap-5">
-          <h3 className="text-[16px] leading-4 font-semibold text-black">Benefit Value</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-[10px]">
-              <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
-              <input
-                className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 outline-none"
-                max={100}
-                min={0}
-                onChange={(event) => onSubsidyPercentChange(event.target.value)}
-                type="number"
-                value={subsidyPercentValue}
-              />
-            </label>
+        <EditBenefitStatusSection
+          isActive={isActive}
+          onIsActiveChange={onIsActiveChange}
+        />
 
-            <label className="flex flex-col gap-[10px]">
-              <BenefitDialogFieldLabel>Vendor name</BenefitDialogFieldLabel>
-              <input
-                className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 outline-none"
-                onChange={(event) => onVendorNameChange(event.target.value)}
-                type="text"
-                value={vendorNameValue}
-              />
-            </label>
-          </div>
-        </section>
+        <div className="border-t border-[#DBDEE1]" />
+
+        <EditBenefitValueSection
+          onSubsidyPercentChange={onSubsidyPercentChange}
+          onVendorNameChange={onVendorNameChange}
+          subsidyPercentValue={subsidyPercentValue}
+          vendorNameValue={vendorNameValue}
+        />
 
         <div className="border-t border-[#DBDEE1]" />
 

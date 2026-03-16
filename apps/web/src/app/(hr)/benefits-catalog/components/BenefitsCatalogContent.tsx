@@ -5,7 +5,13 @@ import { useState } from "react";
 import BenefitsCatalogHeader from "./BenefitsCatalogHeader";
 import WellnessSection from "./WellnessSection";
 
-export default function BenefitsCatalogContent() {
+type BenefitsCatalogContentProps = {
+  currentUserIdentifier: string;
+};
+
+export default function BenefitsCatalogContent({
+  currentUserIdentifier,
+}: BenefitsCatalogContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -14,7 +20,10 @@ export default function BenefitsCatalogContent() {
         onSearchChange={setSearchQuery}
         searchQuery={searchQuery}
       />
-      <WellnessSection searchQuery={searchQuery} />
+      <WellnessSection
+        currentUserIdentifier={currentUserIdentifier}
+        searchQuery={searchQuery}
+      />
     </>
   );
 }

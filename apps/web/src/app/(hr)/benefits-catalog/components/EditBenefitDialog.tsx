@@ -20,6 +20,7 @@ type EditBenefitDialogProps = {
   benefitName: string;
   category: string;
   categoryId: string;
+  currentUserIdentifier: string;
   description: string;
   enabled: boolean;
   isCore: boolean;
@@ -37,6 +38,7 @@ export default function EditBenefitDialog({
   benefitName,
   category,
   categoryId,
+  currentUserIdentifier,
   description,
   enabled: initialIsActive,
   isCore: initialIsCore,
@@ -82,6 +84,7 @@ export default function EditBenefitDialog({
     categoryId,
     contractFile,
     initialIsActive,
+    currentUserIdentifier,
     initialRequiresContract,
     isActive,
     isCore,

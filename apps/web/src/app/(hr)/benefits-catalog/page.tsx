@@ -1,7 +1,12 @@
+import { getCurrentUserAccess } from "@/shared/auth/get-current-user-access";
 import HrPageShell from "../../HR/_components/HrPageShell";
 import BenefitsCatalogContent from "./components/BenefitsCatalogContent";
 
-export default function BenefitsCatalogPage() {
+export default async function BenefitsCatalogPage() {
+  const access = await getCurrentUserAccess();
+  const currentUserIdentifier =
+    access.email ?? access.userId ?? "current_hr_admin";
+
   return (
     <HrPageShell
       activeKey="benefits-catalog"
@@ -9,7 +14,7 @@ export default function BenefitsCatalogPage() {
       subtitle="Review, publish, and maintain employee benefit offerings."
       title="Benefits Catalog"
     >
-      <BenefitsCatalogContent />
+      <BenefitsCatalogContent currentUserIdentifier={currentUserIdentifier} />
     </HrPageShell>
   );
 }

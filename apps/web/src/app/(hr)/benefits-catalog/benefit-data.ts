@@ -1,6 +1,5 @@
 import {
   BadgePercent,
-  CircleCheck,
   Dumbbell,
   Heart,
   Laptop,
@@ -8,22 +7,22 @@ import {
   BookOpen,
   ShieldPlus,
   StickyNote,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
 import type {
   BenefitBadge,
+  BenefitCategory,
   BenefitCatalogRecord,
   BenefitSection,
 } from "./benefit-types";
 
 export type {
   BenefitBadge,
+  BenefitCategory,
   BenefitCard,
   BenefitCatalogRecord,
   BenefitSection,
-  BenefitStat,
 } from "./benefit-types";
 
 const DEFAULT_SECTION_ICON = Heart;
@@ -97,57 +96,75 @@ function buildBadges(record: BenefitCatalogRecord): BenefitBadge[] {
 
 export function buildBenefitSections(
   benefits: BenefitCatalogRecord[],
+  categories: BenefitCategory[] = [],
 ): BenefitSection[] {
-  const groupedBenefits = new Map<string, BenefitCatalogRecord[]>();
+  const groupedBenefits = new Map<
+    string,
+    { categoryId: string; categoryName: string; records: BenefitCatalogRecord[] }
+  >();
 
   benefits.forEach((benefit) => {
-    const category = benefit.category.trim() || "General";
-    const group = groupedBenefits.get(category) ?? [];
-    group.push(benefit);
-    groupedBenefits.set(category, group);
-  });
-
-  return Array.from(groupedBenefits.entries()).map(([category, records]) => {
-    const sectionIcon = findMatchingIcon(
-      category,
-      sectionIconMatchers,
-      DEFAULT_SECTION_ICON,
-    );
-
-    return {
-      categoryId: records[0]?.categoryId ?? "",
-      title: category,
-      count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
-      icon: sectionIcon,
-      stats: [
-        {
-          icon: CircleCheck,
-          label: `${records.filter((record) => record.isActive).length} Active`,
-        },
-        {
-          icon: Users,
-          label: `${records.filter((record) => (record.vendorName?.trim() ?? "").length > 0).length} Vendors`,
-        },
-      ],
-      cards: records.map((record) => ({
-        id: record.id,
-        approvalRole: record.approvalRole,
-        category,
-        categoryId: record.categoryId,
-        title: record.title,
-        icon: findMatchingIcon(
-          `${record.title} ${category}`,
-          cardIconMatchers,
-          DEFAULT_CARD_ICON,
-        ),
-        enabled: record.isActive,
-        isCore: record.isCore,
-        requiresContract: record.requiresContract,
-        subsidyPercent: record.subsidyPercent,
-        vendorName: record.vendorName ?? null,
-        badges: buildBadges(record),
-        description: record.description,
-      })),
+    const categoryName = benefit.category.trim() || "General";
+    const categoryId = benefit.categoryId || categoryName;
+    const group = groupedBenefits.get(categoryId) ?? {
+      categoryId,
+      categoryName,
+      records: [],
     };
+    group.records.push(benefit);
+    groupedBenefits.set(categoryId, group);
   });
+
+  categories.forEach((category) => {
+    const categoryName = category.name.trim();
+    const categoryId = category.id.trim();
+
+    if (!categoryName || !categoryId || groupedBenefits.has(categoryId)) {
+      return;
+    }
+
+    groupedBenefits.set(categoryId, {
+      categoryId,
+      categoryName,
+      records: [],
+    });
+  });
+
+  return Array.from(groupedBenefits.values())
+    .sort((left, right) => left.categoryName.localeCompare(right.categoryName))
+    .map(({ categoryId, categoryName, records }) => {
+      const sectionIcon = findMatchingIcon(
+        categoryName,
+        sectionIconMatchers,
+        DEFAULT_SECTION_ICON,
+      );
+
+      return {
+        categoryId,
+        title: categoryName,
+        count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
+        icon: sectionIcon,
+        cards: records.map((record) => ({
+          activeEmployees: Math.max(0, record.activeEmployees ?? 0),
+          id: record.id,
+          approvalRole: record.approvalRole,
+          category: categoryName,
+          categoryId: record.categoryId,
+          title: record.title,
+          icon: findMatchingIcon(
+            `${record.title} ${categoryName}`,
+            cardIconMatchers,
+            DEFAULT_CARD_ICON,
+          ),
+          enabled: record.isActive,
+          isCore: record.isCore,
+          eligibleEmployees: Math.max(0, record.eligibleEmployees ?? 0),
+          requiresContract: record.requiresContract,
+          subsidyPercent: record.subsidyPercent,
+          vendorName: record.vendorName ?? null,
+          badges: buildBadges(record),
+          description: record.description,
+        })),
+      };
+    });
 }

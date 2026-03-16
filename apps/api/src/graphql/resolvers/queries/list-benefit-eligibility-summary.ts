@@ -9,6 +9,7 @@ import { rules } from '../../../db/schema/rules';
 import type { BenefitEligibilitySummary } from '../../generated/resolvers-types';
 
 type EligibilityCounts = {
+	activeEmployees: number;
 	blockedEmployees: number;
 	eligibleEmployees: number;
 	pendingEmployees: number;
@@ -16,6 +17,7 @@ type EligibilityCounts = {
 
 function createDefaultCounts(): EligibilityCounts {
 	return {
+		activeEmployees: 0,
 		blockedEmployees: 0,
 		eligibleEmployees: 0,
 		pendingEmployees: 0,
@@ -61,7 +63,10 @@ export async function listBenefitEligibilitySummary(DB: D1Database): Promise<Ben
 		const current = countsByBenefit.get(row.benefitId) ?? createDefaultCounts();
 		const count = Number(row.count ?? 0);
 
-		if (row.status === 'active' || row.status === 'eligible') {
+		if (row.status === 'active') {
+			current.activeEmployees += count;
+			current.eligibleEmployees += count;
+		} else if (row.status === 'eligible') {
 			current.eligibleEmployees += count;
 		} else if (row.status === 'locked') {
 			current.blockedEmployees += count;
@@ -90,6 +95,7 @@ export async function listBenefitEligibilitySummary(DB: D1Database): Promise<Ben
 			category: benefit.category ?? 'General',
 			subsidyPercent: benefit.subsidyPercent,
 			rulesApplied: rulesByBenefit.get(benefit.benefitId) ?? [],
+			activeEmployees: counts.activeEmployees,
 			eligibleEmployees: counts.eligibleEmployees,
 			blockedEmployees: counts.blockedEmployees,
 			pendingEmployees: counts.pendingEmployees,

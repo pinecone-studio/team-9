@@ -68,6 +68,7 @@ export type SubmitBenefitUpdateRequestVariables = {
       categoryId: string;
       description: string;
       id: string;
+      isActive?: boolean | null;
       isCore: boolean;
       name: string;
       requiresContract: boolean;

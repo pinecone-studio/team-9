@@ -3,13 +3,13 @@ import { useState } from "react";
 
 import {
   BENEFIT_CATALOG_QUERY,
-  SET_BENEFIT_STATUS_MUTATION,
+  CREATE_BENEFIT_CATEGORY_MUTATION,
   type BenefitCatalogQuery,
-  type SetBenefitStatusMutation,
-  type SetBenefitStatusVariables,
+  type CreateBenefitCategoryMutation,
+  type CreateBenefitCategoryVariables,
 } from "./wellness-section.graphql";
 import { buildBenefitSections } from "../benefit-data";
-import type { BenefitCard, BenefitCatalogRecord } from "../benefit-types";
+import type { BenefitCard } from "../benefit-types";
 import type { BenefitDraft } from "./benefit-draft";
 
 type UseWellnessCatalogStateProps = {
@@ -23,15 +23,12 @@ export function useWellnessCatalogState({
   const [draftBenefit, setDraftBenefit] = useState<BenefitDraft | null>(null);
   const [dialogCategoryId, setDialogCategoryId] = useState<string | null>(null);
   const [dialogDraft, setDialogDraft] = useState<BenefitDraft | null>(null);
-  const [benefitOverrides, setBenefitOverrides] = useState<
-    Record<string, Partial<BenefitCatalogRecord>>
-  >({});
   const [deletedBenefitIds, setDeletedBenefitIds] = useState<Set<string>>(new Set());
   const [selectedBenefit, setSelectedBenefit] = useState<BenefitCard | null>(null);
-  const [setBenefitStatus] = useMutation<
-    SetBenefitStatusMutation,
-    SetBenefitStatusVariables
-  >(SET_BENEFIT_STATUS_MUTATION);
+  const [createBenefitCategory, { loading: creatingCategory }] = useMutation<
+    CreateBenefitCategoryMutation,
+    CreateBenefitCategoryVariables
+  >(CREATE_BENEFIT_CATEGORY_MUTATION);
   const { data, error, loading, refetch } = useQuery<BenefitCatalogQuery>(
     BENEFIT_CATALOG_QUERY,
     {
@@ -40,13 +37,27 @@ export function useWellnessCatalogState({
       notifyOnNetworkStatusChange: true,
     },
   );
+  const eligibilitySummaryByBenefitId = new Map(
+    (data?.listBenefitEligibilitySummary ?? []).map((summary) => [
+      summary.benefitId,
+      summary,
+    ]),
+  );
 
   const benefitCatalogRecords = (data?.allBenefits ?? []).flatMap((benefit) => {
     if (!benefit || deletedBenefitIds.has(benefit.id)) {
       return [];
     }
 
-    return [{ ...benefit, ...benefitOverrides[benefit.id] }];
+    const summary = eligibilitySummaryByBenefitId.get(benefit.id);
+
+    return [
+      {
+        ...benefit,
+        activeEmployees: summary?.activeEmployees ?? 0,
+        eligibleEmployees: summary?.eligibleEmployees ?? 0,
+      },
+    ];
   });
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const shouldShowDraftCard =
@@ -72,7 +83,11 @@ export function useWellnessCatalogState({
 
           return haystack.includes(normalizedSearchQuery);
         });
-  const benefitSections = buildBenefitSections(filteredBenefitRecords);
+  const includeEmptyCategories = normalizedSearchQuery.length === 0;
+  const benefitSections = buildBenefitSections(
+    filteredBenefitRecords,
+    includeEmptyCategories ? data?.benefitCategories ?? [] : [],
+  );
 
   function openNewBenefitDialog(defaultCategoryId?: string | null) {
     setDialogCategoryId(defaultCategoryId ?? benefitSections[0]?.categoryId ?? null);
@@ -96,40 +111,6 @@ export function useWellnessCatalogState({
     setIsAddDialogOpen(false);
   }
 
-  async function handleBenefitToggle(benefitId: string, isActive: boolean) {
-    const previousIsActive =
-      benefitCatalogRecords.find((record) => record.id === benefitId)?.isActive ?? isActive;
-
-    setBenefitOverrides((prev) => ({
-      ...prev,
-      [benefitId]: { ...prev[benefitId], isActive },
-    }));
-
-    try {
-      const result = await setBenefitStatus({
-        variables: {
-          input: {
-            id: benefitId,
-            isActive,
-          },
-        },
-      });
-
-      setBenefitOverrides((prev) => ({
-        ...prev,
-        [benefitId]: {
-          ...prev[benefitId],
-          isActive: result.data?.setBenefitStatus.isActive ?? isActive,
-        },
-      }));
-    } catch {
-      setBenefitOverrides((prev) => ({
-        ...prev,
-        [benefitId]: { ...prev[benefitId], isActive: previousIsActive },
-      }));
-    }
-  }
-
   function handleBenefitDeleted(benefitId: string) {
     setDeletedBenefitIds((prev) => {
       const next = new Set(prev);
@@ -138,13 +119,37 @@ export function useWellnessCatalogState({
     });
   }
 
+  async function handleCreateCategory(name: string) {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      throw new Error("Category name is required.");
+    }
+
+    const result = await createBenefitCategory({
+      variables: {
+        name: trimmedName,
+      },
+    });
+
+    const createdCategory = result.data?.createBenefitCategory;
+
+    if (!createdCategory) {
+      throw new Error("Category could not be created.");
+    }
+
+    await refetch();
+    return createdCategory;
+  }
+
   return {
     benefitSections,
     closeAddDialog,
+    creatingCategory,
     draftBenefit,
     error,
     handleBenefitDeleted,
-    handleBenefitToggle,
+    handleCreateCategory,
     isAddDialogOpen,
     loading,
     openDraftBenefitDialog,

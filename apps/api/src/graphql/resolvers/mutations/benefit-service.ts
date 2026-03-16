@@ -333,6 +333,7 @@ export async function applyUpdateBenefit(
 			approvalRole: prepared.approvalRole,
 			isCore: prepared.isCore,
 			requiresContract: prepared.requiresContract,
+			isActive: input.isActive ?? existingBenefit.isActive,
 		})
 		.where(eq(benefits.id, benefitId));
 
@@ -344,7 +345,7 @@ export async function applyUpdateBenefit(
 		description: prepared.description,
 		categoryId: prepared.categoryId,
 		category: prepared.categoryName,
-		is_active: existingBenefit.isActive,
+		is_active: input.isActive ?? existingBenefit.isActive,
 		approval_role: prepared.approvalRole,
 		subsidy_percent: prepared.subsidyPercent,
 		vendor_name: prepared.vendorName,

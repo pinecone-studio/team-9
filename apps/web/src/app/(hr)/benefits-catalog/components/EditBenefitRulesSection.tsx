@@ -39,7 +39,7 @@ export default function EditBenefitRulesSection({
   selectedRuleId,
 }: EditBenefitRulesSectionProps) {
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 w-full">
       <div className="flex flex-col gap-[5px]">
         <h3 className="text-[16px] leading-4 font-semibold text-black">Eligibility Rules</h3>
         <p className="text-[12px] leading-4 font-normal text-[#5B6470]">

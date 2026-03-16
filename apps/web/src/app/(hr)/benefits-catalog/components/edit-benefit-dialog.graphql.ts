@@ -74,6 +74,13 @@ export type SubmitBenefitUpdateRequestVariables = {
       subsidyPercent: number;
       vendorName?: string | null;
     };
+    contractUpload?: {
+      effectiveDate: string;
+      expiryDate: string;
+      fileBase64: string;
+      fileName: string;
+      version: string;
+    } | null;
     ruleAssignments?: Array<{
       errorMessage: string;
       isActive?: boolean;
@@ -83,6 +90,18 @@ export type SubmitBenefitUpdateRequestVariables = {
       value: string;
     }>;
   };
+};
+
+export type ContractSignedUrlByBenefitQuery = {
+  contractSignedUrlByBenefit: {
+    contractId: string;
+    expiresAt: string;
+    signedUrl: string;
+  };
+};
+
+export type ContractSignedUrlByBenefitVariables = {
+  benefitId: string;
 };
 
 export const DELETE_BENEFIT_MUTATION = gql`
@@ -120,6 +139,16 @@ export const SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION = gql`
       id
       status
       target_role
+    }
+  }
+`;
+
+export const CONTRACT_SIGNED_URL_BY_BENEFIT_QUERY = gql`
+  query ContractSignedUrlByBenefit($benefitId: ID!) {
+    contractSignedUrlByBenefit(benefitId: $benefitId) {
+      contractId
+      signedUrl
+      expiresAt
     }
   }
 `;

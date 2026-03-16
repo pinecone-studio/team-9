@@ -1,20 +1,25 @@
 import { useMutation } from "@apollo/client/react";
-
 import type { ApprovalRoleValue } from "./add-benefit-dialog.graphql";
 import {
   CREATE_BENEFIT_MUTATION,
   type CreateBenefitMutation,
   type CreateBenefitVariables,
 } from "./add-benefit-dialog.graphql";
-import { buildBenefitDraft, hasBenefitDraftContent, type BenefitDraft } from "./benefit-draft";
+import {
+  areBenefitDraftsEqual,
+  buildBenefitDraft,
+  hasBenefitDraftContent,
+  type BenefitDraft,
+} from "./benefit-draft";
+import { buildContractUploadInput } from "./contract-upload-client";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
-
 const FALLBACK_REQUESTED_BY = "current_hr_admin";
 
 type UseAddBenefitDialogActionsProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
   categoryId: string;
+  contractFile: File | null;
   coreBenefitEnabled: boolean;
   description: string;
   initialDraft?: BenefitDraft | null;
@@ -31,6 +36,7 @@ export function useAddBenefitDialogActions({
   approvalRole,
   assignedRules,
   categoryId,
+  contractFile,
   coreBenefitEnabled,
   description,
   initialDraft,
@@ -59,10 +65,24 @@ export function useAddBenefitDialogActions({
       requiresContract,
     });
 
-    if (hasBenefitDraftContent(draft)) {
-      onDraftChange?.(draft);
-    } else if (initialDraft) {
-      onDraftChange?.(null);
+    const baselineDraft = initialDraft ?? buildBenefitDraft({
+        approvalRole: "hr_admin",
+        name: "",
+        description: "",
+        categoryId,
+        subsidyPercent: "50",
+        vendorName: "",
+        coreBenefitEnabled: false,
+        requiresContract: false,
+      });
+    const hasChanges = !areBenefitDraftsEqual(draft, baselineDraft);
+
+    if (hasChanges) {
+      if (hasBenefitDraftContent(draft)) {
+        onDraftChange?.(draft);
+      } else {
+        onDraftChange?.(null);
+      }
     }
 
     onClose();
@@ -89,19 +109,28 @@ export function useAddBenefitDialogActions({
       return;
     }
 
+    if (!trimmedVendorName) {
+      setErrorMessage("Vendor name is required.");
+      return;
+    }
+
     if (!Number.isInteger(parsedSubsidy) || parsedSubsidy < 0 || parsedSubsidy > 100) {
       setErrorMessage("Subsidy percent must be a whole number between 0 and 100.");
       return;
     }
 
-    if (!coreBenefitEnabled && assignedRules.length === 0) {
-      setErrorMessage("Please attach at least one eligibility rule or enable Core Benefit.");
+    if (requiresContract && !contractFile) {
+      setErrorMessage("Please upload a contract file.");
       return;
     }
 
     setErrorMessage(null);
 
     try {
+      const contractUpload = requiresContract && contractFile
+        ? await buildContractUploadInput(contractFile)
+        : null;
+
       await createBenefit({
         variables: {
           input: {
@@ -111,11 +140,12 @@ export function useAddBenefitDialogActions({
               description: trimmedDescription,
               categoryId,
               subsidyPercent: parsedSubsidy,
-              vendorName: trimmedVendorName || null,
+              vendorName: trimmedVendorName,
               requiresContract,
               isCore: coreBenefitEnabled,
               approvalRole,
             },
+            contractUpload,
             ruleAssignments: coreBenefitEnabled
               ? []
               : assignedRules.map((rule, index) => ({
@@ -142,9 +172,5 @@ export function useAddBenefitDialogActions({
     }
   }
 
-  return {
-    handleCloseWithDraft,
-    handleSave,
-    saving,
-  };
+  return { handleCloseWithDraft, handleSave, saving };
 }

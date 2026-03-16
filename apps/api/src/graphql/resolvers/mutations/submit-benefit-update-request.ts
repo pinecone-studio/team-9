@@ -1,5 +1,6 @@
 import { getDb } from '../../../db';
 import { approvalRequests } from '../../../db/schema/approval-requests';
+import { deleteFromR2, uploadContractToR2 } from '../../../lib/r2';
 import {
 	ApprovalActionType,
 	ApprovalEntityType,
@@ -9,42 +10,121 @@ import {
 } from '../../generated/resolvers-types';
 import { mapApprovalRequest } from '../approval-request-mappers';
 import { getBenefitSnapshot, prepareUpdateBenefit } from './benefit-service';
+import {
+	decodeBase64ToBytes,
+	getContentTypeFromFileName,
+	parseBase64Payload,
+	validateFileSignature,
+} from './contract-upload-utils';
+
+type SubmitBenefitUpdateEnv = {
+	DB: D1Database;
+	CONTRACTS_BUCKET: R2Bucket;
+};
+
+type ContractUploadPayload = {
+	effectiveDate: string;
+	expiryDate: string;
+	fileName: string;
+	r2ObjectKey: string;
+	sha256Hash: string;
+	version: string;
+};
+
+function buildPendingContractObjectKey(requestId: string, version: string, fileName: string): string {
+	const safeVersion = version.replace(/[^a-zA-Z0-9._-]/g, '_');
+	const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+	return `contracts/pending/${requestId}/${safeVersion}/${safeName}`;
+}
+
+async function uploadPendingContractToR2(
+	bucket: R2Bucket,
+	requestId: string,
+	contractUpload: NonNullable<MutationSubmitBenefitUpdateRequestArgs['input']['contractUpload']>,
+): Promise<ContractUploadPayload> {
+	const contentType = getContentTypeFromFileName(contractUpload.fileName);
+	const { base64, contentTypeFromPayload } = parseBase64Payload(contractUpload.fileBase64);
+
+	if (contentTypeFromPayload && contentTypeFromPayload !== contentType) {
+		throw new Error(`File type mismatch: filename implies ${contentType}, payload says ${contentTypeFromPayload}`);
+	}
+
+	const bytes = decodeBase64ToBytes(base64);
+	validateFileSignature(bytes, contentType);
+
+	const r2ObjectKey = buildPendingContractObjectKey(requestId, contractUpload.version, contractUpload.fileName);
+	const { sha256Hash } = await uploadContractToR2(bucket, r2ObjectKey, bytes, contentType);
+
+	return {
+		version: contractUpload.version,
+		effectiveDate: contractUpload.effectiveDate,
+		expiryDate: contractUpload.expiryDate,
+		fileName: contractUpload.fileName,
+		r2ObjectKey,
+		sha256Hash,
+	};
+}
 
 export async function submitBenefitUpdateRequest(
-	DB: D1Database,
+	env: SubmitBenefitUpdateEnv,
 	args: MutationSubmitBenefitUpdateRequestArgs,
 ): Promise<ApprovalRequest> {
-	const db = getDb({ DB });
+	const db = getDb({ DB: env.DB });
 	const id = crypto.randomUUID();
 	const input = args.input;
 	const createdAt = new Date().toISOString();
-	const prepared = await prepareUpdateBenefit(DB, input.benefit);
-	const snapshot = await getBenefitSnapshot(DB, input.benefit.id);
+	const prepared = await prepareUpdateBenefit(env.DB, input.benefit);
+	const snapshot = await getBenefitSnapshot(env.DB, input.benefit.id);
 	const requestedBy = input.requestedBy.trim();
+	let contractUploadPayload: ContractUploadPayload | null = null;
 
 	if (!requestedBy) {
 		throw new Error('requestedBy is required');
 	}
 
+	if (prepared.requiresContract && !prepared.vendorName) {
+		throw new Error('Vendor name is required when requiresContract is enabled');
+	}
+
+	if (prepared.requiresContract && !snapshot.benefit.requiresContract && !input.contractUpload) {
+		throw new Error('Contract upload is required when enabling requiresContract');
+	}
+
+	if (!prepared.requiresContract && input.contractUpload) {
+		throw new Error('Contract upload is only allowed when requiresContract is enabled');
+	}
+
+	if (input.contractUpload) {
+		contractUploadPayload = await uploadPendingContractToR2(env.CONTRACTS_BUCKET, id, input.contractUpload);
+	}
+
 	const payloadJson = JSON.stringify({
 		benefit: input.benefit,
 		ruleAssignments: input.ruleAssignments ?? [],
+		contractUpload: contractUploadPayload,
 	});
 	const snapshotJson = JSON.stringify(snapshot);
 
-	await db.insert(approvalRequests).values({
-		id,
-		entityType: ApprovalEntityType.Benefit,
-		entityId: input.benefit.id,
-		actionType: ApprovalActionType.Update,
-		status: ApprovalRequestStatus.Pending,
-		targetRole: prepared.approvalRole,
-		requestedBy,
-		payloadJson,
-		snapshotJson,
-		createdAt,
-		isActive: true,
-	});
+	try {
+		await db.insert(approvalRequests).values({
+			id,
+			entityType: ApprovalEntityType.Benefit,
+			entityId: input.benefit.id,
+			actionType: ApprovalActionType.Update,
+			status: ApprovalRequestStatus.Pending,
+			targetRole: prepared.approvalRole,
+			requestedBy,
+			payloadJson,
+			snapshotJson,
+			createdAt,
+			isActive: true,
+		});
+	} catch (error) {
+		if (contractUploadPayload) {
+			await deleteFromR2(env.CONTRACTS_BUCKET, contractUploadPayload.r2ObjectKey);
+		}
+		throw error;
+	}
 
 	return mapApprovalRequest({
 		id,

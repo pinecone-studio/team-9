@@ -1,12 +1,14 @@
 type AddBenefitDialogFooterProps = {
   onCancel: () => void;
   onSave: () => void;
+  saveDisabled: boolean;
   saving: boolean;
 };
 
 export default function AddBenefitDialogFooter({
   onCancel,
   onSave,
+  saveDisabled,
   saving,
 }: AddBenefitDialogFooterProps) {
   return (
@@ -22,7 +24,7 @@ export default function AddBenefitDialogFooter({
           </button>
           <button
             className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
-            disabled={saving}
+            disabled={saving || saveDisabled}
             onClick={onSave}
             type="button"
           >

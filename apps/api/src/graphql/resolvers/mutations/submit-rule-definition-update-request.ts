@@ -25,6 +25,7 @@ export async function submitRuleDefinitionUpdateRequest(
 
 	const payloadJson = JSON.stringify({ rule: input.rule });
 	const snapshotJson = JSON.stringify(snapshot);
+	const targetRole = input.approvalRole ?? ApprovalRole.HrAdmin;
 
 	await db.insert(approvalRequests).values({
 		id,
@@ -32,7 +33,7 @@ export async function submitRuleDefinitionUpdateRequest(
 		entityId: input.rule.id,
 		actionType: ApprovalActionType.Update,
 		status: ApprovalRequestStatus.Pending,
-		targetRole: ApprovalRole.HrAdmin,
+		targetRole,
 		requestedBy: input.requestedBy.trim(),
 		payloadJson,
 		snapshotJson,
@@ -46,7 +47,7 @@ export async function submitRuleDefinitionUpdateRequest(
 		entityId: input.rule.id,
 		actionType: ApprovalActionType.Update,
 		status: ApprovalRequestStatus.Pending,
-		targetRole: ApprovalRole.HrAdmin,
+		targetRole,
 		requestedBy: input.requestedBy.trim(),
 		reviewedBy: null,
 		reviewComment: null,

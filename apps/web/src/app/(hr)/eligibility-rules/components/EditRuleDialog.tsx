@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { RuleValueType } from "@/shared/apollo/generated";
+import { ApprovalRole, RuleValueType } from "@/shared/apollo/generated";
 
 import EditRuleDialogFields from "./EditRuleDialogFields";
+import RuleApprovalSection, {
+  type ApprovalRoleValue,
+} from "./RuleApprovalSection";
 import { getUnitOptions, parseOptionsJson } from "./edit-rule-dialog.utils";
 import type { RuleCardModel } from "../types";
 
@@ -12,6 +15,7 @@ type EditRuleDialogProps = {
   onClose: () => void;
   onDelete: (id: string) => Promise<void>;
   onSave: (payload: {
+    approvalRole: ApprovalRoleValue;
     description: string;
     id: string;
     measurement?: string;
@@ -36,6 +40,7 @@ export default function EditRuleDialog({
   const [value, setValue] = useState(rule.metricValue ?? "");
   const [measurement, setMeasurement] = useState(rule.defaultUnit ?? "");
   const [enumOptionsInput, setEnumOptionsInput] = useState(parsedOptions.options.join(", "));
+  const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(ApprovalRole.HrAdmin);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const enumOptions = enumOptionsInput.split(",").map((item) => item.trim()).filter(Boolean);
@@ -59,6 +64,7 @@ export default function EditRuleDialog({
     }
 
     await onSave({
+      approvalRole,
       description: description.trim(),
       id: rule.id,
       measurement: rule.valueType === RuleValueType.Number || rule.valueType === RuleValueType.Date ? measurement.trim() || undefined : undefined,
@@ -104,6 +110,11 @@ export default function EditRuleDialog({
             valueType={rule.valueType}
           />
 
+          <RuleApprovalSection
+            approvalRole={approvalRole}
+            onApprovalRoleChange={setApprovalRole}
+          />
+
           <div className="flex w-full items-center justify-between gap-[9px]">
             <button className="flex h-[38px] items-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-white" disabled={submitting} onClick={() => void onDelete(rule.id)} type="button">
               <Trash2 className="h-[18px] w-[18px]" />
@@ -112,7 +123,7 @@ export default function EditRuleDialog({
             <div className="flex items-center gap-[9px]">
               <button className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black" onClick={onClose} type="button">Cancel</button>
               <button className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white" disabled={submitting || !name.trim() || !description.trim()} onClick={() => void handleSave()} type="button">
-                {submitting ? "Saving..." : "Save Changes"}
+                {submitting ? "Submitting..." : "Submit Update"}
               </button>
             </div>
           </div>

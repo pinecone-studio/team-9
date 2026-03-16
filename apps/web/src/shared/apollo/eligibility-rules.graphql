@@ -18,43 +18,19 @@ query EligibilityRulesPageData {
   }
 }
 
-mutation CreateRuleDefinition($input: CreateRuleDefinitionInput!) {
-  createRuleDefinition(input: $input) {
+mutation CreateRuleApprovalRequest($input: CreateApprovalRequestInput!) {
+  createApprovalRequest(input: $input) {
     id
-    category_id
-    category_name
-    rule_type
-    name
-    description
-    value_type
-    allowed_operators_json
-    options_json
-    default_unit
-    default_value
-    default_operator
-    is_active
-    usage_count
-    linked_benefits_json
+    status
+    target_role
   }
 }
 
-mutation UpdateRuleDefinition($input: UpdateRuleDefinitionInput!) {
-  updateRuleDefinition(input: $input) {
+mutation UpdateRuleApprovalRequest($input: CreateApprovalRequestInput!) {
+  createApprovalRequest(input: $input) {
     id
-    category_id
-    category_name
-    rule_type
-    name
-    description
-    value_type
-    allowed_operators_json
-    options_json
-    default_unit
-    default_value
-    default_operator
-    is_active
-    usage_count
-    linked_benefits_json
+    status
+    target_role
   }
 }
 mutation DeleteRuleDefinition($id: ID!) {

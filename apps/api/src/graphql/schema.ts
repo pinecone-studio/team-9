@@ -313,11 +313,13 @@ export const typeDefs = /* GraphQL */ `
 
   input SubmitRuleDefinitionCreateRequestInput {
     requestedBy: String!
+    approvalRole: ApprovalRole
     rule: CreateRuleDefinitionInput!
   }
 
   input SubmitRuleDefinitionUpdateRequestInput {
     requestedBy: String!
+    approvalRole: ApprovalRole
     rule: UpdateRuleDefinitionInput!
   }
 

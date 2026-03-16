@@ -21,12 +21,14 @@ import type { RuleCardModel } from "../types";
 import { buildSections, getAllowedOperators, getFallbackCategoryId } from "./rule-section-list.utils";
 
 type RuleSectionListProps = {
+  currentUserIdentifier: string;
   searchTerm?: string;
 };
 
-const FALLBACK_REQUESTED_BY = "current_hr_admin";
-
-export default function RuleSectionList({ searchTerm = "" }: RuleSectionListProps) {
+export default function RuleSectionList({
+  currentUserIdentifier,
+  searchTerm = "",
+}: RuleSectionListProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleCardModel | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,7 +68,7 @@ export default function RuleSectionList({ searchTerm = "" }: RuleSectionListProp
         actionType: ApprovalActionType.Create,
         entityType: ApprovalEntityType.Rule,
         payloadJson: JSON.stringify({ rule: ruleInput }),
-        requestedBy: FALLBACK_REQUESTED_BY,
+        requestedBy: currentUserIdentifier,
         targetRole: input.approvalRole,
       } } });
       if (!result.data?.createApprovalRequest.id) throw new Error("Failed to submit rule request");
@@ -94,7 +96,7 @@ export default function RuleSectionList({ searchTerm = "" }: RuleSectionListProp
         entityId: editingRule.id,
         entityType: ApprovalEntityType.Rule,
         payloadJson: JSON.stringify({ rule: ruleInput }),
-        requestedBy: FALLBACK_REQUESTED_BY,
+        requestedBy: currentUserIdentifier,
         snapshotJson: JSON.stringify(editingRule),
         targetRole: payload.approvalRole,
       } } });

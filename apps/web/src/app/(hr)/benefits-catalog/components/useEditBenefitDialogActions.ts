@@ -18,8 +18,6 @@ import {
   type SubmitBenefitUpdateRequestVariables,
 } from "./edit-benefit-dialog.graphql";
 
-const FALLBACK_REQUESTED_BY = "current_hr_admin";
-
 type UseEditBenefitDialogActionsProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
@@ -28,6 +26,7 @@ type UseEditBenefitDialogActionsProps = {
   categoryId: string;
   contractFile: File | null;
   initialIsActive: boolean;
+  currentUserIdentifier: string;
   initialRequiresContract: boolean;
   isActive: boolean;
   isCore: boolean;
@@ -48,6 +47,7 @@ export function useEditBenefitDialogActions({
   categoryId,
   contractFile,
   initialIsActive,
+  currentUserIdentifier,
   initialRequiresContract,
   isActive,
   isCore,
@@ -127,7 +127,7 @@ export function useEditBenefitDialogActions({
       await submitBenefitUpdateRequest({
         variables: {
           input: {
-            requestedBy: FALLBACK_REQUESTED_BY,
+            requestedBy: currentUserIdentifier,
             benefit: benefitInput,
             contractUpload,
             ruleAssignments: buildRuleAssignments(assignedRules, isCore),

@@ -15,6 +15,7 @@ import { useBenefitRuleAssignments } from "./useBenefitRuleAssignments";
 import { useAddBenefitDialogActions } from "./useAddBenefitDialogActions";
 
 type AddBenefitDialogProps = {
+  currentUserIdentifier: string;
   defaultCategoryId?: string | null;
   initialDraft?: BenefitDraft | null;
   onClose: () => void;
@@ -23,6 +24,7 @@ type AddBenefitDialogProps = {
 };
 
 export default function AddBenefitDialog({
+  currentUserIdentifier,
   defaultCategoryId,
   initialDraft,
   onClose,
@@ -67,6 +69,7 @@ export default function AddBenefitDialog({
     categoryId,
     contractFile,
     coreBenefitEnabled,
+    currentUserIdentifier,
     description,
     initialDraft,
     name,

@@ -21,15 +21,15 @@ import {
   formatApprovalStatus,
 } from "./approval-request-utils";
 
-const FALLBACK_REVIEWED_BY = "reviewing_hr_admin";
-
 type ApprovalRequestReviewDialogProps = {
+  currentUserIdentifier: string;
   onClose: () => void;
   onReviewed: () => Promise<unknown> | void;
   requestId: string;
 };
 
 export default function ApprovalRequestReviewDialog({
+  currentUserIdentifier,
   onClose,
   onReviewed,
   requestId,
@@ -50,6 +50,9 @@ export default function ApprovalRequestReviewDialog({
   >(REVIEW_APPROVAL_REQUEST_MUTATION);
   const request = data?.approvalRequest ?? null;
   const isPending = request?.status === "pending";
+  const isOwnRequest =
+    request?.requested_by.trim().toLowerCase() ===
+    currentUserIdentifier.trim().toLowerCase();
   const dialogTitle = useMemo(() => {
     if (!request) {
       return "Review Request";
@@ -78,7 +81,7 @@ export default function ApprovalRequestReviewDialog({
             approved,
             id: request.id,
             reviewComment: approved ? null : reviewComment.trim(),
-            reviewedBy: FALLBACK_REVIEWED_BY,
+            reviewedBy: currentUserIdentifier,
           },
         },
       });
@@ -135,8 +138,13 @@ export default function ApprovalRequestReviewDialog({
           )}
         </div>
         <ApprovalRequestReviewFooter
-          errorMessage={errorMessage}
-          isPending={isPending}
+          errorMessage={
+            errorMessage ??
+            (isPending && isOwnRequest
+              ? "You can view your own request, but you cannot approve or reject it."
+              : null)
+          }
+          isPending={Boolean(isPending && !isOwnRequest)}
           onApprove={() => void handleReview(true)}
           onClose={onClose}
           onRejectClick={() => {

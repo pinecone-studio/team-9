@@ -13,6 +13,7 @@ import WellnessSectionNotice from "./WellnessSectionNotice";
 import { useWellnessCatalogState } from "./useWellnessCatalogState";
 
 type WellnessSectionProps = {
+  currentUserIdentifier: string;
   searchQuery?: string;
 };
 
@@ -25,6 +26,7 @@ function formatCategoryLabel(value: string) {
 }
 
 export default function WellnessSection({
+  currentUserIdentifier,
   searchQuery = "",
 }: WellnessSectionProps) {
   const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] = useState(false);
@@ -131,6 +133,7 @@ export default function WellnessSection({
 
       {isAddDialogOpen ? (
         <AddBenefitDialog
+          currentUserIdentifier={currentUserIdentifier}
           defaultCategoryId={dialogCategoryId}
           initialDraft={dialogDraft}
           onClose={closeAddDialog}
@@ -146,6 +149,7 @@ export default function WellnessSection({
           benefitName={selectedBenefit.title}
           category={selectedBenefit.category}
           categoryId={selectedBenefit.categoryId}
+          currentUserIdentifier={currentUserIdentifier}
           description={selectedBenefit.description}
           enabled={selectedBenefit.enabled}
           isCore={selectedBenefit.isCore}

@@ -13,14 +13,13 @@ import {
 } from "./benefit-draft";
 import { buildContractUploadInput } from "./contract-upload-client";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
-const FALLBACK_REQUESTED_BY = "current_hr_admin";
-
 type UseAddBenefitDialogActionsProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
   categoryId: string;
   contractFile: File | null;
   coreBenefitEnabled: boolean;
+  currentUserIdentifier: string;
   description: string;
   initialDraft?: BenefitDraft | null;
   name: string;
@@ -38,6 +37,7 @@ export function useAddBenefitDialogActions({
   categoryId,
   contractFile,
   coreBenefitEnabled,
+  currentUserIdentifier,
   description,
   initialDraft,
   name,
@@ -134,7 +134,7 @@ export function useAddBenefitDialogActions({
       await createBenefit({
         variables: {
           input: {
-            requestedBy: FALLBACK_REQUESTED_BY,
+            requestedBy: currentUserIdentifier,
             benefit: {
               name: trimmedName,
               description: trimmedDescription,

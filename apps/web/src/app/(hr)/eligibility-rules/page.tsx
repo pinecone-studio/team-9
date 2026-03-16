@@ -1,26 +1,15 @@
-"use client";
+import { getCurrentUserAccess } from "@/shared/auth/get-current-user-access";
 
-import { useState } from "react";
+import EligibilityRulesPageContent from "./EligibilityRulesPageContent";
 
-import HrPageShell from "../../HR/_components/HrPageShell";
-import EligibilityRulesHeader from "./components/EligibilityRulesHeader";
-import RuleSectionList from "./components/RuleSectionList";
-
-export default function EligibilityRulesPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+export default async function EligibilityRulesPage() {
+  const access = await getCurrentUserAccess();
+  const currentUserIdentifier =
+    access.email ?? access.userId ?? "current_hr_admin";
 
   return (
-    <HrPageShell
-      activeKey="eligibility-rules"
-      hideHeader
-      subtitle="Control who qualifies for benefits and validate rule changes."
-      title="Eligibility Rules"
-    >
-      <EligibilityRulesHeader
-        onSearchChange={setSearchTerm}
-        searchValue={searchTerm}
-      />
-      <RuleSectionList searchTerm={searchTerm} />
-    </HrPageShell>
+    <EligibilityRulesPageContent
+      currentUserIdentifier={currentUserIdentifier}
+    />
   );
 }

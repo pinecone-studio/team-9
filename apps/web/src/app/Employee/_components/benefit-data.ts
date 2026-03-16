@@ -1,0 +1,152 @@
+import type { BenefitCard } from "./employee-types";
+
+export const wellnessIconPath = [
+  "M12 21s-6.5-4.35-9-8.5C1 9 2.7 6 5.9 6c2 0 3.2 1.2 4.1 2.4",
+  "C10.9 7.2 12.1 6 14.1 6 17.3 6 19 9 21 12.5 18.5 16.65 12 21 12 21Z",
+].join("");
+
+export const topBenefits: BenefitCard[] = [
+  {
+    status: "Eligible",
+    badge: "bg-[#E8EEFF] text-[#2F6BFF]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+    ],
+    passed: "6/6 passed",
+    action: true,
+  },
+  {
+    status: "Locked",
+    badge: "bg-[#F3F4F6] text-[#9CA3AF]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#EF4444",
+      "#EF4444",
+      "#EF4444",
+    ],
+    passed: "3/6 passed",
+    note: "Does not meet all requirements",
+  },
+  {
+    status: "Pending",
+    badge: "bg-[#FEF3C7] text-[#D97706]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+    ],
+    passed: "6/6 passed",
+  },
+  {
+    status: "Active",
+    badge: "bg-[#DCFCE7] text-[#16A34A]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+    ],
+    passed: "6/6 passed",
+  },
+  {
+    status: "Locked",
+    badge: "bg-[#F3F4F6] text-[#9CA3AF]",
+    accent: "",
+    dots: ["#22C55E", "#EF4444"],
+    passed: "1/2 passed",
+    note: "Requires Senior level (Level 3+)",
+  },
+  {
+    status: "Inactive",
+    badge: "bg-[#F3F4F6] text-[#9CA3AF]",
+    accent: "",
+    dots: [],
+    passed: "",
+    note: "Inactive - benefit temporarily disabled",
+  },
+];
+
+export const bottomBenefits: BenefitCard[] = [
+  {
+    status: "Eligible",
+    badge: "bg-[#E8EEFF] text-[#2F6BFF]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+    ],
+    passed: "6/6 passed",
+    action: true,
+  },
+  {
+    status: "Locked",
+    badge: "bg-[#F3F4F6] text-[#9CA3AF]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#EF4444",
+      "#EF4444",
+      "#EF4444",
+    ],
+    passed: "3/6 passed",
+    note: "Does not meet all requirements",
+  },
+  {
+    status: "Pending",
+    badge: "bg-[#FEF3C7] text-[#D97706]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+    ],
+    passed: "6/6 passed",
+  },
+  {
+    status: "Active",
+    badge: "bg-[#DCFCE7] text-[#16A34A]",
+    accent: "",
+    dots: [
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+      "#22C55E",
+    ],
+    passed: "6/6 passed",
+  },
+  {
+    status: "Locked",
+    badge: "bg-[#F3F4F6] text-[#9CA3AF]",
+    accent: "",
+    dots: ["#22C55E", "#EF4444"],
+    passed: "1/2 passed",
+    note: "Requires Senior level (Level 3+)",
+  },
+];

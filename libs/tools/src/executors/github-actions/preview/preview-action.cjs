@@ -13,6 +13,7 @@ const PREVIEW_WEB_WRANGLER_CONFIG = path.resolve(
   __dirname,
   '../../../../../../apps/web/wrangler.preview.jsonc',
 );
+const PREVIEW_WORKER_NAME_MAX = 54;
 
 const readWranglerName = (configPath) => {
   try {
@@ -172,9 +173,9 @@ const main = async () => {
 
   const branch = getEnv('GITHUB_HEAD_REF') || getEnv('GITHUB_REF_NAME') || 'preview';
   const apiWorkerBaseName = getDefaultWorkerName();
-  const apiWorkerName = normalizeName(`${apiWorkerBaseName}-${branch}`, 63);
+  const apiWorkerName = normalizeName(`${apiWorkerBaseName}-${branch}`, PREVIEW_WORKER_NAME_MAX);
   const webWorkerBaseName = getDefaultWebWorkerName();
-  const webWorkerName = normalizeName(`${webWorkerBaseName}-${branch}`, 63);
+  const webWorkerName = normalizeName(`${webWorkerBaseName}-${branch}`, PREVIEW_WORKER_NAME_MAX);
 
   if (apiAffected || webAffected) {
     runCommand('bunx nx run ebms-api:codegen --skip-nx-cache');

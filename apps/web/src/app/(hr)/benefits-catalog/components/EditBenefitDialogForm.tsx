@@ -4,6 +4,8 @@ import EditBenefitApprovalSection from "./EditBenefitApprovalSection";
 import EditBenefitAuditSection from "./EditBenefitAuditSection";
 import EditBenefitContractPanel from "./EditBenefitContractPanel";
 import EditBenefitRulesSection from "./EditBenefitRulesSection";
+import EditBenefitStatusSection from "./EditBenefitStatusSection";
+import EditBenefitValueSection from "./EditBenefitValueSection";
 import type { ApprovalRoleValue } from "./edit-benefit-dialog.graphql";
 import type { AssignedBenefitRule, RuleOption } from "./edit-benefit-dialog.types";
 
@@ -99,70 +101,19 @@ export default function EditBenefitDialogForm({
 
         <div className="border-t border-[#DBDEE1]" />
 
-        <section className="flex flex-col gap-4">
-          <h3 className="text-[16px] leading-4 font-semibold text-black">Benefit Status</h3>
-          <div className="flex flex-col gap-3">
-            <button
-              className="flex min-h-[46px] w-full items-center gap-3 rounded-[10px] border border-[#E5E5E5] bg-white px-3 py-3 text-left"
-              onClick={() => onIsActiveChange(true)}
-              type="button"
-            >
-              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                {isActive ? <span className="h-2 w-2 rounded-full bg-[#171717]" /> : null}
-              </span>
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="text-[14px] leading-[14px] font-medium text-[#0A0A0A]">Active</span>
-                <span className="text-[14px] leading-5 font-normal text-[#737373]">
-                  - Benefit is visible and available to eligible employees
-                </span>
-              </span>
-            </button>
-            <button
-              className="flex min-h-[46px] w-full items-center gap-3 rounded-[10px] border border-[#E5E5E5] bg-white px-3 py-3 text-left"
-              onClick={() => onIsActiveChange(false)}
-              type="button"
-            >
-              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                {!isActive ? <span className="h-2 w-2 rounded-full bg-[#171717]" /> : null}
-              </span>
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="text-[14px] leading-[14px] font-medium text-[#0A0A0A]">Disabled</span>
-                <span className="text-[14px] leading-5 font-normal text-[#737373]">
-                  - Benefit is hidden and not available
-                </span>
-              </span>
-            </button>
-          </div>
-        </section>
+        <EditBenefitStatusSection
+          isActive={isActive}
+          onIsActiveChange={onIsActiveChange}
+        />
 
         <div className="border-t border-[#DBDEE1]" />
 
-        <section className="flex flex-col gap-5">
-          <h3 className="text-[16px] leading-4 font-semibold text-black">Benefit Value</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-[10px]">
-              <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
-              <input
-                className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 outline-none"
-                max={100}
-                min={0}
-                onChange={(event) => onSubsidyPercentChange(event.target.value)}
-                type="number"
-                value={subsidyPercentValue}
-              />
-            </label>
-
-            <label className="flex flex-col gap-[10px]">
-              <BenefitDialogFieldLabel>Vendor name</BenefitDialogFieldLabel>
-              <input
-                className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 outline-none"
-                onChange={(event) => onVendorNameChange(event.target.value)}
-                type="text"
-                value={vendorNameValue}
-              />
-            </label>
-          </div>
-        </section>
+        <EditBenefitValueSection
+          onSubsidyPercentChange={onSubsidyPercentChange}
+          onVendorNameChange={onVendorNameChange}
+          subsidyPercentValue={subsidyPercentValue}
+          vendorNameValue={vendorNameValue}
+        />
 
         <div className="border-t border-[#DBDEE1]" />
 

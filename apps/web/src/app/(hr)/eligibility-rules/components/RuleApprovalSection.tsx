@@ -22,7 +22,7 @@ export default function RuleApprovalSection({
 
       <label className="flex max-w-[274px] flex-col gap-2">
         <span className="text-[14px] leading-[14px] font-medium text-[#0A0A0A]">
-          Approver Role
+          Who should approve this?
         </span>
         <select
           className="h-9 rounded-[8px] border border-[#E5E5E5] bg-white px-3 text-[14px] leading-5 text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none"

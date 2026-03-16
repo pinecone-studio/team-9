@@ -1,4 +1,10 @@
 query EligibilityRulesPageData {
+  employees {
+    id
+    position
+    employmentStatus
+    responsibilityLevel
+  }
   ruleDefinitions {
     id
     category_id

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 import type { RuleCardModel } from "../types";
 
@@ -74,13 +74,9 @@ export default function RuleCard({
             {metricLabel}
           </span>
           {metricVariant === "select" ? (
-            <button
-              className="flex h-7 min-w-[176px] items-center justify-between rounded-[4px] border border-[#D9D9D9] bg-white px-3 text-[12px] leading-[22px] font-medium text-[#262626]"
-              type="button"
-            >
+            <div className="flex h-7 min-w-[90px] items-center rounded-[4px] border border-[#D9D9D9] bg-white px-3 text-[12px] leading-[22px] font-medium text-[#262626]">
               <span>{metricValue}</span>
-              <ChevronDown className="h-4 w-4 text-black" />
-            </button>
+            </div>
           ) : (
             <div className="flex items-center gap-[6px]">
               <span className="flex h-7 min-w-[56px] items-center justify-center rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-2 shadow-[0_1px_2px_rgba(0,0,0,0.05)] text-[14px] leading-[18px] font-normal text-[#060B10]">

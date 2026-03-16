@@ -46,7 +46,6 @@ export default function EditRuleDialog({
   const enumOptions = enumOptionsInput.split(",").map((item) => item.trim()).filter(Boolean);
   const configLabel = parsedOptions.configLabel ?? rule.metricLabel ?? "";
   const unitOptions = getUnitOptions(configLabel, rule.valueType);
-  const ruleTypeLabel = rule.valueType === RuleValueType.Boolean ? "Boolean" : rule.valueType === RuleValueType.Enum ? "Enum" : rule.valueType === RuleValueType.Date ? "Date" : "Number";
 
   const onEnumOptionsInputChange = (next: string) => {
     setEnumOptionsInput(next);
@@ -102,8 +101,6 @@ export default function EditRuleDialog({
             onMeasurementChange={setMeasurement}
             onNameChange={setName}
             onValueChange={setValue}
-            ruleMetricLabel={rule.metricLabel}
-            ruleTypeLabel={ruleTypeLabel}
             unitOptions={unitOptions}
             validationError={validationError}
             value={value}

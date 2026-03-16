@@ -46,6 +46,17 @@ export default function RuleSectionList({
     for (const definition of data?.ruleDefinitions ?? []) map.set(definition.category_name, definition.category_id);
     return map;
   }, [data?.ruleDefinitions]);
+  const employeeRoles = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (data?.employees ?? [])
+            .map((employee) => employee?.position?.trim() ?? "")
+            .filter(Boolean),
+        ),
+      ),
+    [data?.employees],
+  );
 
   async function handleAddRule(input: { approvalRole: ApprovalRoleValue; defaultOperator: Operator; defaultUnit?: string; description: string; name: string; optionsJson?: string; ruleType: RuleType; value: string; valueType: RuleValueType }) {
     if (!activeSection) return;
@@ -127,7 +138,7 @@ export default function RuleSectionList({
     <>
       {error && <div className="mx-auto mt-4 w-full max-w-[1300px] px-4 text-sm text-red-600 sm:px-0">{error.message}</div>}
       <RuleSectionsView loading={loading} onAddRule={setActiveSection} onEditRule={setEditingRule} searchTerm={searchTerm} sections={sections} />
-      {activeSection && <AddRuleDialog onClose={() => setActiveSection(null)} onSubmit={handleAddRule} sectionTitle={activeSection} submitting={submitting} />}
+      {activeSection && <AddRuleDialog employeeRoles={employeeRoles} onClose={() => setActiveSection(null)} onSubmit={handleAddRule} sectionTitle={activeSection} submitting={submitting} />}
       {editingRule && <EditRuleDialog onDelete={handleDeleteRule} onClose={() => setEditingRule(null)} onSave={handleSaveRule} rule={editingRule} submitting={submitting} />}
     </>
   );

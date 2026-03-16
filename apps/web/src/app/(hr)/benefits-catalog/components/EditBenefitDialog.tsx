@@ -21,11 +21,13 @@ type EditBenefitDialogProps = {
   category: string;
   categoryId: string;
   description: string;
+  enabled: boolean;
   isCore: boolean;
   requiresContract: boolean;
   subsidyPercent: number;
   vendorName: string;
   onDeleted?: (benefitId: string) => void | Promise<unknown>;
+  onSaved?: () => void | Promise<unknown>;
   onClose: () => void;
 };
 
@@ -36,17 +38,20 @@ export default function EditBenefitDialog({
   category,
   categoryId,
   description,
+  enabled: initialIsActive,
   isCore: initialIsCore,
   requiresContract: initialRequiresContract,
   subsidyPercent,
   vendorName,
   onDeleted,
+  onSaved,
   onClose,
 }: EditBenefitDialogProps) {
   const [name, setName] = useState(benefitName);
   const [benefitDescription, setBenefitDescription] = useState(description);
   const [subsidyPercentValue, setSubsidyPercentValue] = useState(String(subsidyPercent));
   const [vendorNameValue, setVendorNameValue] = useState(vendorName);
+  const [isActive, setIsActive] = useState(initialIsActive);
   const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(initialApprovalRole);
   const [isCore, setIsCore] = useState(initialIsCore);
   const [requiresContract, setRequiresContract] = useState(initialRequiresContract);
@@ -76,11 +81,14 @@ export default function EditBenefitDialog({
     benefitId,
     categoryId,
     contractFile,
+    initialIsActive,
     initialRequiresContract,
+    isActive,
     isCore,
     name,
     onClose,
     onDeleted,
+    onSaved,
     requiresContract,
     subsidyPercentValue,
     vendorNameValue,
@@ -119,12 +127,14 @@ export default function EditBenefitDialog({
           onBenefitDescriptionChange={setBenefitDescription}
           onContractFileChange={setContractFile}
           onDeleteRule={handleDeleteRule}
+          onIsActiveChange={setIsActive}
           onIsCoreChange={setIsCore}
           onNameChange={setName}
           onRequiresContractChange={handleRequiresContractChange}
           onSelectedRuleIdChange={setSelectedRuleId}
           onSubsidyPercentChange={setSubsidyPercentValue}
           onVendorNameChange={setVendorNameValue}
+          isActive={isActive}
           requiresContract={requiresContract}
           selectedRuleId={selectedRuleId}
           subsidyPercentValue={subsidyPercentValue}

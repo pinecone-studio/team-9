@@ -14,6 +14,36 @@ import {
 
 const FALLBACK_REQUESTED_BY = "current_hr_admin";
 
+function isMissingIsActiveFieldError(error: unknown): boolean {
+  if (!error) {
+    return false;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message ?? "";
+    if (message.includes("UpdateBenefitInput") && message.includes("isActive")) {
+      return true;
+    }
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const graphQLErrors = (
+      error as {
+        graphQLErrors?: Array<{ message?: string }>;
+      }
+    ).graphQLErrors;
+
+    if (Array.isArray(graphQLErrors)) {
+      return graphQLErrors.some((item) => {
+        const message = item?.message ?? "";
+        return message.includes("UpdateBenefitInput") && message.includes("isActive");
+      });
+    }
+  }
+
+  return false;
+}
+
 type UseEditBenefitDialogActionsProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
@@ -21,11 +51,14 @@ type UseEditBenefitDialogActionsProps = {
   benefitId: string;
   categoryId: string;
   contractFile: File | null;
+  initialIsActive: boolean;
   initialRequiresContract: boolean;
+  isActive: boolean;
   isCore: boolean;
   name: string;
   onClose: () => void;
   onDeleted?: (benefitId: string) => void | Promise<unknown>;
+  onSaved?: () => void | Promise<unknown>;
   requiresContract: boolean;
   subsidyPercentValue: string;
   vendorNameValue: string;
@@ -38,11 +71,14 @@ export function useEditBenefitDialogActions({
   benefitId,
   categoryId,
   contractFile,
+  initialIsActive,
   initialRequiresContract,
+  isActive,
   isCore,
   name,
   onClose,
   onDeleted,
+  onSaved,
   requiresContract,
   subsidyPercentValue,
   vendorNameValue,
@@ -111,22 +147,27 @@ export function useEditBenefitDialogActions({
 
     try {
       const contractUpload = contractFile ? await buildContractUploadInput(contractFile) : null;
+      const benefitInput: SubmitBenefitUpdateRequestVariables["input"]["benefit"] = {
+        id: benefitId,
+        name: trimmedName,
+        description: trimmedDescription,
+        categoryId,
+        subsidyPercent: parsedSubsidy,
+        vendorName: trimmedVendorName || null,
+        requiresContract,
+        isCore,
+        approvalRole,
+      };
+
+      if (isActive !== initialIsActive) {
+        benefitInput.isActive = isActive;
+      }
 
       await submitBenefitUpdateRequest({
         variables: {
           input: {
             requestedBy: FALLBACK_REQUESTED_BY,
-            benefit: {
-              id: benefitId,
-              name: trimmedName,
-              description: trimmedDescription,
-              categoryId,
-              subsidyPercent: parsedSubsidy,
-              vendorName: trimmedVendorName || null,
-              requiresContract,
-              isCore,
-              approvalRole,
-            },
+            benefit: benefitInput,
             contractUpload,
             ruleAssignments: isCore
               ? []
@@ -142,8 +183,20 @@ export function useEditBenefitDialogActions({
         },
       });
 
+      try {
+        await onSaved?.();
+      } catch {
+        // Save already succeeded; ignore refresh callback failures.
+      }
       onClose();
     } catch (error) {
+      if (isMissingIsActiveFieldError(error)) {
+        setErrorMessage(
+          "Status request ilgeehiin tuld backend schema deploy hiih shaardlagatai (UpdateBenefitInput.isActive).",
+        );
+        return;
+      }
+
       setErrorMessage(
         error instanceof Error
           ? error.message

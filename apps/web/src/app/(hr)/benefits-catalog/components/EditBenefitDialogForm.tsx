@@ -23,12 +23,14 @@ type EditBenefitDialogFormProps = {
   onBenefitDescriptionChange: (value: string) => void;
   onContractFileChange: (file: File | null) => void;
   onDeleteRule: (ruleId: string) => void;
+  onIsActiveChange: (value: boolean) => void;
   onIsCoreChange: (checked: boolean) => void;
   onNameChange: (value: string) => void;
   onRequiresContractChange: (checked: boolean) => void;
   onSelectedRuleIdChange: (value: string) => void;
   onSubsidyPercentChange: (value: string) => void;
   onVendorNameChange: (value: string) => void;
+  isActive: boolean;
   requiresContract: boolean;
   selectedRuleId: string;
   subsidyPercentValue: string;
@@ -51,12 +53,14 @@ export default function EditBenefitDialogForm({
   onBenefitDescriptionChange,
   onContractFileChange,
   onDeleteRule,
+  onIsActiveChange,
   onIsCoreChange,
   onNameChange,
   onRequiresContractChange,
   onSelectedRuleIdChange,
   onSubsidyPercentChange,
   onVendorNameChange,
+  isActive,
   requiresContract,
   selectedRuleId,
   subsidyPercentValue,
@@ -92,6 +96,44 @@ export default function EditBenefitDialogForm({
             value={benefitDescription}
           />
         </label>
+
+        <div className="border-t border-[#DBDEE1]" />
+
+        <section className="flex flex-col gap-4">
+          <h3 className="text-[16px] leading-4 font-semibold text-black">Benefit Status</h3>
+          <div className="flex flex-col gap-3">
+            <button
+              className="flex min-h-[46px] w-full items-center gap-3 rounded-[10px] border border-[#E5E5E5] bg-white px-3 py-3 text-left"
+              onClick={() => onIsActiveChange(true)}
+              type="button"
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                {isActive ? <span className="h-2 w-2 rounded-full bg-[#171717]" /> : null}
+              </span>
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="text-[14px] leading-[14px] font-medium text-[#0A0A0A]">Active</span>
+                <span className="text-[14px] leading-5 font-normal text-[#737373]">
+                  - Benefit is visible and available to eligible employees
+                </span>
+              </span>
+            </button>
+            <button
+              className="flex min-h-[46px] w-full items-center gap-3 rounded-[10px] border border-[#E5E5E5] bg-white px-3 py-3 text-left"
+              onClick={() => onIsActiveChange(false)}
+              type="button"
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                {!isActive ? <span className="h-2 w-2 rounded-full bg-[#171717]" /> : null}
+              </span>
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="text-[14px] leading-[14px] font-medium text-[#0A0A0A]">Disabled</span>
+                <span className="text-[14px] leading-5 font-normal text-[#737373]">
+                  - Benefit is hidden and not available
+                </span>
+              </span>
+            </button>
+          </div>
+        </section>
 
         <div className="border-t border-[#DBDEE1]" />
 

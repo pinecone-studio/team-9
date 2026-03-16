@@ -13,7 +13,6 @@ type WellnessCategorySectionProps = {
   onContinueDraft: () => void;
   onDeleteDraft: () => void;
   onEditBenefit: (benefit: BenefitCardData) => void;
-  onToggleBenefit: (benefitId: string, isActive: boolean) => Promise<void>;
   section: BenefitSection;
   shouldShowDraftCard: boolean;
 };
@@ -25,14 +24,13 @@ export default function WellnessCategorySection({
   onContinueDraft,
   onDeleteDraft,
   onEditBenefit,
-  onToggleBenefit,
   section,
   shouldShowDraftCard,
 }: WellnessCategorySectionProps) {
-  const { cards, categoryId, count, icon: SectionIcon, stats, title } = section;
+  const { cards, categoryId, count, icon: SectionIcon, title } = section;
 
   return (
-    <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0">
+    <section className="flex w-full flex-col items-start gap-6">
       <div className="flex h-6 w-full items-center justify-between gap-[10px]">
         <div className="flex h-6 items-center gap-[10px]">
           <div className="flex h-6 items-center gap-2">
@@ -56,8 +54,6 @@ export default function WellnessCategorySection({
             key={`${title}-${card.title}`}
             {...card}
             onEdit={onEditBenefit}
-            onToggle={onToggleBenefit}
-            stats={stats}
           />
         ))}
         {shouldShowDraftCard && draftBenefit && draftBenefit.categoryId === categoryId ? (

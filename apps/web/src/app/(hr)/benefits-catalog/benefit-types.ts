@@ -7,12 +7,13 @@ export type BenefitBadge = {
   weight?: "medium" | "semibold";
 };
 
-export type BenefitStat = {
-  icon: ComponentType<LucideProps>;
-  label: string;
+export type BenefitCategory = {
+  id: string;
+  name: string;
 };
 
 export type BenefitCard = {
+  activeEmployees: number;
   approvalRole: "finance_manager" | "hr_admin";
   badges: readonly BenefitBadge[];
   category: string;
@@ -22,6 +23,7 @@ export type BenefitCard = {
   id: string;
   icon: ComponentType<LucideProps>;
   isCore: boolean;
+  eligibleEmployees: number;
   requiresContract: boolean;
   subsidyPercent?: number | null;
   title: string;
@@ -34,15 +36,16 @@ export type BenefitSection = {
   cards: readonly BenefitCard[];
   count: string;
   icon: ComponentType<LucideProps>;
-  stats: readonly BenefitStat[];
   title: string;
 };
 
 export type BenefitCatalogRecord = {
+  activeEmployees?: number | null;
   approvalRole: "finance_manager" | "hr_admin";
   category: string;
   categoryId: string;
   description: string;
+  eligibleEmployees?: number | null;
   id: string;
   isActive: boolean;
   isCore: boolean;

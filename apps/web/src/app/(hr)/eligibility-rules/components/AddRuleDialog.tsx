@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { RuleValueType } from "@/shared/apollo/generated";
+import { ApprovalRole, RuleValueType } from "@/shared/apollo/generated";
 import type { Operator, RuleType } from "@/shared/apollo/generated";
 
 import AddRuleDialogFields from "./AddRuleDialogFields";
+import RuleApprovalSection, {
+  type ApprovalRoleValue,
+} from "./RuleApprovalSection";
 import {
   getConfigLabelOptions,
   getDefaultEnumOptions,
@@ -19,6 +22,7 @@ import {
 type AddRuleDialogProps = {
   onClose: () => void;
   onSubmit: (input: {
+    approvalRole: ApprovalRoleValue;
     defaultOperator: Operator;
     defaultUnit?: string;
     description: string;
@@ -47,6 +51,7 @@ export default function AddRuleDialog({
   const [configLabel, setConfigLabel] = useState(initialConfigLabel);
   const [unit, setUnit] = useState(getUnitOptions(initialConfigLabel, RuleValueType.Number)[0] ?? "");
   const [enumOptionsInput, setEnumOptionsInput] = useState(() => getDefaultEnumOptions(ruleType).join(", "));
+  const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(ApprovalRole.HrAdmin);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const enumOptions = enumOptionsInput.split(",").map((item) => item.trim()).filter(Boolean);
@@ -93,6 +98,7 @@ export default function AddRuleDialog({
     }
 
     await onSubmit({
+      approvalRole,
       defaultOperator: getOperatorForValueType(valueType),
       defaultUnit: valueType === RuleValueType.Number || valueType === RuleValueType.Date ? unit.trim() || undefined : undefined,
       description: description.trim(),
@@ -140,10 +146,15 @@ export default function AddRuleDialog({
           valueType={valueType}
         />
 
+        <RuleApprovalSection
+          approvalRole={approvalRole}
+          onApprovalRoleChange={setApprovalRole}
+        />
+
         <div className="flex w-full justify-end gap-2">
           <button className="flex h-9 items-center justify-center rounded-[6px] border border-[#DBDEE1] bg-[#F9FAFB] px-4 text-[14px] leading-5 font-medium text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)]" onClick={onClose} type="button">Cancel</button>
           <button className="flex h-9 items-center justify-center rounded-[6px] bg-[#424242] px-4 text-[14px] leading-5 font-medium text-[#FAFAFA] disabled:opacity-50" disabled={submitting || !name.trim() || !description.trim()} onClick={() => void handleSubmit()} type="button">
-            {submitting ? "Adding..." : "Add Rule"}
+            {submitting ? "Submitting..." : "Submit Request"}
           </button>
         </div>
       </div>

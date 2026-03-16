@@ -1,176 +1,167 @@
 "use client";
 
-import {
-  ChevronDown,
-  Percent,
-  Plus,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { useQuery } from "@apollo/client/react";
+import { useEffect, useRef, useState } from "react";
 
-import BenefitDialogFieldLabel from "./BenefitDialogFieldLabel";
-import BenefitDialogToggle from "./BenefitDialogToggle";
+import AddBenefitDialogFooter from "./AddBenefitDialogFooter";
+import AddBenefitDialogForm from "./AddBenefitDialogForm";
+import {
+  ADD_BENEFIT_RULES_QUERY,
+  type AddBenefitRulesQuery,
+  type ApprovalRoleValue,
+} from "./add-benefit-dialog.graphql";
+import type { BenefitDraft } from "./benefit-draft";
+import { useBenefitRuleAssignments } from "./useBenefitRuleAssignments";
+import { useAddBenefitDialogActions } from "./useAddBenefitDialogActions";
 
 type AddBenefitDialogProps = {
+  currentUserIdentifier: string;
+  defaultCategoryId?: string | null;
+  initialDraft?: BenefitDraft | null;
   onClose: () => void;
+  onCreated?: () => void | Promise<unknown>;
+  onDraftChange?: (draft: BenefitDraft | null) => void;
 };
 
-export default function AddBenefitDialog({ onClose }: AddBenefitDialogProps) {
+export default function AddBenefitDialog({
+  currentUserIdentifier,
+  defaultCategoryId,
+  initialDraft,
+  onClose,
+  onCreated,
+  onDraftChange,
+}: AddBenefitDialogProps) {
+  const [name, setName] = useState(initialDraft?.name ?? "");
+  const [description, setDescription] = useState(initialDraft?.description ?? "");
+  const [categoryId] = useState(initialDraft?.categoryId ?? defaultCategoryId ?? "");
+  const [subsidyPercent, setSubsidyPercent] = useState(
+    String(initialDraft?.subsidyPercent ?? 50),
+  );
+  const [vendorName, setVendorName] = useState(initialDraft?.vendorName ?? "");
+  const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(
+    initialDraft?.approvalRole ?? "hr_admin",
+  );
+  const [coreBenefitEnabled, setCoreBenefitEnabled] = useState(
+    initialDraft?.coreBenefitEnabled ?? false,
+  );
+  const [requiresContract, setRequiresContract] = useState(
+    initialDraft?.requiresContract ?? false,
+  );
+  const [contractFile, setContractFile] = useState<File | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const errorMessageRef = useRef<HTMLParagraphElement | null>(null);
+
+  const { data } = useQuery<AddBenefitRulesQuery>(ADD_BENEFIT_RULES_QUERY);
+  const {
+    assignedRules,
+    availableRules,
+    handleAddRule,
+    handleDeleteRule,
+    selectedRuleId,
+    setSelectedRuleId,
+  } = useBenefitRuleAssignments({
+    initialRules: [],
+    ruleDefinitions: data?.ruleDefinitions,
+  });
+  const { handleCloseWithDraft, handleSave, saving } = useAddBenefitDialogActions({
+    approvalRole,
+    assignedRules,
+    categoryId,
+    contractFile,
+    coreBenefitEnabled,
+    currentUserIdentifier,
+    description,
+    initialDraft,
+    name,
+    onClose,
+    onCreated,
+    onDraftChange,
+    requiresContract,
+    subsidyPercent,
+    vendorName,
+  });
+
+  useEffect(() => {
+    if (!errorMessage) {
+      return;
+    }
+
+    errorMessageRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [errorMessage]);
+
+  const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
+  const saveDisabled =
+    !categoryId ||
+    name.trim().length === 0 ||
+    description.trim().length === 0 ||
+    vendorName.trim().length === 0 ||
+    !Number.isInteger(parsedSubsidy) ||
+    parsedSubsidy < 0 ||
+    parsedSubsidy > 100 ||
+    (requiresContract && !contractFile);
+
+  function handleRequiresContractChange(value: boolean) {
+    setRequiresContract(value);
+    if (!value) {
+      setContractFile(null);
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-      <div className="flex w-full max-w-[578px] flex-col items-start gap-8 rounded-[10px] bg-white p-6">
-        <div className="flex w-full flex-col items-start gap-2">
-          <h2 className="w-full text-[18px] leading-7 font-semibold text-[#0F172A]">
-            Add a New Benefit
-          </h2>
-          <p className="w-full text-[14px] leading-5 font-normal text-[#64748B]">
-            Make changes to your profile here. Click save when you&apos;re done.
-          </p>
-        </div>
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          handleCloseWithDraft();
+        }
+      }}
+    >
+      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white">
+        <AddBenefitDialogForm
+          approvalRole={approvalRole}
+          assignedRules={assignedRules}
+          availableRules={availableRules}
+          contractFile={contractFile}
+          coreBenefitEnabled={coreBenefitEnabled}
+          description={description}
+          name={name}
+          onAddRule={handleAddRule}
+          onApprovalRoleChange={setApprovalRole}
+          onContractFileChange={setContractFile}
+          onCoreBenefitEnabledChange={setCoreBenefitEnabled}
+          onDescriptionChange={setDescription}
+          onNameChange={setName}
+          onRequiresContractChange={handleRequiresContractChange}
+          onRuleDelete={handleDeleteRule}
+          onSelectedRuleIdChange={setSelectedRuleId}
+          onSubsidyPercentChange={setSubsidyPercent}
+          onVendorNameChange={setVendorName}
+          requiresContract={requiresContract}
+          selectedRuleId={selectedRuleId}
+          subsidyPercent={subsidyPercent}
+          vendorName={vendorName}
+        />
 
-        <div className="flex w-full items-center justify-between gap-4">
-          <BenefitDialogFieldLabel>Benefit Name</BenefitDialogFieldLabel>
-          <input
-            className="h-9 w-[300px] rounded-[6px] border border-[#CBD5E1] bg-white px-3 text-[14px] leading-5 text-[#0F172A] outline-none"
-            defaultValue="Name"
-            type="text"
-          />
-        </div>
-
-        <label className="flex w-full flex-col items-start gap-2">
-          <BenefitDialogFieldLabel>Description</BenefitDialogFieldLabel>
-          <textarea
-            className="min-h-24 w-full rounded-[8px] border border-[#CBD5E1] bg-[rgba(255,255,255,0.002)] px-3 py-[9px] text-[14px] leading-5 text-[#0F172A] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]"
-            placeholder="Explain how this benefit works and what employees get from it..."
-          />
-        </label>
-
-        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center">
-          <label className="flex flex-1 flex-col gap-[10px]">
-            <BenefitDialogFieldLabel>Category</BenefitDialogFieldLabel>
-            <button
-              className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]"
-              type="button"
+        {errorMessage ? (
+          <div className="px-6 pb-3">
+            <p
+              className="w-full rounded-[6px] border border-[#F3C7C7] bg-[#FFF7F7] px-3 py-2 text-[13px] leading-5 text-[#B42318]"
+              ref={errorMessageRef}
             >
-              <span className="text-[12px] leading-4 font-normal text-black">Wellness</span>
-              <ChevronDown className="h-6 w-6 text-black" />
-            </button>
-          </label>
-
-          <label className="flex flex-1 flex-col gap-[10px]">
-            <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
-            <div className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]">
-              <input
-                className="w-full text-[12px] leading-4 font-normal text-black outline-none"
-                defaultValue="50"
-                type="text"
-              />
-              <Percent className="h-4 w-4 text-black" />
-            </div>
-          </label>
-
-          <label className="flex flex-1 flex-col gap-[10px]">
-            <BenefitDialogFieldLabel>Vendor name</BenefitDialogFieldLabel>
-            <input
-              className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 font-normal text-black outline-none"
-              defaultValue="PineFit Corp"
-              type="text"
-            />
-          </label>
-        </div>
-
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-col items-start gap-[5px]">
-            <span className="text-[14px] leading-4 font-medium text-black">Core Benefit</span>
-            <span className="text-[12px] leading-4 font-normal text-[#5B6470]">
-              Available to all employees
-            </span>
+              {errorMessage}
+            </p>
           </div>
-          <BenefitDialogToggle />
-        </div>
+        ) : null}
 
-        <div className="flex w-full flex-col items-start gap-3">
-          <div className="flex w-full flex-col gap-4 rounded-[10px] border border-[#E5E5E5] bg-[rgba(245,245,245,0.3)] p-4">
-            <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
-              <button
-                className="flex h-9 w-full items-center justify-between rounded-[8px] border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] lg:w-[180px]"
-                type="button"
-              >
-                <span className="text-[14px] leading-5 font-normal text-[#737373]">Rule Type</span>
-                <ChevronDown className="h-4 w-4 text-[#737373]" />
-              </button>
-              <button
-                className="flex h-9 w-full items-center justify-between rounded-[8px] border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] lg:flex-1"
-                type="button"
-              >
-                <span className="text-[14px] leading-5 font-normal text-[#0A0A0A]">at least</span>
-                <ChevronDown className="h-4 w-4 text-[#737373]" />
-              </button>
-              <input
-                className="h-9 w-full rounded-[8px] border border-[#E5E5E5] bg-[rgba(255,255,255,0.002)] px-3 text-[14px] leading-[18px] text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373] lg:flex-1"
-                placeholder="Enter value"
-                type="text"
-              />
-              <button className="flex h-8 w-8 items-center justify-center rounded-[8px] opacity-50" type="button">
-                <Trash2 className="h-4 w-4 text-[#737373]" />
-              </button>
-            </div>
-          </div>
-
-          <button
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-[#E5E5E5] bg-white text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-            type="button"
-          >
-            <Plus className="h-4 w-4" />
-            Add Another Rule
-          </button>
-        </div>
-
-        <div className="flex w-full flex-col items-center gap-4">
-          <div className="flex w-full items-center justify-between">
-            <div className="flex flex-col items-start gap-[2px]">
-              <span className="text-[14px] leading-4 font-medium text-black">Requires Contract</span>
-              <span className="text-[12px] leading-4 font-normal text-[#5B6470]">
-                Employee must sign an agreement
-              </span>
-            </div>
-            <BenefitDialogToggle />
-          </div>
-
-          <button
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-[#E5E5E5] bg-white text-[14px] leading-5 font-medium text-[#BFBFBF] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-            type="button"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Contract
-          </button>
-        </div>
-
-        <div className="flex w-full flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-          <button
-            className="flex h-[38px] items-center justify-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-[14px] leading-4 font-medium text-white"
-            type="button"
-          >
-            <Trash2 className="h-[18px] w-[18px]" />
-            Delete
-          </button>
-
-          <div className="flex items-center gap-[9px]">
-            <button
-              className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black"
-              onClick={onClose}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white"
-              type="button"
-            >
-              Save Changes
-            </button>
-          </div>
-        </div>
+        <AddBenefitDialogFooter
+          onCancel={handleCloseWithDraft}
+          onSave={() => handleSave(setErrorMessage)}
+          saveDisabled={saveDisabled}
+          saving={saving}
+        />
       </div>
     </div>
   );

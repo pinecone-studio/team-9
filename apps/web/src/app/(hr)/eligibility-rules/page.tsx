@@ -1,17 +1,15 @@
-import HrPageShell from "../../HR/_components/HrPageShell";
-import EligibilityRulesHeader from "./components/EligibilityRulesHeader";
-import RuleSectionList from "./components/RuleSectionList";
+import { getCurrentUserAccess } from "@/shared/auth/get-current-user-access";
 
-export default function EligibilityRulesPage() {
+import EligibilityRulesPageContent from "./EligibilityRulesPageContent";
+
+export default async function EligibilityRulesPage() {
+  const access = await getCurrentUserAccess();
+  const currentUserIdentifier =
+    access.email ?? access.userId ?? "current_hr_admin";
+
   return (
-    <HrPageShell
-      activeKey="eligibility-rules"
-      hideHeader
-      subtitle="Control who qualifies for benefits and validate rule changes."
-      title="Eligibility Rules"
-    >
-      <EligibilityRulesHeader />
-      <RuleSectionList />
-    </HrPageShell>
+    <EligibilityRulesPageContent
+      currentUserIdentifier={currentUserIdentifier}
+    />
   );
 }

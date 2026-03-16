@@ -1,12 +1,16 @@
 import { relations } from "drizzle-orm";
 
+import { approvalRequests } from "./approval-requests";
 import { benefitEligibility } from "./benefit-eligibility";
+import { benefitRules } from "./benefit-rules";
 import { benefitRequests } from "./benefit-requests";
 import { benefits } from "./benefits";
 import { contracts } from "./contracts";
 import { eligibilityRules } from "./eligibility-rules";
 import { employees } from "./employees";
 import { benefitCategories } from "./benefit-categories";
+import { ruleCategories } from "./rule-categories";
+import { rules } from "./rules";
 
 export const employeesRelations = relations(employees, ({ many }) => ({
   benefitEligibility: many(benefitEligibility),
@@ -27,6 +31,7 @@ export const benefitsRelations = relations(benefits, ({ one, many }) => ({
   }),
   contracts: many(contracts),
   eligibilityRules: many(eligibilityRules),
+  benefitRules: many(benefitRules),
   benefitEligibility: many(benefitEligibility),
   benefitRequests: many(benefitRequests),
 }));
@@ -38,6 +43,29 @@ export const eligibilityRulesRelations = relations(eligibilityRules, ({ one }) =
   benefit: one(benefits, {
     fields: [eligibilityRules.benefitId],
     references: [benefits.id],
+  }),
+}));
+
+export const ruleCategoriesRelations = relations(ruleCategories, ({ many }) => ({
+  rules: many(rules),
+}));
+
+export const rulesRelations = relations(rules, ({ one, many }) => ({
+  category: one(ruleCategories, {
+    fields: [rules.categoryId],
+    references: [ruleCategories.id],
+  }),
+  benefitRules: many(benefitRules),
+}));
+
+export const benefitRulesRelations = relations(benefitRules, ({ one }) => ({
+  benefit: one(benefits, {
+    fields: [benefitRules.benefitId],
+    references: [benefits.id],
+  }),
+  rule: one(rules, {
+    fields: [benefitRules.ruleId],
+    references: [rules.id],
   }),
 }));
 
@@ -62,3 +90,5 @@ export const benefitRequestsRelations = relations(benefitRequests, ({ one }) => 
     references: [benefits.id],
   }),
 }));
+
+export const approvalRequestsRelations = relations(approvalRequests, () => ({}));

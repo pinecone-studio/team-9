@@ -1,8 +1,5 @@
-import type { ComponentType } from "react";
-import type { LucideProps } from "lucide-react";
 import {
   BadgePercent,
-  CircleCheck,
   Dumbbell,
   Heart,
   Laptop,
@@ -10,44 +7,23 @@ import {
   BookOpen,
   ShieldPlus,
   StickyNote,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
-export type BenefitBadge = {
-  icon: ComponentType<LucideProps>;
-  label: string;
-  weight?: "medium" | "semibold";
-};
+import type {
+  BenefitBadge,
+  BenefitCategory,
+  BenefitCatalogRecord,
+  BenefitSection,
+} from "./benefit-types";
 
-export type BenefitStat = {
-  icon: ComponentType<LucideProps>;
-  label: string;
-};
-
-export type BenefitCard = {
-  badges: readonly BenefitBadge[];
-  description: string;
-  enabled: boolean;
-  icon: ComponentType<LucideProps>;
-  title: string;
-  titleIcon?: ComponentType<LucideProps>;
-};
-
-export type BenefitSection = {
-  cards: readonly BenefitCard[];
-  count: string;
-  icon: ComponentType<LucideProps>;
-  stats: readonly BenefitStat[];
-  title: string;
-};
-
-export type BenefitCatalogRecord = {
-  category: string;
-  description: string;
-  id: string;
-  title: string;
-};
+export type {
+  BenefitBadge,
+  BenefitCategory,
+  BenefitCard,
+  BenefitCatalogRecord,
+  BenefitSection,
+} from "./benefit-types";
 
 const DEFAULT_SECTION_ICON = Heart;
 const DEFAULT_CARD_ICON = Dumbbell;
@@ -86,34 +62,31 @@ function findMatchingIcon(
   );
 }
 
-function buildBadges(description: string, category: string): BenefitBadge[] {
-  const subsidyMatch = description.match(/(\d+)% subsidy/i);
-  const vendorName = description.includes(" - ")
-    ? description.split(" - ")[0]?.trim()
-    : "";
-
+function buildBadges(record: BenefitCatalogRecord): BenefitBadge[] {
+  const normalizedVendorName = record.vendorName?.trim() ?? "";
   const badges: BenefitBadge[] = [];
 
-  if (subsidyMatch?.[1]) {
+  if (
+    typeof record.subsidyPercent === "number" &&
+    Number.isFinite(record.subsidyPercent)
+  ) {
     badges.push({
       icon: BadgePercent,
-      label: `${subsidyMatch[1]}% OFF`,
+      label: `${record.subsidyPercent}% OFF`,
       weight: "semibold",
     });
   }
 
-  if (vendorName) {
+  if (normalizedVendorName) {
     badges.push({
       icon: StickyNote,
-      label: vendorName,
+      label: normalizedVendorName,
       weight: "medium",
     });
-  }
-
-  if (badges.length === 0) {
+  } else {
     badges.push({
       icon: StickyNote,
-      label: category,
+      label: "No vendor",
       weight: "medium",
     });
   }
@@ -123,48 +96,75 @@ function buildBadges(description: string, category: string): BenefitBadge[] {
 
 export function buildBenefitSections(
   benefits: BenefitCatalogRecord[],
+  categories: BenefitCategory[] = [],
 ): BenefitSection[] {
-  const groupedBenefits = new Map<string, BenefitCatalogRecord[]>();
+  const groupedBenefits = new Map<
+    string,
+    { categoryId: string; categoryName: string; records: BenefitCatalogRecord[] }
+  >();
 
   benefits.forEach((benefit) => {
-    const category = benefit.category.trim() || "General";
-    const group = groupedBenefits.get(category) ?? [];
-    group.push(benefit);
-    groupedBenefits.set(category, group);
-  });
-
-  return Array.from(groupedBenefits.entries()).map(([category, records]) => {
-    const sectionIcon = findMatchingIcon(
-      category,
-      sectionIconMatchers,
-      DEFAULT_SECTION_ICON,
-    );
-
-    return {
-      title: category,
-      count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
-      icon: sectionIcon,
-      stats: [
-        {
-          icon: CircleCheck,
-          label: `${records.length} Active`,
-        },
-        {
-          icon: Users,
-          label: `${records.filter((record) => record.description.includes(" - ")).length} Vendors`,
-        },
-      ],
-      cards: records.map((record) => ({
-        title: record.title,
-        icon: findMatchingIcon(
-          `${record.title} ${category}`,
-          cardIconMatchers,
-          DEFAULT_CARD_ICON,
-        ),
-        enabled: true,
-        badges: buildBadges(record.description, category),
-        description: record.description,
-      })),
+    const categoryName = benefit.category.trim() || "General";
+    const categoryId = benefit.categoryId || categoryName;
+    const group = groupedBenefits.get(categoryId) ?? {
+      categoryId,
+      categoryName,
+      records: [],
     };
+    group.records.push(benefit);
+    groupedBenefits.set(categoryId, group);
   });
+
+  categories.forEach((category) => {
+    const categoryName = category.name.trim();
+    const categoryId = category.id.trim();
+
+    if (!categoryName || !categoryId || groupedBenefits.has(categoryId)) {
+      return;
+    }
+
+    groupedBenefits.set(categoryId, {
+      categoryId,
+      categoryName,
+      records: [],
+    });
+  });
+
+  return Array.from(groupedBenefits.values())
+    .sort((left, right) => left.categoryName.localeCompare(right.categoryName))
+    .map(({ categoryId, categoryName, records }) => {
+      const sectionIcon = findMatchingIcon(
+        categoryName,
+        sectionIconMatchers,
+        DEFAULT_SECTION_ICON,
+      );
+
+      return {
+        categoryId,
+        title: categoryName,
+        count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
+        icon: sectionIcon,
+        cards: records.map((record) => ({
+          activeEmployees: Math.max(0, record.activeEmployees ?? 0),
+          id: record.id,
+          approvalRole: record.approvalRole,
+          category: categoryName,
+          categoryId: record.categoryId,
+          title: record.title,
+          icon: findMatchingIcon(
+            `${record.title} ${categoryName}`,
+            cardIconMatchers,
+            DEFAULT_CARD_ICON,
+          ),
+          enabled: record.isActive,
+          isCore: record.isCore,
+          eligibleEmployees: Math.max(0, record.eligibleEmployees ?? 0),
+          requiresContract: record.requiresContract,
+          subsidyPercent: record.subsidyPercent,
+          vendorName: record.vendorName ?? null,
+          badges: buildBadges(record),
+          description: record.description,
+        })),
+      };
+    });
 }

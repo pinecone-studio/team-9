@@ -11,7 +11,7 @@ export const employeeRuleTypes = [
   "tenure_days",
 ] as const;
 
-export const eligibilityRuleOperators = ["eq", "neq", "gte", "lte", "in", "not_in"] as const;
+export const eligibilityRuleOperators = ["eq", "neq", "gt", "gte", "lt", "lte", "in", "not_in"] as const;
 
 export const eligibilityRules = sqliteTable("eligibility_rules", {
   id: text("id").primaryKey(),

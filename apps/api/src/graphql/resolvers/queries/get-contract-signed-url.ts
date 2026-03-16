@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
+import { GraphQLError } from "graphql";
 import { Env, getDb } from "../../../db";
 import { contracts } from "../../../db/schema/contracts";
-import { getSignedDownloadUrl } from "../../../lib/r2";
 
 export async function getContractSignedUrl(
   env: Env,
@@ -19,7 +19,14 @@ export async function getContractSignedUrl(
     throw new Error(`Contract not found: ${contractId}`);
   }
 
-  const signedUrl = await getSignedDownloadUrl(env.CONTRACTS_BUCKET, contract.r2ObjectKey);
+  const object = await env.CONTRACTS_BUCKET.head(contract.r2ObjectKey);
+  if (!object) {
+    throw new GraphQLError("Contract file is unavailable in storage.", {
+      extensions: { code: "NOT_FOUND" },
+    });
+  }
+
+  const signedUrl = `/contracts/${contract.id}`;
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 

@@ -1,131 +1,178 @@
 "use client";
 
-import { gql } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
 import { useState } from "react";
 
 import AddBenefitCard from "./AddBenefitCard";
 import AddBenefitDialog from "./AddBenefitDialog";
-import BenefitCard from "./BenefitCard";
+import BenefitsCatalogSkeleton from "./BenefitsCatalogSkeleton";
+import CreateCategoryDialog from "./CreateCategoryDialog";
+import DraftBenefitCard from "./DraftBenefitCard";
 import EditBenefitDialog from "./EditBenefitDialog";
-import {
-  buildBenefitSections,
-  type BenefitCard as BenefitCardData,
-} from "../benefit-data";
+import WellnessCategorySection from "./WellnessCategorySection";
+import WellnessSectionNotice from "./WellnessSectionNotice";
+import { useWellnessCatalogState } from "./useWellnessCatalogState";
 
-const BENEFIT_CATALOG_QUERY = gql`
-  query BenefitCatalogPage {
-    allBenefits {
-      id
-      title
-      description
-      category
-    }
-  }
-`;
-
-type BenefitCatalogQuery = {
-  allBenefits?: Array<{
-    category: string;
-    description: string;
-    id: string;
-    title: string;
-  } | null> | null;
+type WellnessSectionProps = {
+  currentUserIdentifier: string;
+  searchQuery?: string;
 };
 
-export default function WellnessSection() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedBenefit, setSelectedBenefit] = useState<{
-    benefit: BenefitCardData;
-    category: string;
-  } | null>(null);
-  const { data, error, loading } = useQuery<BenefitCatalogQuery>(
-    BENEFIT_CATALOG_QUERY,
-  );
+function formatCategoryLabel(value: string) {
+  return value
+    .split(" ")
+    .filter((part) => part.length > 0)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
-  const benefitSections = buildBenefitSections(
-    (data?.allBenefits ?? []).flatMap((benefit) =>
-      benefit
-        ? [
-            {
-              id: benefit.id,
-              title: benefit.title,
-              description: benefit.description,
-              category: benefit.category,
-            },
-          ]
-        : [],
-    ),
-  );
+export default function WellnessSection({
+  currentUserIdentifier,
+  searchQuery = "",
+}: WellnessSectionProps) {
+  const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] = useState(false);
+  const {
+    benefitSections,
+    closeAddDialog,
+    creatingCategory,
+    dialogCategoryId,
+    dialogDraft,
+    draftBenefit,
+    error,
+    handleBenefitDeleted,
+    handleCreateCategory,
+    isAddDialogOpen,
+    loading,
+    openDraftBenefitDialog,
+    openNewBenefitDialog,
+    refetch,
+    selectedBenefit,
+    setDraftBenefit,
+    setSelectedBenefit,
+    shouldShowDraftCard,
+  } = useWellnessCatalogState({ searchQuery });
+  const showSkeleton =
+    loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
+  const showEmptyState =
+    !loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
+  const showDraftOnlyState =
+    !loading && !error && benefitSections.length === 0 && shouldShowDraftCard && !!draftBenefit;
+  const showMainContent = !error && !showSkeleton && !showEmptyState && !showDraftOnlyState;
 
   return (
     <>
-      {loading ? (
-        <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
-          <div className="rounded-[8px] border border-[#DBDEE1] bg-white p-6 text-[14px] text-[#51565B]">
-            Loading benefits catalog...
-          </div>
-        </section>
-      ) : null}
+      {showSkeleton ? <BenefitsCatalogSkeleton /> : null}
 
       {!loading && error ? (
-        <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
-          <div className="rounded-[8px] border border-[#F3C7C7] bg-[#FFF7F7] p-6 text-[14px] text-[#B42318]">
-            Benefits data could not be loaded.
-          </div>
-        </section>
+        <WellnessSectionNotice
+          accentClassName="text-[#B42318]"
+          borderClassName="border-[#F3C7C7] bg-[#FFF7F7]"
+          message="Benefits data could not be loaded."
+        />
       ) : null}
 
-      {!loading && !error && benefitSections.length === 0 ? (
+      {showEmptyState ? (
         <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
           <div className="rounded-[8px] border border-dashed border-[#DBDEE1] bg-white p-6 text-[14px] text-[#51565B]">
-            No active benefits found in the catalog.
+            No benefits found in the catalog.
           </div>
         </section>
       ) : null}
 
-      {!loading &&
-        !error &&
-        benefitSections.map(({ cards, count, icon: Icon, stats, title }) => (
-          <section
-            className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0"
-            key={title}
-          >
-            <div className="flex h-6 w-full items-center gap-[10px]">
-              <div className="flex h-6 items-center gap-2">
-                <Icon className="h-6 w-6 text-black" />
-                <h2 className="text-[16px] leading-[21px] font-semibold text-[#060B10]">
-                  {title}
-                </h2>
-              </div>
-              <span className="flex h-6 items-center justify-center rounded-[6px] border border-[#DBDEE1] px-[6px] text-[10px] leading-[15px] font-normal text-[#51565B]">
-                {count}
-              </span>
-            </div>
+      {showDraftOnlyState && draftBenefit ? (
+        <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0">
+          <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            <DraftBenefitCard
+              description={draftBenefit.description.trim() || "No description yet."}
+              onContinueEditing={openDraftBenefitDialog}
+              onDeleteDraft={() => setDraftBenefit(null)}
+              title={draftBenefit.name.trim() || "Untitled Benefit"}
+            />
+            <AddBenefitCard onClick={() => openNewBenefitDialog(draftBenefit.categoryId)} />
+          </div>
+        </section>
+      ) : null}
 
+      {showMainContent ? (
+        <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col gap-[34px] px-4 sm:px-0">
+          {benefitSections.map((section, index) => (
+            <div
+              className="flex flex-col gap-[34px]"
+              key={section.categoryId || section.title}
+            >
+              <WellnessCategorySection
+                draftBenefit={draftBenefit}
+                formatCategoryLabel={formatCategoryLabel}
+                onAddBenefit={openNewBenefitDialog}
+                onContinueDraft={openDraftBenefitDialog}
+                onDeleteDraft={() => setDraftBenefit(null)}
+                onEditBenefit={setSelectedBenefit}
+                section={section}
+                shouldShowDraftCard={shouldShowDraftCard}
+              />
+              {index < benefitSections.length - 1 ? (
+                <div className="h-px w-full bg-[#DBDEE1]" />
+              ) : null}
+            </div>
+          ))}
+
+          <div className="h-px w-full bg-[#DBDEE1]" />
+
+          <div className="flex w-full flex-col items-start gap-6">
+            <h2 className="text-[16px] leading-[21px] font-semibold text-[#060B10]">
+              Create a new category
+            </h2>
             <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-              {cards.map((card) => (
-                <BenefitCard
-                  key={`${title}-${card.title}`}
-                  {...card}
-                  onEdit={(benefit) => setSelectedBenefit({ benefit, category: title })}
-                  stats={stats}
-                />
-              ))}
-              <AddBenefitCard onClick={() => setIsAddDialogOpen(true)} />
+              <AddBenefitCard
+                label="Create new category"
+                onClick={() => setIsCreateCategoryDialogOpen(true)}
+              />
             </div>
-          </section>
-        ))}
+          </div>
+        </section>
+      ) : null}
 
-      {isAddDialogOpen && <AddBenefitDialog onClose={() => setIsAddDialogOpen(false)} />}
-      {selectedBenefit && (
-        <EditBenefitDialog
-          benefitName={selectedBenefit.benefit.title}
-          category={selectedBenefit.category}
-          description={selectedBenefit.benefit.description}
-          onClose={() => setSelectedBenefit(null)}
+      {isAddDialogOpen ? (
+        <AddBenefitDialog
+          currentUserIdentifier={currentUserIdentifier}
+          defaultCategoryId={dialogCategoryId}
+          initialDraft={dialogDraft}
+          onClose={closeAddDialog}
+          onCreated={() => refetch()}
+          onDraftChange={setDraftBenefit}
         />
-      )}
+      ) : null}
+
+      {selectedBenefit ? (
+        <EditBenefitDialog
+          approvalRole={selectedBenefit.approvalRole}
+          benefitId={selectedBenefit.id}
+          benefitName={selectedBenefit.title}
+          category={selectedBenefit.category}
+          categoryId={selectedBenefit.categoryId}
+          currentUserIdentifier={currentUserIdentifier}
+          description={selectedBenefit.description}
+          enabled={selectedBenefit.enabled}
+          isCore={selectedBenefit.isCore}
+          onClose={() => setSelectedBenefit(null)}
+          onDeleted={handleBenefitDeleted}
+          onSaved={() => refetch()}
+          requiresContract={selectedBenefit.requiresContract}
+          subsidyPercent={selectedBenefit.subsidyPercent ?? 0}
+          vendorName={selectedBenefit.vendorName ?? ""}
+        />
+      ) : null}
+
+      {isCreateCategoryDialogOpen ? (
+        <CreateCategoryDialog
+          creating={creatingCategory}
+          onClose={() => setIsCreateCategoryDialogOpen(false)}
+          onCreated={(categoryId) => {
+            setIsCreateCategoryDialogOpen(false);
+            openNewBenefitDialog(categoryId);
+          }}
+          onSubmit={handleCreateCategory}
+        />
+      ) : null}
     </>
   );
 }

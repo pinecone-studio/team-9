@@ -37,8 +37,6 @@ export default function RootLayout({
           appearance={{
             cssLayerName: "clerk",
           }}
-          afterMultiSessionSingleSignOutUrl="/auth/login"
-          afterSignOutUrl="/auth/login"
           publishableKey={clerkPublishableKey}
         >
           <AppApolloProvider>

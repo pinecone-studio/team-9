@@ -33,11 +33,7 @@ function isIdentifierNotFoundError(error: unknown) {
 }
 
 export default function LoginForm() {
-<<<<<<< Updated upstream
   const apolloClient = useApolloClient();
-=======
-  const client = useApolloClient();
->>>>>>> Stashed changes
   const router = useRouter();
   const { fetchStatus: signInFetchStatus, signIn } = useSignIn();
   const { fetchStatus: signUpFetchStatus, signUp } = useSignUp();
@@ -125,22 +121,14 @@ export default function LoginForm() {
   };
 
   const checkEmployeeAccess = async (normalizedEmail: string) => {
-<<<<<<< Updated upstream
     const { data } = await apolloClient.query<
-=======
-    const result = await client.query<
->>>>>>> Stashed changes
       EmployeeAccessByEmailQuery,
       EmployeeAccessByEmailQueryVariables
     >({
       query: EmployeeAccessByEmailDocument,
-<<<<<<< Updated upstream
       variables: {
         email: normalizedEmail,
       },
-=======
-      variables: { email: normalizedEmail },
->>>>>>> Stashed changes
       fetchPolicy: "no-cache",
       context: {
         fetchOptions: {
@@ -149,11 +137,7 @@ export default function LoginForm() {
       },
     });
 
-<<<<<<< Updated upstream
     return Boolean(data?.employeeByEmail);
-=======
-    return Boolean(result.data?.employeeByEmail);
->>>>>>> Stashed changes
   };
 
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -170,15 +154,9 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
-<<<<<<< Updated upstream
       const hasEmployeeAccess = await checkEmployeeAccess(normalizedEmail);
 
       if (!hasEmployeeAccess) {
-=======
-      const hasAccess = await checkEmployeeAccess(normalizedEmail);
-
-      if (!hasAccess) {
->>>>>>> Stashed changes
         setErrorMessage("This work email doesn't have access.");
         return;
       }

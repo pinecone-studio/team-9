@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 
 import { getDb } from "../../../db";
 import { benefitRequests } from "../../../db/schema/benefit-requests";
@@ -9,6 +9,7 @@ import { mapBenefitRecord, mapEmployeeRecord } from "../../../utils/mappers";
 import type { ApprovalRole, BenefitRequest } from "../../generated/resolvers-types";
 
 type ListBenefitRequestsArgs = {
+  employeeId?: string | null;
   targetRole?: ApprovalRole | null;
 };
 
@@ -18,9 +19,15 @@ export async function listBenefitRequests(
 ): Promise<BenefitRequest[]> {
   try {
     const db = getDb({ DB });
+    const normalizedEmployeeId = args.employeeId?.trim() || null;
     const requestRows = await db
       .select()
       .from(benefitRequests)
+      .where(
+        normalizedEmployeeId
+          ? eq(benefitRequests.employeeId, normalizedEmployeeId)
+          : undefined,
+      )
       .orderBy(desc(benefitRequests.createdAt));
 
     if (requestRows.length === 0) {

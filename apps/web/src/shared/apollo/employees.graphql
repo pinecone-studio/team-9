@@ -23,14 +23,90 @@ query EmployeeEligibility($employeeId: ID!) {
   }
 }
 
-mutation RecalculateEmployeeEligibility($employeeId: ID!) {
-  recalculateEmployeeEligibility(employeeId: $employeeId) {
+query EmployeeDashboardData($employeeId: ID!) {
+  employee(id: $employeeId) {
+    id
+    employmentStatus
+    responsibilityLevel
+  }
+  employeeEligibility(employeeId: $employeeId) {
     status
     computedAt
+    ruleEvaluationJson
+    benefit {
+      approvalRole
+      categoryId
+      id
+      isActive
+      isCore
+      requiresContract
+      title
+      description
+      category
+      subsidyPercent
+      vendorName
+    }
+  }
+  listBenefitEligibilitySummary {
+    benefitId
+    status
+    rulesApplied
+  }
+}
+
+query EmployeeBenefitRequests($employeeId: ID!) {
+  benefitRequests(employeeId: $employeeId) {
+    id
+    status
+    created_at
+    updated_at
+    approval_role
+    employee {
+      id
+      name
+      email
+      position
+    }
     benefit {
       id
       title
       category
     }
+    reviewed_by {
+      id
+      name
+      email
+      position
+    }
+  }
+}
+
+mutation RecalculateEmployeeEligibility($employeeId: ID!) {
+  recalculateEmployeeEligibility(employeeId: $employeeId) {
+    status
+    computedAt
+    ruleEvaluationJson
+    benefit {
+      approvalRole
+      categoryId
+      id
+      isActive
+      isCore
+      requiresContract
+      title
+      description
+      category
+      subsidyPercent
+      vendorName
+    }
+  }
+}
+
+mutation SubmitEmployeeBenefitRequest(
+  $input: SubmitEmployeeBenefitRequestInput!
+) {
+  submitEmployeeBenefitRequest(input: $input) {
+    id
+    status
   }
 }

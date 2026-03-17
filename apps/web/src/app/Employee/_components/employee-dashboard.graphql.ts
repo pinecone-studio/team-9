@@ -34,17 +34,31 @@ export const EMPLOYEE_DASHBOARD_QUERY = `
   }
 `;
 
-export const APPROVAL_REQUESTS_QUERY = `
-  query EmployeeApprovalRequests {
-    approvalRequests {
+export const BENEFIT_REQUESTS_QUERY = `
+  query EmployeeBenefitRequests($employeeId: ID!) {
+    benefitRequests(employeeId: $employeeId) {
       id
-      entity_id
-      entity_type
       status
-      requested_by
-      reviewed_by
-      payload_json
       created_at
+      updated_at
+      approval_role
+      employee {
+        id
+        name
+        email
+        position
+      }
+      benefit {
+        id
+        title
+        category
+      }
+      reviewed_by {
+        id
+        name
+        email
+        position
+      }
     }
   }
 `;
@@ -103,16 +117,30 @@ export type DashboardQueryResult = {
   }>;
 };
 
-export type ApprovalRequestsQueryResult = {
-  approvalRequests?: Array<{
+export type BenefitRequestsQueryResult = {
+  benefitRequests?: Array<{
+    approval_role: "finance_manager" | "hr_admin";
+    benefit: {
+      category: string;
+      id: string;
+      title: string;
+    };
     created_at: string;
-    entity_id?: string | null;
-    entity_type: string;
+    employee: {
+      email: string;
+      id: string;
+      name: string;
+      position: string;
+    };
     id: string;
-    payload_json: string;
-    requested_by: string;
-    reviewed_by?: string | null;
+    reviewed_by?: {
+      email: string;
+      id: string;
+      name: string;
+      position: string;
+    } | null;
     status: string;
+    updated_at: string;
   }>;
 };
 

@@ -1,21 +1,19 @@
 /* eslint-disable max-lines */
 "use client";
 
-import { gql } from "@apollo/client";
-import { useMutation, useQuery } from "@apollo/client/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEmployeeBenefitRequestsQuery,
+  useEmployeeDashboardDataQuery,
+  useRecalculateEmployeeEligibilityMutation,
+} from "@/shared/apollo/generated";
 import { EmployeeContent } from "./EmployeeContent";
 import {
   hasMissingActiveBenefitRecords,
   mapBenefitSections,
 } from "./employee-dashboard-benefits";
 import {
-  APPROVAL_REQUESTS_QUERY,
-  EMPLOYEE_DASHBOARD_QUERY,
-  RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
-  type ApprovalRequestsQueryResult,
   type DashboardQueryResult,
-  type RecalculateEligibilityMutationResult,
 } from "./employee-dashboard.graphql";
 import { mapRequests } from "./employee-dashboard-requests";
 import {
@@ -28,16 +26,6 @@ import type {
   EmployeeEligibilitySignals,
 } from "./employee-types";
 
-const EMPLOYEE_DASHBOARD_DOCUMENT = gql`
-  ${EMPLOYEE_DASHBOARD_QUERY}
-`;
-const APPROVAL_REQUESTS_DOCUMENT = gql`
-  ${APPROVAL_REQUESTS_QUERY}
-`;
-const RECALCULATE_EMPLOYEE_ELIGIBILITY_DOCUMENT = gql`
-  ${RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION}
-`;
-
 type EmployeeDashboardClientProps = {
   currentUserIdentifier: string;
   employeeEmail: string | null;
@@ -47,14 +35,6 @@ type EmployeeDashboardClientProps = {
   employeeOkrSubmitted: boolean | null;
   employeeResponsibilityLevel: number | null;
   employmentStatus: string;
-};
-
-type DashboardQueryVariables = {
-  employeeId: string;
-};
-
-type RecalculateMutationVariables = {
-  employeeId: string;
 };
 
 export function EmployeeDashboardClient({
@@ -102,29 +82,26 @@ export function EmployeeDashboardClient({
     data: dashboardDataResponse,
     error: dashboardQueryError,
     loading: dashboardQueryLoading,
-  } = useQuery<DashboardQueryResult, DashboardQueryVariables>(
-    EMPLOYEE_DASHBOARD_DOCUMENT,
-    {
-      fetchPolicy: "network-only",
-      skip: shouldSkip,
-      variables: {
-        employeeId,
-      },
-    },
-  );
-  const {
-    data: approvalsDataResponse,
-    error: approvalsQueryError,
-    loading: approvalsQueryLoading,
-  } = useQuery<ApprovalRequestsQueryResult>(APPROVAL_REQUESTS_DOCUMENT, {
+  } = useEmployeeDashboardDataQuery({
     fetchPolicy: "network-only",
     skip: shouldSkip,
+    variables: {
+      employeeId,
+    },
+  });
+  const {
+    data: benefitRequestsDataResponse,
+    error: benefitRequestsQueryError,
+    loading: benefitRequestsQueryLoading,
+  } = useEmployeeBenefitRequestsQuery({
+    fetchPolicy: "network-only",
+    skip: shouldSkip,
+    variables: {
+      employeeId,
+    },
   });
   const [recalculateEmployeeEligibility, { loading: recalculateLoading }] =
-    useMutation<
-      RecalculateEligibilityMutationResult,
-      RecalculateMutationVariables
-    >(RECALCULATE_EMPLOYEE_ELIGIBILITY_DOCUMENT);
+    useRecalculateEmployeeEligibilityMutation();
 
   useEffect(() => {
     attemptedRecalculationRef.current = false;
@@ -212,9 +189,9 @@ export function EmployeeDashboardClient({
     const benefitNameById = new Map(
       baseBenefits.map((benefit) => [benefit.id, benefit.title]),
     );
-    const approvalRequests = approvalsDataResponse?.approvalRequests ?? [];
+    const benefitRequests = benefitRequestsDataResponse?.benefitRequests ?? [];
     const requestsPayload = mapRequests(
-      approvalRequests,
+      benefitRequests,
       employeeEmail,
       employeeName,
       benefitNameById,
@@ -259,16 +236,16 @@ export function EmployeeDashboardClient({
   const errorMessage =
     (manualError?.employeeId === employeeId ? manualError.message : null) ??
     dashboardQueryError?.message ??
-    approvalsQueryError?.message ??
+    benefitRequestsQueryError?.message ??
     null;
   const isLoading =
-    !shouldSkip && (dashboardQueryLoading || approvalsQueryLoading || recalculateLoading);
+    !shouldSkip &&
+    (dashboardQueryLoading || benefitRequestsQueryLoading || recalculateLoading);
 
   return (
     <EmployeeContent
       currentUserIdentifier={currentUserIdentifier}
       dashboardData={dashboardData}
-      employeeEmail={employeeEmail}
       employeeId={employeeId}
       employeeName={employeeName}
       errorMessage={errorMessage}

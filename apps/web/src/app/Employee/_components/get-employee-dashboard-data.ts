@@ -7,11 +7,11 @@ import {
   mapBenefitSections,
 } from "./employee-dashboard-benefits";
 import {
-  APPROVAL_REQUESTS_QUERY,
+  BENEFIT_REQUESTS_QUERY,
   EMPLOYEE_DASHBOARD_QUERY,
-  RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
-  type ApprovalRequestsQueryResult,
+  type BenefitRequestsQueryResult,
   type DashboardQueryResult,
+  RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
   type RecalculateEligibilityMutationResult,
 } from "./employee-dashboard.graphql";
 import { mapRequests } from "./employee-dashboard-requests";
@@ -111,22 +111,24 @@ export async function getEmployeeDashboardData({
     baseBenefits.map((benefit) => [benefit.id, benefit.title]),
   );
 
-  let approvalRequests: NonNullable<ApprovalRequestsQueryResult["approvalRequests"]> =
+  let benefitRequests: NonNullable<BenefitRequestsQueryResult["benefitRequests"]> =
     [];
 
   try {
-    const approvalData =
-      await postGraphql<ApprovalRequestsQueryResult>(APPROVAL_REQUESTS_QUERY);
-    approvalRequests = approvalData?.approvalRequests ?? [];
+    const requestData = await postGraphql<BenefitRequestsQueryResult>(
+      BENEFIT_REQUESTS_QUERY,
+      { employeeId: employee.id },
+    );
+    benefitRequests = requestData?.benefitRequests ?? [];
   } catch (error) {
-    console.warn("[employee] approval requests could not be loaded.", {
+    console.warn("[employee] benefit requests could not be loaded.", {
       employeeId: employee.id,
       error: error instanceof Error ? error.message : String(error),
     });
   }
 
   const requestsPayload = mapRequests(
-    approvalRequests,
+    benefitRequests,
     employee.email,
     employeeName,
     benefitNameById,

@@ -1,35 +1,22 @@
 "use client";
 
-import { useMutation } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSubmitEmployeeBenefitRequestMutation } from "@/shared/apollo/generated";
 
 import { BenefitCardItem } from "./BenefitCardItem";
 import { BenefitSectionHeader } from "./BenefitSectionHeader";
-import {
-  buildEmployeeBenefitRequestPayload,
-  buildEmployeeBenefitRequestSnapshot,
-} from "./benefits-request-payload";
-import {
-  CREATE_APPROVAL_REQUEST_MUTATION,
-  type CreateApprovalRequestMutation,
-  type CreateApprovalRequestVariables,
-} from "./employee-requests.graphql";
 import type { EmployeeBenefitCard, EmployeeBenefitSection } from "./employee-types";
 
 type BenefitsGroupProps = {
   currentUserIdentifier: string;
-  employeeEmail: string | null;
   employeeId: string;
-  employeeName: string;
   section: EmployeeBenefitSection;
 };
 
 export function BenefitsGroup({
   currentUserIdentifier,
-  employeeEmail,
   employeeId,
-  employeeName,
   section,
 }: BenefitsGroupProps) {
   const router = useRouter();
@@ -38,35 +25,20 @@ export function BenefitsGroup({
   const [submittingBenefitId, setSubmittingBenefitId] = useState<string | null>(
     null,
   );
-  const [createApprovalRequest] = useMutation<
-    CreateApprovalRequestMutation,
-    CreateApprovalRequestVariables
-  >(CREATE_APPROVAL_REQUEST_MUTATION);
+  const [submitEmployeeBenefitRequest] =
+    useSubmitEmployeeBenefitRequestMutation();
 
   async function handleRequest(card: EmployeeBenefitCard) {
     setErrorMessage(null);
     setSubmittingBenefitId(card.id);
 
     try {
-      await createApprovalRequest({
+      await submitEmployeeBenefitRequest({
         variables: {
           input: {
-            actionType: "update",
-            entityId: card.id,
-            entityType: "benefit",
-            payloadJson: buildEmployeeBenefitRequestPayload({
-              card,
-              employeeEmail,
-              employeeId,
-              employeeName,
-            }),
+            benefitId: card.id,
+            employeeId,
             requestedBy: currentUserIdentifier,
-            snapshotJson: buildEmployeeBenefitRequestSnapshot({
-              card,
-              employeeEmail,
-              employeeId,
-            }),
-            targetRole: card.approvalRole,
           },
         },
       });

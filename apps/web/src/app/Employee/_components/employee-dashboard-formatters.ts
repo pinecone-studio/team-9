@@ -96,21 +96,23 @@ export function extractEmployeeRequestBenefitId(payloadJson: string) {
 }
 
 export function isCurrentUserRequest(
-  requestedBy: string,
+  requestEmployeeEmail: string,
+  requestEmployeeName: string,
   employeeEmail: string | null,
   employeeName: string,
 ) {
-  const normalizedRequestedBy = requestedBy.trim().toLowerCase();
+  const normalizedRequestEmail = requestEmployeeEmail.trim().toLowerCase();
+  const normalizedRequestName = requestEmployeeName.trim().toLowerCase();
   const normalizedEmail = employeeEmail?.trim().toLowerCase() ?? "";
   const normalizedName = employeeName.trim().toLowerCase();
 
-  if (!normalizedRequestedBy) {
+  if (!normalizedRequestEmail && !normalizedRequestName) {
     return false;
   }
 
   return (
-    normalizedRequestedBy === normalizedEmail ||
-    normalizedRequestedBy === normalizedName
+    normalizedRequestEmail === normalizedEmail ||
+    normalizedRequestName === normalizedName
   );
 }
 

@@ -12,7 +12,6 @@ import type { EmployeeDashboardViewData } from "./employee-types";
 type EmployeeContentProps = {
   currentUserIdentifier: string;
   dashboardData: EmployeeDashboardViewData;
-  employeeEmail: string | null;
   employeeId: string;
   employeeName: string;
   errorMessage?: string | null;
@@ -26,7 +25,6 @@ const geist = Geist({
 export function EmployeeContent({
   currentUserIdentifier,
   dashboardData,
-  employeeEmail,
   employeeId,
   employeeName,
   errorMessage,
@@ -80,9 +78,7 @@ export function EmployeeContent({
             dashboardData.sections.map((section) => (
               <BenefitsGroup
                 currentUserIdentifier={currentUserIdentifier}
-                employeeEmail={employeeEmail}
                 employeeId={employeeId}
-                employeeName={employeeName}
                 key={section.id}
                 section={section}
               />

@@ -1,10 +1,8 @@
 import type {
-  ApprovalRequestsQueryResult,
+  BenefitRequestsQueryResult,
   EmployeeBenefitStatusOverride,
 } from "./employee-dashboard.graphql";
 import {
-  extractBenefitName,
-  extractEmployeeRequestBenefitId,
   formatPerson,
   formatShortDate,
   getRequestStatusLabel,
@@ -12,7 +10,9 @@ import {
 } from "./employee-dashboard-formatters";
 import type { EmployeeRequestItem } from "./employee-types";
 
-type ApprovalRequest = NonNullable<ApprovalRequestsQueryResult["approvalRequests"]>[number];
+type BenefitRequest = NonNullable<
+  BenefitRequestsQueryResult["benefitRequests"]
+>[number];
 
 type RequestMapResult = {
   pendingCount: number;
@@ -21,16 +21,14 @@ type RequestMapResult = {
 };
 
 export function mapRequests(
-  requests: NonNullable<ApprovalRequestsQueryResult["approvalRequests"]>,
+  requests: NonNullable<BenefitRequestsQueryResult["benefitRequests"]>,
   employeeEmail: string | null,
   employeeName: string,
   benefitNameById: Map<string, string>,
 ): RequestMapResult {
   const scoped = requests
-    .filter(
-      (request) =>
-        request.entity_type === "benefit" &&
-        isCurrentUserRequest(request.requested_by, employeeEmail, employeeName),
+    .filter((request) =>
+      isCurrentUserRequest(request.employee.email, request.employee.name, employeeEmail, employeeName),
     )
     .sort(
       (a, b) =>
@@ -43,12 +41,11 @@ export function mapRequests(
   }
 
   const mapped: EmployeeRequestItem[] = scoped.slice(0, 6).map((request) => ({
-    benefit:
-      extractBenefitName(request.payload_json) ??
-      (request.entity_id ? benefitNameById.get(request.entity_id) : null) ??
-      "Benefit request",
+    benefit: request.benefit.title || benefitNameById.get(request.benefit.id) || "Benefit request",
     id: request.id,
-    reviewedBy: request.reviewed_by ? formatPerson(request.reviewed_by) : "-",
+    reviewedBy: request.reviewed_by
+      ? formatPerson(request.reviewed_by.name || request.reviewed_by.email)
+      : "-",
     status: getRequestStatusLabel(request.status),
     submittedAt: formatShortDate(request.created_at),
   }));
@@ -65,28 +62,23 @@ export function mapRequests(
 }
 
 function mapStatusByBenefit(
-  request: ApprovalRequest,
+  request: BenefitRequest,
   statusByBenefitId: Map<string, EmployeeBenefitStatusOverride>,
 ) {
-  const benefitId =
-    extractEmployeeRequestBenefitId(request.payload_json) ?? request.entity_id ?? null;
-
+  const benefitId = request.benefit.id;
   if (!benefitId || statusByBenefitId.has(benefitId)) {
     return;
   }
 
   const normalizedStatus = request.status.trim().toLowerCase();
-
   if (normalizedStatus === "approved") {
     statusByBenefitId.set(benefitId, "Active");
     return;
   }
-
   if (normalizedStatus === "pending") {
     statusByBenefitId.set(benefitId, "Pending");
     return;
   }
-
   if (normalizedStatus === "rejected") {
     statusByBenefitId.set(benefitId, "Eligible");
   }

@@ -17,6 +17,7 @@ import { submitBenefitCreateRequest } from './submit-benefit-create-request';
 import { submitBenefitUpdateRequest } from './submit-benefit-update-request';
 import { submitRuleDefinitionCreateRequest } from './submit-rule-definition-create-request';
 import { submitRuleDefinitionUpdateRequest } from './submit-rule-definition-update-request';
+import { submitEmployeeBenefitRequest } from './submit-employee-benefit-request';
 import { updateBenefit } from './update-benefit';
 import { updateEligibilityRule } from './update-eligibility-rule';
 import { updateRuleDefinition } from './update-rule-definition';
@@ -38,6 +39,7 @@ import type {
 	MutationSetBenefitStatusArgs,
 	MutationSubmitBenefitCreateRequestArgs,
 	MutationSubmitBenefitUpdateRequestArgs,
+	MutationSubmitEmployeeBenefitRequestArgs,
 	MutationSubmitRuleDefinitionCreateRequestArgs,
 	MutationSubmitRuleDefinitionUpdateRequestArgs,
 	MutationUpdateBenefitArgs,
@@ -132,6 +134,12 @@ export const mutationResolvers = {
 
 	reviewBenefitRequest: (_: unknown, args: MutationReviewBenefitRequestArgs, { DB }: GraphQLContext) =>
 		reviewBenefitRequest(DB, args),
+
+	submitEmployeeBenefitRequest: (
+		_: unknown,
+		args: MutationSubmitEmployeeBenefitRequestArgs,
+		{ DB }: GraphQLContext,
+	) => submitEmployeeBenefitRequest(DB, args),
 
 	uploadContract: (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
 		uploadContract({ DB, CONTRACTS_BUCKET }, input),

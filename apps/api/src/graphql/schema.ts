@@ -373,6 +373,12 @@ export const typeDefs = /* GraphQL */ `
     reviewedBy: String!
   }
 
+  input SubmitEmployeeBenefitRequestInput {
+    employeeId: ID!
+    benefitId: ID!
+    requestedBy: String!
+  }
+
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
@@ -382,7 +388,7 @@ export const typeDefs = /* GraphQL */ `
     allBenefits: [Benefit]
     approvalRequests(status: ApprovalRequestStatus, targetRole: ApprovalRole): [ApprovalRequest!]!
     approvalRequest(id: ID!): ApprovalRequest
-    benefitRequests(targetRole: ApprovalRole): [BenefitRequest!]!
+    benefitRequests(targetRole: ApprovalRole, employeeId: ID): [BenefitRequest!]!
     ruleCategories: [RuleCategory!]!
     ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!
     eligibilityRules(benefitId: ID): [EligibilityRule!]!
@@ -407,6 +413,7 @@ export const typeDefs = /* GraphQL */ `
     submitRuleDefinitionUpdateRequest(input: SubmitRuleDefinitionUpdateRequestInput!): ApprovalRequest!
     reviewApprovalRequest(input: ReviewApprovalRequestInput!): ApprovalRequest!
     reviewBenefitRequest(input: ReviewBenefitRequestInput!): BenefitRequest!
+    submitEmployeeBenefitRequest(input: SubmitEmployeeBenefitRequestInput!): BenefitRequest!
     setBenefitStatus(input: SetBenefitStatusInput!): Benefit!
     deleteBenefit(id: ID!): Boolean!
     createBenefitCategory(name: String!): BenefitCategory!

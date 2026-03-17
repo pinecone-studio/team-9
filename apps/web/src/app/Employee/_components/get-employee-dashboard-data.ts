@@ -48,14 +48,26 @@ export async function getEmployeeDashboardData({
     };
   }
 
-  const dashboardData = await postGraphql<DashboardQueryResult>(
-    EMPLOYEE_DASHBOARD_QUERY,
-    {
+  let dashboardData: DashboardQueryResult | null = null;
+  let employeeEligibility: NonNullable<DashboardQueryResult["employeeEligibility"]> =
+    [];
+  let benefitSummary: NonNullable<
+    DashboardQueryResult["listBenefitEligibilitySummary"]
+  > = [];
+
+  try {
+    dashboardData =
+      (await postGraphql<DashboardQueryResult>(EMPLOYEE_DASHBOARD_QUERY, {
+        employeeId: employee.id,
+      })) ?? null;
+    employeeEligibility = dashboardData?.employeeEligibility ?? [];
+    benefitSummary = dashboardData?.listBenefitEligibilitySummary ?? [];
+  } catch (error) {
+    console.warn("[employee] dashboard data could not be loaded.", {
       employeeId: employee.id,
-    },
-  );
-  let employeeEligibility = dashboardData?.employeeEligibility ?? [];
-  const benefitSummary = dashboardData?.listBenefitEligibilitySummary ?? [];
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   if (hasMissingActiveBenefitRecords(employeeEligibility, benefitSummary)) {
     try {

@@ -63,7 +63,6 @@ export function mapBenefitSections(
         : vendorName || "No subsidy details";
     const card: EmployeeBenefitCard = {
       accent: "",
-      action: status === "Eligible",
       approvalRole: eligibility.benefit.approvalRole,
       badge: toBadgeClass(status),
       categoryId: eligibility.benefit.categoryId,
@@ -75,6 +74,7 @@ export function mapBenefitSections(
       note: status === "Locked" ? "Does not meet all requirements" : undefined,
       passed: total > 0 ? `${passed}/${total} passed` : "",
       requiresContract: eligibility.benefit.requiresContract,
+      ruleEvaluationJson: eligibility.ruleEvaluationJson,
       status,
       subsidyPercent: typeof subsidy === "number" ? subsidy : null,
       subsidyLabel,

@@ -91,6 +91,8 @@ export async function listBenefitRequests(
           employee,
           benefit,
           status: String(request.status),
+          contractVersionAccepted: request.contractVersionAccepted,
+          contractAcceptedAt: request.contractAcceptedAt,
           created_at: request.createdAt,
           updated_at: request.updatedAt,
           reviewed_by: request.reviewedBy ? employeeMap.get(request.reviewedBy) ?? null : null,

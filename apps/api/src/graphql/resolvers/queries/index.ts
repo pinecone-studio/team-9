@@ -3,6 +3,7 @@ import { listBenefitRequests } from './list-benefit-requests';
 import { countActiveContracts } from './count-active-contracts';
 import { countPendingBenefitRequests } from './count-pending-benefit-requests';
 import { getApprovalRequestById } from './get-approval-request-by-id';
+import { getBenefitContract } from './get-benefit-contract';
 import { getContractSignedUrl } from './get-contract-signed-url';
 import { getContractSignedUrlByBenefit } from './get-contract-signed-url-by-benefit';
 import { getEmployeeById } from './get-employee-by-id';
@@ -26,6 +27,7 @@ import type {
 	QueryListAuditLogEntriesArgs,
 	QueryApprovalRequestsArgs,
 	QueryBenefitRequestsArgs,
+	QueryBenefitContractArgs,
 	QueryContractSignedUrlArgs,
 	QueryContractSignedUrlByBenefitArgs,
 } from '../../generated/resolvers-types';
@@ -68,6 +70,9 @@ export const queryResolvers = {
 
 	employeeEligibility: (_: unknown, { employeeId }: QueryEmployeeEligibilityArgs, { DB }: GraphQLContext) =>
 		listEmployeeEligibilityRecords(DB, employeeId),
+
+	benefitContract: (_: unknown, { benefitId }: QueryBenefitContractArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
+		getBenefitContract({ DB, CONTRACTS_BUCKET }, benefitId),
 
 	contractSignedUrl: (_: unknown, { contractId }: QueryContractSignedUrlArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getContractSignedUrl({ DB, CONTRACTS_BUCKET }, contractId),

@@ -4,6 +4,7 @@ import { getDb } from "../../../db";
 import { benefitEligibility } from "../../../db/schema/benefit-eligibility";
 import { benefitRequests } from "../../../db/schema/benefit-requests";
 import { benefits } from "../../../db/schema/benefits";
+import { contracts } from "../../../db/schema/contracts";
 import { employees } from "../../../db/schema/employees";
 import type {
   BenefitRequest,
@@ -56,7 +57,12 @@ export async function submitEmployeeBenefitRequest(
     }
 
     const [benefit] = await db
-      .select({ id: benefits.id, isActive: benefits.isActive })
+      .select({
+        activeContractId: benefits.activeContractId,
+        id: benefits.id,
+        isActive: benefits.isActive,
+        requiresContract: benefits.requiresContract,
+      })
       .from(benefits)
       .where(eq(benefits.id, benefitId))
       .limit(1);
@@ -66,6 +72,53 @@ export async function submitEmployeeBenefitRequest(
     }
     if (!benefit.isActive) {
       throw new Error("This benefit is inactive and cannot be requested");
+    }
+
+    let contractAcceptedAt: string | null = null;
+    let contractVersionAccepted: string | null = null;
+
+    if (benefit.requiresContract) {
+      const submittedAcceptedAt = args.input.contractAcceptedAt?.trim() || "";
+      const submittedVersion = args.input.contractVersionAccepted?.trim() || "";
+
+      if (!submittedAcceptedAt) {
+        throw new Error("Contract acceptance is required for this benefit");
+      }
+      if (!submittedVersion) {
+        throw new Error("Accepted contract version is required");
+      }
+      if (Number.isNaN(Date.parse(submittedAcceptedAt))) {
+        throw new Error("Contract acceptance timestamp is invalid");
+      }
+
+      const [activeContract] = benefit.activeContractId
+        ? await db
+            .select({ version: contracts.version })
+            .from(contracts)
+            .where(eq(contracts.id, benefit.activeContractId))
+            .limit(1)
+        : await db
+            .select({ version: contracts.version })
+            .from(contracts)
+            .where(
+              and(
+                eq(contracts.benefitId, benefitId),
+                eq(contracts.isActive, true),
+              ),
+            )
+            .limit(1);
+
+      if (!activeContract) {
+        throw new Error("No active contract is attached to this benefit");
+      }
+      if (activeContract.version !== submittedVersion) {
+        throw new Error(
+          "The contract has changed. Please reopen the benefit and review the latest version.",
+        );
+      }
+
+      contractAcceptedAt = submittedAcceptedAt;
+      contractVersionAccepted = activeContract.version;
     }
 
     const [eligibility] = await db
@@ -118,6 +171,8 @@ export async function submitEmployeeBenefitRequest(
       employeeId,
       benefitId,
       status: PENDING_STATUS,
+      contractAcceptedAt,
+      contractVersionAccepted,
       reviewedBy: null,
       createdAt: now,
       updatedAt: now,

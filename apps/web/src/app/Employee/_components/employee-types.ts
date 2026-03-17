@@ -38,7 +38,6 @@ export type EmployeeBenefitStatus =
 
 export type EmployeeBenefitCard = {
   accent: string;
-  action?: boolean;
   approvalRole: "finance_manager" | "hr_admin";
   badge: string;
   categoryId: string;
@@ -50,6 +49,7 @@ export type EmployeeBenefitCard = {
   note?: string;
   passed: string;
   requiresContract: boolean;
+  ruleEvaluationJson: string;
   status: EmployeeBenefitStatus;
   subsidyPercent: number | null;
   subsidyLabel: string;

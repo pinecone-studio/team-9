@@ -81,6 +81,7 @@ export function EmployeeNav({ employeeName }: EmployeeNavProps) {
         </div>
 
         <Show when="signed-in">
+<<<<<<< Updated upstream
           <div className="shrink-0 rounded-full transition-transform hover:scale-[1.02]">
             <UserButton
               appearance={{
@@ -91,6 +92,16 @@ export function EmployeeNav({ employeeName }: EmployeeNavProps) {
               }}
             />
           </div>
+=======
+          <UserButton
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "!h-11 !w-11",
+                userButtonTrigger: "!h-11 !w-11",
+              },
+            }}
+          />
+>>>>>>> Stashed changes
         </Show>
         <Show when="signed-out">
           <SignInButton mode="modal">

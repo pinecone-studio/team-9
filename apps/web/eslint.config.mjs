@@ -64,6 +64,7 @@ const eslintConfig = defineConfig([
   },
 
   globalIgnores([
+    ".open-next/**",
     ".next/**",
     ".open-next/**",
     "out/**",

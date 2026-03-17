@@ -149,3 +149,16 @@ mutation SubmitEmployeeBenefitRequest(
     contractAcceptedAt
   }
 }
+
+query EmployeeAccessByEmail($email: String!) {
+  employeeByEmail(email: $email) {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+  }
+}

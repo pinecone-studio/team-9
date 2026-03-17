@@ -5,11 +5,10 @@ export default function DashboardPage() {
   return (
     <HrPageShell
       activeKey="dashboard"
-      lockViewport
       subtitle="Manage employee benefits and eligibility"
       title="Good Morning, HR person!"
     >
-      <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden">
+      <div className="w-full">
         <DashboardContent />
       </div>
     </HrPageShell>

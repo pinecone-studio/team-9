@@ -5,6 +5,7 @@ import TopNaviBar, { type HrNavKey } from "../_features/TopNaviBar";
 type HrPageShellProps = {
   activeKey: HrNavKey;
   children: ReactNode;
+  fullWidthHeader?: boolean;
   hideHeader?: boolean;
   lockViewport?: boolean;
   subtitle: string;
@@ -18,6 +19,7 @@ const geist = Geist({
 export default function HrPageShell({
   activeKey,
   children,
+  fullWidthHeader = false,
   hideHeader = false,
   lockViewport = false,
   subtitle,
@@ -25,7 +27,7 @@ export default function HrPageShell({
 }: HrPageShellProps) {
   return (
     <main
-      className={`${geist.className} bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8 ${
+      className={`${geist.className} bg-[#f5f4f4] px-[35px] py-8 ${
         lockViewport ? "h-dvh overflow-hidden" : "min-h-screen"
       }`}
     >
@@ -37,18 +39,22 @@ export default function HrPageShell({
         <TopNaviBar activeKey={activeKey} />
 
         {!hideHeader && (
-          <section className="mt-8 flex shrink-0 flex-col items-center gap-[5px] text-center sm:mt-10">
-            <h1 className="text-[24px] font-semibold leading-[100%] tracking-[0] text-black">
+          <section
+            className={`mt-14 flex h-[54px] w-full shrink-0 flex-col items-center gap-[5px] px-0 text-center ${
+              fullWidthHeader ? "max-w-[1300px]" : "max-w-[560px]"
+            }`}
+          >
+            <h1 className="flex h-[31px] w-full items-center justify-center text-[24px] leading-[31px] font-semibold text-black">
               {title}
             </h1>
-            <p className="text-[14px] font-normal leading-[100%] tracking-[0] text-[#555555]">
+            <p className="flex h-[18px] w-full items-center justify-center text-[14px] leading-[18px] font-normal text-[#555555]">
               {subtitle}
             </p>
           </section>
         )}
 
         <section
-          className={`${hideHeader ? "mt-0" : "mt-8"} w-full ${
+          className={`${hideHeader ? "mt-0" : "mt-[31px]"} w-full ${
             lockViewport ? "min-h-0 flex-1 overflow-hidden" : ""
           }`}
         >

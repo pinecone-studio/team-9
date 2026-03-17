@@ -99,6 +99,8 @@ export const typeDefs = /* GraphQL */ `
     employee: Employee!
     benefit: Benefit!
     status: String!
+    contractVersionAccepted: String
+    contractAcceptedAt: String
     created_at: String!
     updated_at: String!
     reviewed_by: Employee
@@ -377,6 +379,8 @@ export const typeDefs = /* GraphQL */ `
     employeeId: ID!
     benefitId: ID!
     requestedBy: String!
+    contractVersionAccepted: String
+    contractAcceptedAt: String
   }
 
   type Query {
@@ -394,6 +398,7 @@ export const typeDefs = /* GraphQL */ `
     eligibilityRules(benefitId: ID): [EligibilityRule!]!
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+    benefitContract(benefitId: ID!): Contract
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
     contractSignedUrlByBenefit(benefitId: ID!): ContractSignedUrl!
     countPendingBenefitRequests: Int!

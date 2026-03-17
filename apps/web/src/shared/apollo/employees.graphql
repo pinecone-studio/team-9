@@ -58,6 +58,8 @@ query EmployeeBenefitRequests($employeeId: ID!) {
   benefitRequests(employeeId: $employeeId) {
     id
     status
+    contractVersionAccepted
+    contractAcceptedAt
     created_at
     updated_at
     approval_role
@@ -78,6 +80,28 @@ query EmployeeBenefitRequests($employeeId: ID!) {
       email
       position
     }
+  }
+}
+
+query EmployeeBenefitDialog($benefitId: ID!) {
+  benefitContract(benefitId: $benefitId) {
+    id
+    vendorName
+    version
+    r2ObjectKey
+    effectiveDate
+    expiryDate
+    isActive
+  }
+  eligibilityRules(benefitId: $benefitId) {
+    id
+    name
+    description
+    rule_type
+    operator
+    value
+    default_unit
+    priority
   }
 }
 
@@ -108,5 +132,7 @@ mutation SubmitEmployeeBenefitRequest(
   submitEmployeeBenefitRequest(input: $input) {
     id
     status
+    contractVersionAccepted
+    contractAcceptedAt
   }
 }

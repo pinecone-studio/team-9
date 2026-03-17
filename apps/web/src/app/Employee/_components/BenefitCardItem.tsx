@@ -7,26 +7,14 @@ import type { EmployeeBenefitCard } from "./employee-types";
 
 type BenefitCardItemProps = {
   card: EmployeeBenefitCard;
-  isSubmitting: boolean;
-  onRequest: (card: EmployeeBenefitCard) => void;
+  onSelect: (card: EmployeeBenefitCard) => void;
 };
 
-export function BenefitCardItem({
-  card,
-  isSubmitting,
-  onRequest,
-}: BenefitCardItemProps) {
+function BenefitCardBody({ card }: { card: EmployeeBenefitCard }) {
   const [subsidyText, providerText] = splitSubsidyLabel(card.subsidyLabel);
 
   return (
-    <article
-      className={[
-        "box-border flex min-h-[184px] w-full flex-col justify-between",
-        "rounded-[8px] border border-[#DBDEE1] bg-white p-4",
-        card.accent,
-      ].join(" ")}
-      key={card.id}
-    >
+    <>
       <div className="flex w-full items-center justify-between gap-[23px]">
         <h3 className="text-[16px] font-semibold leading-[21px] text-[#060B10]">
           {card.title}
@@ -65,7 +53,7 @@ export function BenefitCardItem({
           {card.note ?? ""}
         </p>
       )}
-      <div className="flex h-7 w-full items-center justify-between">
+      <div className="flex min-h-7 w-full items-center justify-between">
         <p className="flex items-center gap-2 text-[14px] font-normal leading-[18px] text-[#737373]">
           <span>{subsidyText}</span>
           {providerText ? <span>{providerText}</span> : null}
@@ -75,22 +63,31 @@ export function BenefitCardItem({
             {card.note}
           </span>
         )}
-        {card.action ? (
-          <button
-            className={[
-              "inline-flex h-7 items-center justify-center rounded-[8px] border",
-              "border-[#E5E5E5] bg-white px-5 text-[12px] font-medium leading-4",
-              "text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)]",
-              isSubmitting ? "cursor-not-allowed opacity-60" : "",
-            ].join(" ")}
-            disabled={isSubmitting}
-            onClick={() => onRequest(card)}
-            type="button"
-          >
-            {isSubmitting ? "Requesting..." : "Request"}
-          </button>
-        ) : null}
       </div>
+    </>
+  );
+}
+
+export function BenefitCardItem({ card, onSelect }: BenefitCardItemProps) {
+  const className = [
+    "box-border flex min-h-[184px] w-full flex-col justify-between rounded-[8px] border border-[#DBDEE1] bg-white p-4 text-left",
+    card.status === "Eligible"
+      ? "cursor-pointer transition-transform duration-150 hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+      : "",
+    card.accent,
+  ].join(" ");
+
+  if (card.status === "Eligible") {
+    return (
+      <button className={className} onClick={() => onSelect(card)} type="button">
+        <BenefitCardBody card={card} />
+      </button>
+    );
+  }
+
+  return (
+    <article className={className}>
+      <BenefitCardBody card={card} />
     </article>
   );
 }

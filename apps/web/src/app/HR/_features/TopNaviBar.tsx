@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";

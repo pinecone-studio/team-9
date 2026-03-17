@@ -16,6 +16,14 @@ export type CurrentUserAccess = {
 };
 
 const HR_ROLES = new Set(["finance_manager", "hr_admin"]);
+const UNAUTHENTICATED_ACCESS: CurrentUserAccess = {
+  email: null,
+  employee: null,
+  hasHrAccess: false,
+  isAuthenticated: false,
+  role: null,
+  userId: null,
+};
 
 function normalizeRole(role: string | null | undefined) {
   return role?.trim().toLowerCase() ?? null;
@@ -28,20 +36,33 @@ export function isHrRole(role: string | null | undefined) {
 }
 
 export async function getCurrentUserAccess(): Promise<CurrentUserAccess> {
-  const { userId } = await auth();
+  let userId: string | null = null;
 
-  if (!userId) {
-    return {
-      email: null,
-      employee: null,
-      hasHrAccess: false,
-      isAuthenticated: false,
-      role: null,
-      userId: null,
-    };
+  try {
+    const authResult = await auth();
+    userId = authResult.userId;
+  } catch (error) {
+    console.error("[auth] Failed to resolve auth session.", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return UNAUTHENTICATED_ACCESS;
   }
 
-  const user = await currentUser();
+  if (!userId) {
+    return UNAUTHENTICATED_ACCESS;
+  }
+
+  let user: Awaited<ReturnType<typeof currentUser>> | null = null;
+
+  try {
+    user = await currentUser();
+  } catch (error) {
+    console.error("[auth] Failed to load current user profile.", {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return UNAUTHENTICATED_ACCESS;
+  }
   const email =
     user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ??
     user?.emailAddresses[0]?.emailAddress?.trim().toLowerCase() ??

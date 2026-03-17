@@ -25,81 +25,87 @@ function createDefaultCounts(): EligibilityCounts {
 }
 
 export async function listBenefitEligibilitySummary(DB: D1Database): Promise<BenefitEligibilitySummary[]> {
-	const db = getDb({ DB });
+	try {
+		const db = getDb({ DB });
 
-	const benefitsRows = await db
-		.select({
-			benefitId: benefits.id,
-			benefitName: benefits.name,
-			category: benefitCategories.name,
-			subsidyPercent: benefits.subsidyPercent,
-			isActive: benefits.isActive,
-		})
-		.from(benefits)
-		.leftJoin(benefitCategories, eq(benefitCategories.id, benefits.categoryId))
-		.orderBy(asc(benefits.name));
+		const benefitsRows = await db
+			.select({
+				benefitId: benefits.id,
+				benefitName: benefits.name,
+				category: benefitCategories.name,
+				subsidyPercent: benefits.subsidyPercent,
+				isActive: benefits.isActive,
+			})
+			.from(benefits)
+			.leftJoin(benefitCategories, eq(benefitCategories.id, benefits.categoryId))
+			.orderBy(asc(benefits.name));
 
-	const eligibilityRows = await db
-		.select({
-			benefitId: benefitEligibility.benefitId,
-			status: benefitEligibility.status,
-			count: sql<number>`count(*)`,
-		})
-		.from(benefitEligibility)
-		.groupBy(benefitEligibility.benefitId, benefitEligibility.status);
+		const eligibilityRows = await db
+			.select({
+				benefitId: benefitEligibility.benefitId,
+				status: benefitEligibility.status,
+				count: sql<number>`count(*)`,
+			})
+			.from(benefitEligibility)
+			.groupBy(benefitEligibility.benefitId, benefitEligibility.status);
 
-	const benefitRuleRows = await db
-		.select({
-			benefitId: benefitRules.benefitId,
-			ruleName: rules.name,
-		})
-		.from(benefitRules)
-		.innerJoin(rules, eq(rules.id, benefitRules.ruleId))
-		.where(eq(benefitRules.isActive, true))
-		.orderBy(asc(rules.name));
+		const benefitRuleRows = await db
+			.select({
+				benefitId: benefitRules.benefitId,
+				ruleName: rules.name,
+			})
+			.from(benefitRules)
+			.innerJoin(rules, eq(rules.id, benefitRules.ruleId))
+			.where(eq(benefitRules.isActive, true))
+			.orderBy(asc(rules.name));
 
-	const countsByBenefit = new Map<string, EligibilityCounts>();
-	for (const row of eligibilityRows) {
-		const current = countsByBenefit.get(row.benefitId) ?? createDefaultCounts();
-		const count = Number(row.count ?? 0);
+		const countsByBenefit = new Map<string, EligibilityCounts>();
+		for (const row of eligibilityRows) {
+			const current = countsByBenefit.get(row.benefitId) ?? createDefaultCounts();
+			const count = Number(row.count ?? 0);
 
-		if (row.status === 'active') {
-			current.activeEmployees += count;
-			current.eligibleEmployees += count;
-		} else if (row.status === 'eligible') {
-			current.eligibleEmployees += count;
-		} else if (row.status === 'locked') {
-			current.blockedEmployees += count;
-		} else if (row.status === 'pending') {
-			current.pendingEmployees += count;
+			if (row.status === 'active') {
+				current.activeEmployees += count;
+				current.eligibleEmployees += count;
+			} else if (row.status === 'eligible') {
+				current.eligibleEmployees += count;
+			} else if (row.status === 'locked') {
+				current.blockedEmployees += count;
+			} else if (row.status === 'pending') {
+				current.pendingEmployees += count;
+			}
+
+			countsByBenefit.set(row.benefitId, current);
 		}
 
-		countsByBenefit.set(row.benefitId, current);
-	}
-
-	const rulesByBenefit = new Map<string, string[]>();
-	for (const row of benefitRuleRows) {
-		const current = rulesByBenefit.get(row.benefitId) ?? [];
-		if (!current.includes(row.ruleName)) {
-			current.push(row.ruleName);
+		const rulesByBenefit = new Map<string, string[]>();
+		for (const row of benefitRuleRows) {
+			const current = rulesByBenefit.get(row.benefitId) ?? [];
+			if (!current.includes(row.ruleName)) {
+				current.push(row.ruleName);
+			}
+			rulesByBenefit.set(row.benefitId, current);
 		}
-		rulesByBenefit.set(row.benefitId, current);
+
+		return benefitsRows.map((benefit) => {
+			const counts = countsByBenefit.get(benefit.benefitId) ?? createDefaultCounts();
+
+			return {
+				benefitId: benefit.benefitId,
+				benefitName: benefit.benefitName,
+				category: benefit.category ?? 'General',
+				subsidyPercent: benefit.subsidyPercent,
+				rulesApplied: rulesByBenefit.get(benefit.benefitId) ?? [],
+				activeEmployees: counts.activeEmployees,
+				eligibleEmployees: counts.eligibleEmployees,
+				blockedEmployees: counts.blockedEmployees,
+				pendingEmployees: counts.pendingEmployees,
+				status: benefit.isActive ? 'Active' : 'Inactive',
+			};
+		});
+	} catch (error) {
+		throw new Error(
+			`Failed to list benefit eligibility summary: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
-
-	return benefitsRows.map((benefit) => {
-		const counts = countsByBenefit.get(benefit.benefitId) ?? createDefaultCounts();
-
-		return {
-			benefitId: benefit.benefitId,
-			benefitName: benefit.benefitName,
-			category: benefit.category ?? 'General',
-			subsidyPercent: benefit.subsidyPercent,
-			rulesApplied: rulesByBenefit.get(benefit.benefitId) ?? [],
-			activeEmployees: counts.activeEmployees,
-			eligibleEmployees: counts.eligibleEmployees,
-			blockedEmployees: counts.blockedEmployees,
-			pendingEmployees: counts.pendingEmployees,
-			status: benefit.isActive ? 'Active' : 'Inactive',
-		};
-	});
 }

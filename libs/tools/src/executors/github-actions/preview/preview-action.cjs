@@ -77,8 +77,7 @@ const extractWorkersDevUrl = (output, workerName) => {
   if (!workerName) return matches[0];
 
   const primaryUrl = matches.find((url) => url.includes(`https://${workerName}.`));
-  const previewUrl = matches.find((url) => !url.includes(`https://${workerName}.`));
-  return previewUrl || primaryUrl || matches[0];
+  return primaryUrl || matches[0];
 };
 
 const createPreviewWranglerConfig = ({ baseConfigPath, outputPath, workerName, vars }) => {

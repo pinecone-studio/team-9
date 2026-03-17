@@ -1,3 +1,5 @@
+"use client";
+
 import { Geist } from "next/font/google";
 import { BenefitsGroup } from "./BenefitsGroup";
 import { EmployeeDashboardAutoRefresh } from "./EmployeeDashboardAutoRefresh";
@@ -13,6 +15,8 @@ type EmployeeContentProps = {
   employeeEmail: string | null;
   employeeId: string;
   employeeName: string;
+  errorMessage?: string | null;
+  isLoading?: boolean;
 };
 
 const geist = Geist({
@@ -25,6 +29,8 @@ export function EmployeeContent({
   employeeEmail,
   employeeId,
   employeeName,
+  errorMessage,
+  isLoading = false,
 }: EmployeeContentProps) {
   const shouldAutoRefresh = dashboardData.requests.some(
     (request) => request.status === "Pending",
@@ -46,6 +52,16 @@ export function EmployeeContent({
         </header>
 
         <SummaryCards cards={dashboardData.summaryCards} className="mt-8" />
+        {isLoading ? (
+          <p className="mt-3 text-center text-[13px] text-[#6B7280]">
+            Loading latest dashboard data...
+          </p>
+        ) : null}
+        {errorMessage ? (
+          <div className="mt-4 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#B91C1C]">
+            {errorMessage}
+          </div>
+        ) : null}
 
         <section
           id="my-requests"

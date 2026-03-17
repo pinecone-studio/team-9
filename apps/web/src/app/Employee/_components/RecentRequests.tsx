@@ -19,6 +19,13 @@ function getStatusStyles(status: EmployeeRequestItem["status"]) {
     };
   }
 
+  if (status === "Cancelled") {
+    return {
+      color: "bg-[#F3F4F6] text-[#6B7280]",
+      icon: "slash" as const,
+    };
+  }
+
   return {
     color: "bg-[#FEF3C7] text-[#D97706]",
     icon: "clock" as const,
@@ -112,6 +119,18 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
                   >
                     <path d="M12 6l8 14H4l8-14Z" />
                     <path d="M12 10v4m0 4h.01" />
+                  </svg>
+                )}
+                {status.icon === "slash" && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m15 9-6 6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
                 {row.status}

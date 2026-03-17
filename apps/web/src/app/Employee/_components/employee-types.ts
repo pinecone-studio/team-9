@@ -6,9 +6,9 @@ export type SummaryCard = {
 };
 
 export type RequestRow = {
-  status: "Accepted" | "Pending" | "Rejected";
+  status: "Accepted" | "Pending" | "Rejected" | "Cancelled";
   color: string;
-  icon: "check" | "clock" | "alert";
+  icon: "check" | "clock" | "alert" | "slash";
 };
 
 export type BenefitCard = {
@@ -25,7 +25,7 @@ export type EmployeeRequestItem = {
   benefit: string;
   id: string;
   reviewedBy: string;
-  status: "Accepted" | "Pending" | "Rejected";
+  status: "Accepted" | "Pending" | "Rejected" | "Cancelled";
   submittedAt: string;
 };
 
@@ -41,6 +41,7 @@ export type EmployeeBenefitCard = {
   approvalRole: "finance_manager" | "hr_admin";
   badge: string;
   categoryId: string;
+  categoryName: string;
   description: string;
   dots: string[];
   id: string;

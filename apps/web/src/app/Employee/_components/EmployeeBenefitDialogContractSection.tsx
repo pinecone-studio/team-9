@@ -7,6 +7,8 @@ import {
 
 type EmployeeBenefitDialogContractSectionProps = {
   acceptedContract: boolean;
+  agreementDisabled?: boolean;
+  agreementStatusNote?: string | null;
   contract: {
     effectiveDate: string;
     expiryDate: string;
@@ -14,12 +16,14 @@ type EmployeeBenefitDialogContractSectionProps = {
     version: string;
   } | null;
   contractLoading: boolean;
-  onAcceptedContractChange: (accepted: boolean) => void;
+  onAcceptedContractChange?: (accepted: boolean) => void;
   onViewContract: () => void;
 };
 
 export default function EmployeeBenefitDialogContractSection({
   acceptedContract,
+  agreementDisabled = false,
+  agreementStatusNote,
   contract,
   contractLoading,
   onAcceptedContractChange,
@@ -60,11 +64,17 @@ export default function EmployeeBenefitDialogContractSection({
         </div>
       </div>
 
-      <label className="flex items-start gap-3">
+      <label
+        className={[
+          "flex items-start gap-3",
+          agreementDisabled ? "cursor-not-allowed" : "",
+        ].join(" ")}
+      >
         <input
           checked={acceptedContract}
           className="mt-0.5 h-4 w-4 rounded-[2px] border border-[#D1D5DB]"
-          onChange={(event) => onAcceptedContractChange(event.target.checked)}
+          disabled={agreementDisabled}
+          onChange={(event) => onAcceptedContractChange?.(event.target.checked)}
           type="checkbox"
         />
         <span className="flex flex-col gap-1">
@@ -74,6 +84,11 @@ export default function EmployeeBenefitDialogContractSection({
           <span className="text-[12px] leading-4 text-[#737373]">
             I confirm that I have read and accept the contract terms.
           </span>
+          {agreementStatusNote ? (
+            <span className="text-[12px] leading-4 text-[#737373]">
+              {agreementStatusNote}
+            </span>
+          ) : null}
         </span>
       </label>
     </>

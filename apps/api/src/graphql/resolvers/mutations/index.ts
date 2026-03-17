@@ -1,4 +1,5 @@
 import { createApprovalRequest } from './create-approval-request';
+import { cancelEmployeeBenefitRequest } from './cancel-employee-benefit-request';
 import { createBenefit } from './create-benefit';
 import { createBenefitCategory } from './create-benefit-category';
 import { createEligibilityRule } from './create-eligibility-rule';
@@ -26,6 +27,7 @@ import type {
 	MutationCreateApprovalRequestArgs,
 	MutationCreateBenefitCategoryArgs,
 	MutationCreateEligibilityRuleArgs,
+	MutationCancelEmployeeBenefitRequestArgs,
 	MutationCreateEmployeeArgs,
 	MutationDeleteBenefitArgs,
 	MutationCreateRuleCategoryArgs,
@@ -58,6 +60,12 @@ export const mutationResolvers = {
 
 	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, { DB }: GraphQLContext) =>
 		createApprovalRequest(DB, args),
+
+	cancelEmployeeBenefitRequest: (
+		_: unknown,
+		args: MutationCancelEmployeeBenefitRequestArgs,
+		{ DB }: GraphQLContext,
+	) => cancelEmployeeBenefitRequest(DB, args),
 
 	submitBenefitCreateRequest: (
 		_: unknown,

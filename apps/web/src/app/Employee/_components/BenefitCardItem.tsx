@@ -69,15 +69,16 @@ function BenefitCardBody({ card }: { card: EmployeeBenefitCard }) {
 }
 
 export function BenefitCardItem({ card, onSelect }: BenefitCardItemProps) {
+  const isInteractive = card.status === "Eligible" || card.status === "Pending";
   const className = [
     "box-border flex min-h-[184px] w-full flex-col justify-between rounded-[8px] border border-[#DBDEE1] bg-white p-4 text-left",
-    card.status === "Eligible"
+    isInteractive
       ? "cursor-pointer transition-transform duration-150 hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
       : "",
     card.accent,
   ].join(" ");
 
-  if (card.status === "Eligible") {
+  if (isInteractive) {
     return (
       <button className={className} onClick={() => onSelect(card)} type="button">
         <BenefitCardBody card={card} />

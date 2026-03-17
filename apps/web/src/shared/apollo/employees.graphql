@@ -136,3 +136,14 @@ mutation SubmitEmployeeBenefitRequest(
     contractAcceptedAt
   }
 }
+
+mutation CancelEmployeeBenefitRequest(
+  $input: CancelEmployeeBenefitRequestInput!
+) {
+  cancelEmployeeBenefitRequest(input: $input) {
+    id
+    status
+    contractVersionAccepted
+    contractAcceptedAt
+  }
+}

@@ -57,6 +57,7 @@ export function mapBenefitSections(
     const passed = Math.min(stats.passed, total);
     const subsidy = eligibility.benefit.subsidyPercent;
     const vendorName = eligibility.benefit.vendorName?.trim() ?? "";
+    const category = eligibility.benefit.category?.trim() || "Other";
     const subsidyLabel =
       typeof subsidy === "number"
         ? `${subsidy}% subsidy${vendorName ? ` by ${vendorName}` : ""}`
@@ -66,6 +67,7 @@ export function mapBenefitSections(
       approvalRole: eligibility.benefit.approvalRole,
       badge: toBadgeClass(status),
       categoryId: eligibility.benefit.categoryId,
+      categoryName: category,
       description: eligibility.benefit.description,
       dots: buildDots(passed, total),
       id: eligibility.benefit.id,
@@ -81,7 +83,6 @@ export function mapBenefitSections(
       title: eligibility.benefit.title,
       vendorName: vendorName || null,
     };
-    const category = eligibility.benefit.category?.trim() || "Other";
     const existing = byCategory.get(category) ?? [];
     existing.push(card);
     byCategory.set(category, existing);

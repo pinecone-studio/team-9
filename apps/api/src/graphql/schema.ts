@@ -383,6 +383,11 @@ export const typeDefs = /* GraphQL */ `
     contractAcceptedAt: String
   }
 
+  input CancelEmployeeBenefitRequestInput {
+    id: ID!
+    cancelledBy: String!
+  }
+
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
@@ -419,6 +424,7 @@ export const typeDefs = /* GraphQL */ `
     reviewApprovalRequest(input: ReviewApprovalRequestInput!): ApprovalRequest!
     reviewBenefitRequest(input: ReviewBenefitRequestInput!): BenefitRequest!
     submitEmployeeBenefitRequest(input: SubmitEmployeeBenefitRequestInput!): BenefitRequest!
+    cancelEmployeeBenefitRequest(input: CancelEmployeeBenefitRequestInput!): BenefitRequest!
     setBenefitStatus(input: SetBenefitStatusInput!): Benefit!
     deleteBenefit(id: ID!): Boolean!
     createBenefitCategory(name: String!): BenefitCategory!

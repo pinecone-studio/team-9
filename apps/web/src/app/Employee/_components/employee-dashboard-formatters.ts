@@ -123,6 +123,10 @@ export function getRequestStatusLabel(status: string): EmployeeRequestItem["stat
     return "Accepted";
   }
 
+  if (normalizedStatus === "cancelled") {
+    return "Cancelled";
+  }
+
   if (normalizedStatus === "rejected") {
     return "Rejected";
   }

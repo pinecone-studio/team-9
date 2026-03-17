@@ -32,7 +32,7 @@ export default function DashboardRecentActivity({
   const visibleEntries = entries.slice(0, 5);
 
   return (
-    <section className="box-border flex h-[490px] w-full flex-col items-start rounded-[14px] border border-[#E5E5E5] bg-white py-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
+    <section className="box-border flex h-[490px] w-full flex-col items-start gap-6 rounded-[14px] border border-[#E5E5E5] bg-white py-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
       <div className="flex h-[44px] w-full flex-col items-start gap-2 px-6">
         <h2 className="h-4 text-[16px] leading-4 font-semibold text-[#0A0A0A]">
           Recent System Activity
@@ -42,7 +42,7 @@ export default function DashboardRecentActivity({
         </p>
       </div>
 
-      <div className="mt-6 flex w-full flex-col gap-4 px-6">
+      <div className="flex w-full flex-col gap-4 px-6">
         {visibleEntries.length > 0 ? (
           visibleEntries.map((entry) => {
             const Icon = getActivityIcon(entry.entityType);
@@ -55,7 +55,7 @@ export default function DashboardRecentActivity({
                   <p className="truncate text-[14px] leading-5 text-[#0A0A0A]">
                     {formatActivityMessage(entry)}
                   </p>
-                  <p className="mt-1 text-[12px] leading-4 text-[#737373]">
+                  <p className="text-[12px] leading-4 text-[#737373]">
                     {formatActivityTime(entry.createdAt)}
                   </p>
                 </div>

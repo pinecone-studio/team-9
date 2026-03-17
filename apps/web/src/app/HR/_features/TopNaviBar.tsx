@@ -4,16 +4,19 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { ComponentType, SVGProps } from "react";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
-
-import AuditLogsIcon from "../_icons/AuditLogs";
-import BenefitsCatalogIcon from "../_icons/Benefits_catalog";
-import ContractsIcon from "../_icons/Contracts";
-import DashboardIcon from "../_icons/Dashboard";
-import EligibilityRulesIcon from "../_icons/EligibilityRules";
-import EmployeesIcon from "../_icons/Employees";
-import RequestsIcon from "../_icons/Requests";
+import type { LucideIcon } from "lucide-react";
+import {
+  Boxes,
+  FilePenLine,
+  FileText,
+  Grid2x2,
+  LayoutGrid,
+  Shield,
+  Users,
+  Waypoints,
+} from "lucide-react";
+import BmsLogo from "../_icons/BmsLogo";
 
 export type HrNavKey =
   | "dashboard"
@@ -27,7 +30,7 @@ export type HrNavKey =
 type NavigationItem = {
   hasNotification?: boolean;
   href: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  icon: LucideIcon;
   key: HrNavKey;
   label: string;
 };
@@ -35,46 +38,48 @@ type NavigationItem = {
 const navigationItems = [
   {
     href: "/dashboard",
-    icon: DashboardIcon,
+    icon: LayoutGrid,
     key: "dashboard",
     label: "Dashboard",
   },
   {
-    href: "/benefits-catalog",
-    icon: BenefitsCatalogIcon,
-    key: "benefits-catalog",
-    label: "Benefits catalog",
-  },
-  {
-    href: "/employees",
-    icon: EmployeesIcon,
-    key: "employees",
-    label: "Employees",
-  },
-  {
+    hasNotification: true,
     href: "/requests",
-    icon: RequestsIcon,
+    icon: FilePenLine,
     key: "requests",
     label: "Requests",
   },
   {
-    href: "/eligibility-rules",
-    icon: EligibilityRulesIcon,
-    key: "eligibility-rules",
-    label: "Eligibility rules",
+    href: "/employees",
+    icon: Users,
+    key: "employees",
+    label: "Employees",
   },
   {
-    href: "/audit-logs",
-    icon: AuditLogsIcon,
-    key: "audit-logs",
-    label: "Audit Logs",
+    href: "/benefits-catalog",
+    icon: Grid2x2,
+    key: "benefits-catalog",
+    label: "Benefits",
+  },
+  {
+    href: "/eligibility-rules",
+    icon: Waypoints,
+    key: "eligibility-rules",
+    label: "Rules",
   },
   {
     hasNotification: true,
     href: "/contracts",
-    icon: ContractsIcon,
+    icon: FileText,
     key: "contracts",
     label: "Contracts",
+  },
+  {
+    hasNotification: true,
+    href: "/audit-logs",
+    icon: Shield,
+    key: "audit-logs",
+    label: "Audit Logs",
   },
 ] satisfies NavigationItem[];
 
@@ -111,6 +116,18 @@ type ContractsNavActivityData = {
 function isContractRelatedActivity(entry: ContractsNavActivityEntry) {
   const searchableText = `${entry.entityType} ${entry.action} ${entry.metadata ?? ""}`;
   return /contract/i.test(searchableText);
+}
+
+function TopNavLogo() {
+  return (
+    <Link
+      aria-label="Go to Dashboard"
+      className="flex h-[38px] w-[86px] items-center text-black"
+      href="/dashboard"
+    >
+      <BmsLogo className="h-[38px] w-[86px]" />
+    </Link>
+  );
 }
 
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
@@ -162,50 +179,46 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
     latestContractChangeAt > 0 && latestContractChangeAt > lastSeenContractChangeAt;
 
   return (
-    <div className="h-[78px] w-full max-w-[860px] rounded-2xl border border-[#e6e1e1] bg-white px-6 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-      <div className="flex h-full items-center gap-6">
+    <div className="relative z-[2] w-full max-w-[1120px] rounded-[16px] border border-[rgba(229,229,229,0.6)] bg-[rgba(255,255,255,0.95)] px-5 py-3 font-sans shadow-[0_67px_27px_rgba(0,0,0,0.01),0_37px_22px_rgba(0,0,0,0.04),0_17px_17px_rgba(0,0,0,0.06),0_4px_9px_rgba(0,0,0,0.07)] backdrop-blur-[4px]">
+      <div className="flex h-[44px] items-center gap-4">
+        <div className="shrink-0">
+          <TopNavLogo />
+        </div>
+
         <nav aria-label="HR sections" className="min-w-0 flex-1 overflow-hidden">
-          <ul className="flex w-full items-start justify-between gap-2">
+          <ul className="flex h-9 w-full items-center justify-center gap-[2px]">
             {navigationItems.map(
               ({ hasNotification, href, icon: Icon, key, label }) => {
               const isActive = activeKey === key;
 
               return (
-                <li key={key} className="flex h-[54px] min-w-0 flex-1 items-center">
+                <li key={key} className="flex min-w-0 items-center">
                   <Link
                     aria-current={isActive ? "page" : undefined}
-                    className={`group relative isolate flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl text-[12px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
+                    className={`group relative isolate inline-flex h-9 items-center justify-center gap-2 rounded-[8px] px-[14px] text-[14px] leading-5 font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
                       isActive
-                        ? "text-slate-950"
-                        : "text-slate-500 hover:text-slate-700"
+                        ? "bg-black text-white"
+                        : "text-[#737373] hover:text-[#171717]"
                     }`}
                     href={href}
                   >
-                    <span className="flex h-7 items-center justify-center">
+                    <span className="flex h-5 w-5 items-center justify-center">
                       <Icon
                         className={`transition-colors ${
                           isActive
-                            ? "h-[34px] w-[34px] text-slate-950"
-                            : "h-6 w-6 text-slate-500 group-hover:text-slate-700"
+                            ? "h-5 w-5 text-white"
+                            : "h-5 w-5 text-[#737373] group-hover:text-[#171717]"
                         }`}
+                        strokeWidth={2}
                       />
                     </span>
-                    <span className={isActive ? "font-semibold" : "font-medium"}>
-                      {label}
-                    </span>
-                    {(key === "contracts" ? shouldShowContractsDot : hasNotification) ? (
-                      <span className="absolute top-0 right-2 h-2.5 w-2.5 rounded-full bg-[#EF4444]" />
-                    ) : null}
+                    <span>{label}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </nav>
-
-        <div className="flex h-full w-8 shrink-0 items-center justify-center">
-          <div className="h-11 w-px bg-[#e6e1e1]" />
-        </div>
 
         <div className="top-nav-user-button shrink-0">
           <Show when="signed-out">
@@ -219,7 +232,7 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
             </SignInButton>
           </Show>
           <Show when="signed-in">
-            <div className="rounded-full transition-transform hover:scale-[1.02]">
+            <div className="relative rounded-full transition-transform hover:scale-[1.02]">
               <UserButton
                 appearance={{
                   elements: {

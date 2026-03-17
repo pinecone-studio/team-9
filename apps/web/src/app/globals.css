@@ -43,3 +43,28 @@ body::-webkit-scrollbar {
   width: 44px !important;
   height: 44px !important;
 }
+
+.contracts-scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
+.contracts-scrollbar-hidden::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+.contracts-scrollbar-hidden::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent;
+}
+
+.contracts-scrollbar-hidden::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent;
+  border: 0;
+}

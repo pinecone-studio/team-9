@@ -5,7 +5,7 @@ export default function ContractsPage() {
   return (
     <HrPageShell
       activeKey="contracts"
-      fullWidthHeader
+      hideHeader
       subtitle="Manage vendor agreements, track contract versions, and monitor employee acceptance."
       title="Contracts"
     >

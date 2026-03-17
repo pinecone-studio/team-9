@@ -39,6 +39,11 @@ mutation UpdateRuleApprovalRequest($input: CreateApprovalRequestInput!) {
     target_role
   }
 }
-mutation DeleteRuleDefinition($id: ID!) {
-  deleteRuleDefinition(id: $id)
+
+mutation DeleteRuleApprovalRequest($input: CreateApprovalRequestInput!) {
+  createApprovalRequest(input: $input) {
+    id
+    status
+    target_role
+  }
 }

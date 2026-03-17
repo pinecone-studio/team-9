@@ -77,8 +77,8 @@ export default function ApprovalRequestReviewFooter({
               </button>
             )}
             <button
-              className="flex items-center gap-2 rounded-[8px] bg-[#008E00] px-4 py-2 text-[14px] leading-5 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#86EFAC]"
-              disabled={reviewing}
+              className="flex items-center gap-2 rounded-[8px] bg-[#008E00] px-4 py-2 text-[14px] leading-5 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#86EFAC] disabled:text-white/80"
+              disabled={reviewing || rejectMode}
               onClick={onApprove}
               type="button"
             >

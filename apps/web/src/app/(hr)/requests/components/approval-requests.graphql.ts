@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export type ApprovalActionValue = "create" | "update";
+export type ApprovalActionValue = "create" | "update" | "delete";
 export type ApprovalEntityValue = "benefit" | "rule";
 export type ApprovalRequestStatusValue = "approved" | "pending" | "rejected";
 export type ApprovalRoleValue = "finance_manager" | "hr_admin";

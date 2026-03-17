@@ -18,6 +18,7 @@ import {
 } from '../../generated/resolvers-types';
 import { mapApprovalRequest } from '../approval-request-mappers';
 import { applyCreateBenefit, applyUpdateBenefit } from './benefit-service';
+import { deleteRuleDefinition } from './delete-rule-definition';
 import { applyCreateRuleDefinition, applyUpdateRuleDefinition } from './rule-definition-service';
 
 type ReviewApprovalEnv = {
@@ -122,6 +123,12 @@ export async function reviewApprovalRequest(
       } else if (existing.actionType === "update") {
         const updated = await applyUpdateRuleDefinition(env.DB, payload.rule as UpdateRuleDefinitionInput);
         entityId = updated.id;
+      } else if (existing.actionType === "delete") {
+        if (!existing.entityId) {
+          throw new Error("Delete approval request is missing entity id");
+        }
+
+        await deleteRuleDefinition(env.DB, existing.entityId);
       }
     }
 

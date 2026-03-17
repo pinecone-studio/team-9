@@ -123,12 +123,16 @@ export function buildBenefitDialogRuleItems(
 
   return [...rules]
     .sort((left, right) => left.priority - right.priority)
-    .map((rule) => ({
-      description: rule.description,
-      id: rule.id,
-      label: buildRuleLabel(rule),
-      passed: readRulePassState(rule.rule_type, queueByRuleType, fallbackValue),
-    }));
+    .map((rule) => {
+      const passed = readRulePassState(rule.rule_type, queueByRuleType, fallbackValue);
+
+      return {
+        description: passed ? rule.description : rule.error_message || rule.description,
+        id: rule.id,
+        label: buildRuleLabel(rule),
+        passed,
+      };
+    });
 }
 
 export function formatContractPeriod(effectiveDate: string, expiryDate: string) {

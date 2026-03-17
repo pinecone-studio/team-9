@@ -97,6 +97,7 @@ query EmployeeBenefitDialog($benefitId: ID!) {
     id
     name
     description
+    error_message
     rule_type
     operator
     value

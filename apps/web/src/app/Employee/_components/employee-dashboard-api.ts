@@ -1,3 +1,6 @@
+import type { DocumentNode } from "graphql";
+import { print } from "graphql";
+
 import { DEFAULT_GRAPHQL_ENDPOINT } from "./employee-dashboard.graphql";
 
 type GraphqlResponse<T> = {
@@ -16,7 +19,7 @@ function getGraphqlEndpoint() {
 }
 
 export async function postGraphql<T>(
-  query: string,
+  document: DocumentNode,
   variables: Record<string, unknown> = {},
 ) {
   const response = await fetch(getGraphqlEndpoint(), {
@@ -26,7 +29,7 @@ export async function postGraphql<T>(
     },
     cache: "no-store",
     body: JSON.stringify({
-      query,
+      query: print(document),
       variables,
     }),
   });

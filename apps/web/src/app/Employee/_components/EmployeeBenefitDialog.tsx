@@ -5,6 +5,7 @@ import {
 } from "@/shared/apollo/generated";
 import EmployeeBenefitDialogLayout from "./EmployeeBenefitDialogLayout";
 import EmployeeEligibleBenefitDialogContent from "./EmployeeEligibleBenefitDialogContent";
+import EmployeeLockedBenefitDialogContent from "./EmployeeLockedBenefitDialogContent";
 import EmployeePendingBenefitDialogContent from "./EmployeePendingBenefitDialogContent";
 import { buildBenefitDialogRuleItems } from "./employee-benefit-dialog.helpers";
 import { findPendingBenefitRequest } from "./employee-benefit-request.helpers";
@@ -27,6 +28,7 @@ export default function EmployeeBenefitDialog({
   onSubmitted,
 }: EmployeeBenefitDialogProps) {
   const isPending = card.status === "Pending";
+  const isLocked = card.status === "Locked";
   const { data, error, loading } = useEmployeeBenefitDialogQuery({
     fetchPolicy: "network-only",
     variables: { benefitId: card.id },
@@ -80,6 +82,16 @@ export default function EmployeeBenefitDialog({
           onViewContract={() => void handleViewContract()}
           request={pendingRequest}
           requestLoading={requestsLoading}
+          requiresContract={card.requiresContract}
+          ruleItems={eligibilityItems}
+        />
+      ) : isLocked ? (
+        <EmployeeLockedBenefitDialogContent
+          contract={contract}
+          contractLoading={contractLoading}
+          errorMessage={resolvedErrorMessage}
+          loading={loading}
+          onViewContract={() => void handleViewContract()}
           requiresContract={card.requiresContract}
           ruleItems={eligibilityItems}
         />

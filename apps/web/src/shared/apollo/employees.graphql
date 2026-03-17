@@ -11,6 +11,19 @@ query EmployeesPage {
   }
 }
 
+query EmployeeAccessByEmail($email: String!) {
+  employeeByEmail(email: $email) {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+  }
+}
+
 query EmployeeEligibility($employeeId: ID!) {
   employeeEligibility(employeeId: $employeeId) {
     status

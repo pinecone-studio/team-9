@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 import { getDb } from '../../../db';
 import { employees } from '../../../db/schema/employees';
@@ -25,7 +25,7 @@ export async function getEmployeeByEmail(DB: D1Database, email: string): Promise
 			responsibilityLevel: employees.responsibilityLevel,
 		})
 		.from(employees)
-		.where(eq(employees.email, normalizedEmail))
+		.where(sql`lower(${employees.email}) = ${normalizedEmail}`)
 		.limit(1);
 
 	return result[0] ? mapEmployeeRecord(result[0]) : null;

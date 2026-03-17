@@ -11,14 +11,6 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "team9_pinequest_dev",
-      "database_id": "4cb7fad9-625c-4540-a076-a0a2ea44b572",
-      "migrations_dir": "../api/drizzle"
-    }
-  ],
   "observability": {
     "enabled": true
   }

@@ -1,11 +1,17 @@
 /* eslint-disable max-lines */
 "use client";
 
+import { useApolloClient } from "@apollo/client/react";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useSignIn, useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useState } from "react";
+import {
+  EmployeeAccessByEmailDocument,
+  type EmployeeAccessByEmailQuery,
+  type EmployeeAccessByEmailQueryVariables,
+} from "@/shared/apollo/generated";
 import CodeStep from "./CodeStep";
 import EmailStep from "./EmailStep";
 import getErrorMessage from "./getErrorMessage";
@@ -27,6 +33,7 @@ function isIdentifierNotFoundError(error: unknown) {
 }
 
 export default function LoginForm() {
+  const apolloClient = useApolloClient();
   const router = useRouter();
   const { fetchStatus: signInFetchStatus, signIn } = useSignIn();
   const { fetchStatus: signUpFetchStatus, signUp } = useSignUp();
@@ -113,6 +120,26 @@ export default function LoginForm() {
     setAuthFlow("signUp");
   };
 
+  const checkEmployeeAccess = async (normalizedEmail: string) => {
+    const { data } = await apolloClient.query<
+      EmployeeAccessByEmailQuery,
+      EmployeeAccessByEmailQueryVariables
+    >({
+      query: EmployeeAccessByEmailDocument,
+      variables: {
+        email: normalizedEmail,
+      },
+      fetchPolicy: "no-cache",
+      context: {
+        fetchOptions: {
+          cache: "no-store",
+        },
+      },
+    });
+
+    return Boolean(data?.employeeByEmail);
+  };
+
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -127,6 +154,13 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
+      const hasEmployeeAccess = await checkEmployeeAccess(normalizedEmail);
+
+      if (!hasEmployeeAccess) {
+        setErrorMessage("This work email doesn't have access.");
+        return;
+      }
+
       try {
         await startSignInCodeFlow(normalizedEmail);
       } catch (error) {

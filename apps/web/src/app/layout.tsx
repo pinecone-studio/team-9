@@ -32,6 +32,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ClerkProvider
+          afterMultiSessionSingleSignOutUrl="/auth/login"
+          afterSignOutUrl="/auth/login"
           appearance={{
             cssLayerName: "clerk",
           }}

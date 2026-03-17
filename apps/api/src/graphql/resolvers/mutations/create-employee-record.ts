@@ -7,10 +7,11 @@ export async function createEmployeeRecord(DB: D1Database, args: MutationCreateE
 
 	const id = crypto.randomUUID();
 	const now = new Date().toISOString();
+	const normalizedEmail = args.email.trim().toLowerCase();
 
 	await db.insert(employees).values({
 		id,
-		email: args.email,
+		email: normalizedEmail,
 		name: args.name,
 		nameEng: args.name,
 		role: args.position,
@@ -29,7 +30,7 @@ export async function createEmployeeRecord(DB: D1Database, args: MutationCreateE
 		department: 'Unassigned',
 		id,
 		name: args.name,
-		email: args.email,
+		email: normalizedEmail,
 		employmentStatus: 'active',
 		hireDate: now,
 		position: args.position,

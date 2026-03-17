@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Show, SignInButton, SignOutButton } from "@clerk/nextjs";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import DashboardIcon from "@/app/HR/_icons/Dashboard";
 import RequestsIcon from "@/app/HR/_icons/Requests";
 
@@ -81,15 +81,16 @@ export function EmployeeNav({ employeeName }: EmployeeNavProps) {
         </div>
 
         <Show when="signed-in">
-          <SignOutButton redirectUrl="/auth/login">
-            <button
-              aria-label="Log out"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] text-[14px] font-semibold leading-none text-slate-700 transition-colors hover:bg-white"
-              type="button"
-            >
-              {initials || "U"}
-            </button>
-          </SignOutButton>
+          <div className="shrink-0 rounded-full transition-transform hover:scale-[1.02]">
+            <UserButton
+              appearance={{
+                elements: {
+                  userButtonAvatarBox: "!h-11 !w-11",
+                  userButtonTrigger: "!h-11 !w-11",
+                },
+              }}
+            />
+          </div>
         </Show>
         <Show when="signed-out">
           <SignInButton mode="modal">

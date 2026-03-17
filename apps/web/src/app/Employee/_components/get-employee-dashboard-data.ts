@@ -4,7 +4,6 @@ import type { EmployeeRecord } from "@/shared/auth/get-employee-record-by-email"
 import { postGraphql } from "./employee-dashboard-api";
 import {
   hasMissingActiveBenefitRecords,
-  mapBenefitSections,
 } from "./employee-dashboard-benefits";
 import {
   BENEFIT_REQUESTS_QUERY,
@@ -14,12 +13,10 @@ import {
   RECALCULATE_EMPLOYEE_ELIGIBILITY_MUTATION,
   type RecalculateEligibilityMutationResult,
 } from "./employee-dashboard.graphql";
-import { mapRequests } from "./employee-dashboard-requests";
 import {
-  findFirstBooleanMetric,
-  findFirstNumericMetric,
-} from "./employee-dashboard-signals";
-import { buildSummaryCards } from "./employee-dashboard-summary";
+  buildEmployeeDashboardViewData,
+  buildEmptyDashboardData,
+} from "./employee-dashboard-view-data";
 import type {
   EmployeeDashboardViewData,
   EmployeeEligibilitySignals,
@@ -40,12 +37,10 @@ export async function getEmployeeDashboardData({
   };
 
   if (!employee?.id) {
-    return {
-      requests: [],
-      sections: [],
-      signals: emptySignals,
-      summaryCards: buildSummaryCards([], 0),
-    };
+    return buildEmptyDashboardData(
+      emptySignals.employmentStatus,
+      emptySignals.responsibilityLevel,
+    );
   }
 
   let dashboardData: DashboardQueryResult | null = null;
@@ -86,31 +81,6 @@ export async function getEmployeeDashboardData({
     }
   }
 
-  const benefitRuleCountByBenefitId = new Map(
-    benefitSummary.map((summary) => [
-      summary.benefitId,
-      summary.rulesApplied.length,
-    ]),
-  );
-  const activeBenefitIds =
-    benefitSummary.length > 0
-      ? new Set(
-          benefitSummary
-            .filter((summary) => summary.status.trim().toLowerCase() === "active")
-            .map((summary) => summary.benefitId),
-        )
-      : null;
-  const baseSections = mapBenefitSections(
-    employeeEligibility,
-    new Map(),
-    benefitRuleCountByBenefitId,
-    activeBenefitIds,
-  );
-  const baseBenefits = baseSections.flatMap((section) => section.items);
-  const benefitNameById = new Map(
-    baseBenefits.map((benefit) => [benefit.id, benefit.title]),
-  );
-
   let benefitRequests: NonNullable<BenefitRequestsQueryResult["benefitRequests"]> =
     [];
 
@@ -127,51 +97,27 @@ export async function getEmployeeDashboardData({
     });
   }
 
-  const requestsPayload = mapRequests(
-    benefitRequests,
-    employee.email,
-    employeeName,
-    benefitNameById,
-  );
-  const sections = mapBenefitSections(
+  return buildEmployeeDashboardViewData({
+    benefitStatusOverrides: new Map(),
     employeeEligibility,
-    requestsPayload.statusByBenefitId,
-    benefitRuleCountByBenefitId,
-    activeBenefitIds,
-  );
-  const allBenefits = sections.flatMap((section) => section.items);
-  const okrSubmitted =
-    findFirstBooleanMetric(
-      employeeEligibility,
-      (key) => key.toLowerCase().includes("okr"),
-    ) ?? (typeof employee.okrSubmitted === "boolean" ? employee.okrSubmitted : null);
-  const lateArrivals30Days =
-    findFirstNumericMetric(
-      employeeEligibility,
-      (key) =>
-        key.toLowerCase().includes("late") ||
-        key.toLowerCase().includes("attendance"),
-    ) ??
-    (typeof employee.lateArrivalCount30Days === "number"
-      ? employee.lateArrivalCount30Days
-      : null);
-  const signals: EmployeeEligibilitySignals = {
+    employeeEmail: employee.email,
+    employeeLateArrivals30Days:
+      typeof employee.lateArrivalCount30Days === "number"
+        ? employee.lateArrivalCount30Days
+        : null,
+    employeeName,
+    employeeOkrSubmitted:
+      typeof employee.okrSubmitted === "boolean" ? employee.okrSubmitted : null,
+    employeeResponsibilityLevel:
+      dashboardData?.employee?.responsibilityLevel ??
+      employee.responsibilityLevel ??
+      null,
     employmentStatus:
       dashboardData?.employee?.employmentStatus ??
       employee.employmentStatus ??
       "Unknown",
-    lateArrivals30Days,
-    okrSubmitted,
-    responsibilityLevel:
-      dashboardData?.employee?.responsibilityLevel ??
-      employee.responsibilityLevel ??
-      null,
-  };
-
-  return {
-    requests: requestsPayload.requests,
-    sections,
-    signals,
-    summaryCards: buildSummaryCards(allBenefits, requestsPayload.pendingCount),
-  };
+    rawEligibility: employeeEligibility,
+    requestRows: benefitRequests,
+    summaryRows: benefitSummary,
+  });
 }

@@ -18,6 +18,7 @@ type EmployeeBenefitDialogContractSectionProps = {
   contractLoading: boolean;
   onAcceptedContractChange?: (accepted: boolean) => void;
   onViewContract: () => void;
+  showAgreement?: boolean;
 };
 
 export default function EmployeeBenefitDialogContractSection({
@@ -28,6 +29,7 @@ export default function EmployeeBenefitDialogContractSection({
   contractLoading,
   onAcceptedContractChange,
   onViewContract,
+  showAgreement = true,
 }: EmployeeBenefitDialogContractSectionProps) {
   return (
     <>
@@ -64,33 +66,35 @@ export default function EmployeeBenefitDialogContractSection({
         </div>
       </div>
 
-      <label
-        className={[
-          "flex items-start gap-3",
-          agreementDisabled ? "cursor-not-allowed" : "",
-        ].join(" ")}
-      >
-        <input
-          checked={acceptedContract}
-          className="mt-0.5 h-4 w-4 rounded-[2px] border border-[#D1D5DB]"
-          disabled={agreementDisabled}
-          onChange={(event) => onAcceptedContractChange?.(event.target.checked)}
-          type="checkbox"
-        />
-        <span className="flex flex-col gap-1">
-          <span className="text-[14px] leading-[14px] font-medium text-black">
-            Contract Agreement
-          </span>
-          <span className="text-[12px] leading-4 text-[#737373]">
-            I confirm that I have read and accept the contract terms.
-          </span>
-          {agreementStatusNote ? (
-            <span className="text-[12px] leading-4 text-[#737373]">
-              {agreementStatusNote}
+      {showAgreement ? (
+        <label
+          className={[
+            "flex items-start gap-3",
+            agreementDisabled ? "cursor-not-allowed" : "",
+          ].join(" ")}
+        >
+          <input
+            checked={acceptedContract}
+            className="mt-0.5 h-4 w-4 rounded-[2px] border border-[#D1D5DB]"
+            disabled={agreementDisabled}
+            onChange={(event) => onAcceptedContractChange?.(event.target.checked)}
+            type="checkbox"
+          />
+          <span className="flex flex-col gap-1">
+            <span className="text-[14px] leading-[14px] font-medium text-black">
+              Contract Agreement
             </span>
-          ) : null}
-        </span>
-      </label>
+            <span className="text-[12px] leading-4 text-[#737373]">
+              I confirm that I have read and accept the contract terms.
+            </span>
+            {agreementStatusNote ? (
+              <span className="text-[12px] leading-4 text-[#737373]">
+                {agreementStatusNote}
+              </span>
+            ) : null}
+          </span>
+        </label>
+      ) : null}
     </>
   );
 }

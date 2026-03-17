@@ -9,7 +9,9 @@ export function formatApprovalRole(role: ApprovalRequestRecord["target_role"]) {
 export function formatApprovalAction(
   action: ApprovalRequestRecord["action_type"],
 ) {
-  return action === "create" ? "Create" : "Update";
+  if (action === "create") return "Create";
+  if (action === "update") return "Update";
+  return "Delete";
 }
 
 export function formatApprovalStatus(
@@ -65,9 +67,15 @@ export function formatRequestChangeSummary(request: ApprovalRequestRecord) {
   const snapshot = parseApprovalSnapshot(request) as Record<string, unknown> | null;
 
   if (request.entity_type === "rule") {
-    return request.action_type === "create"
-      ? "New rule creation"
-      : "Rule configuration updated";
+    if (request.action_type === "create") {
+      return "New rule creation";
+    }
+
+    if (request.action_type === "update") {
+      return "Rule configuration updated";
+    }
+
+    return "Rule deletion request";
   }
 
   if (request.action_type === "create") {

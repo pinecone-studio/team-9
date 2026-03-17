@@ -1,20 +1,37 @@
+"use client";
+
+import { useState } from "react";
 import type { ReactNode } from "react";
-import type { ApprovalRequestRecord } from "./approval-requests.graphql";
+import type {
+  ApprovalRequestRecord,
+} from "./approval-requests.graphql";
+import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
-  BenefitRequestsTable,
   ConfigurationApprovalsTable,
   EmptyTableState,
 } from "./RequestsBoardTables";
-import { RequestsMetrics, SectionHeader } from "./RequestsBoardMetrics";
+import BenefitRequestsTable from "./BenefitRequestsTable";
+import {
+  type RequestsMetricKey,
+  RequestsMetrics,
+} from "./RequestsBoardMetrics";
+import {
+  filterBenefitRequests,
+  filterConfigurationRequests,
+  getTabForMetric,
+} from "./requests-board-filters";
+import RequestsBoardToolbar from "./RequestsBoardToolbar";
 
 type RequestsBoardContentProps = {
   configurationRequests: ApprovalRequestRecord[];
-  benefitRequests: ApprovalRequestRecord[];
+  benefitRequests: BenefitRequestRecord[];
+  benefitError?: string | null;
   currentUserIdentifier: string;
-  error?: string | null;
+  configurationError?: string | null;
   loading: boolean;
   metrics: Record<string, number>;
-  onReview: (requestId: string) => void;
+  onBenefitReview: (requestId: string) => void;
+  onConfigurationReview: (requestId: string) => void;
 };
 
 function SectionFrame({ children }: { children: ReactNode }) {
@@ -27,13 +44,60 @@ function SectionFrame({ children }: { children: ReactNode }) {
 
 export default function RequestsBoardContent({
   benefitRequests,
+  benefitError,
   configurationRequests,
+  configurationError,
   currentUserIdentifier,
-  error,
   loading,
   metrics,
-  onReview,
+  onBenefitReview,
+  onConfigurationReview,
 }: RequestsBoardContentProps) {
+  const [activeTab, setActiveTab] = useState<"benefit" | "configuration">("benefit");
+  const [activeMetric, setActiveMetric] = useState<RequestsMetricKey | null>(null);
+  const normalizedUserIdentifier = currentUserIdentifier.trim().toLowerCase();
+  const activeError = activeTab === "benefit" ? benefitError : configurationError;
+
+  const filteredBenefitRequests = filterBenefitRequests(
+    benefitRequests,
+    activeMetric,
+    normalizedUserIdentifier,
+  );
+  const filteredConfigurationRequests = filterConfigurationRequests(
+    configurationRequests,
+    activeMetric,
+    normalizedUserIdentifier,
+  );
+
+  const activeCount =
+    activeTab === "benefit"
+      ? filteredBenefitRequests.length
+      : filteredConfigurationRequests.length;
+
+  const handleMetricSelect = (metric: RequestsMetricKey) => {
+    const nextMetric = activeMetric === metric ? null : metric;
+    const nextBenefitRequests = filterBenefitRequests(
+      benefitRequests,
+      nextMetric,
+      normalizedUserIdentifier,
+    );
+    const nextConfigurationRequests = filterConfigurationRequests(
+      configurationRequests,
+      nextMetric,
+      normalizedUserIdentifier,
+    );
+
+    setActiveMetric(nextMetric);
+    setActiveTab(
+      getTabForMetric(
+        nextMetric,
+        activeTab,
+        nextBenefitRequests.length,
+        nextConfigurationRequests.length,
+      ),
+    );
+  };
+
   return (
     <section className="flex w-full flex-col gap-6 pt-8">
       <div className="flex flex-col gap-3">
@@ -43,34 +107,44 @@ export default function RequestsBoardContent({
         </p>
       </div>
 
-      <RequestsMetrics metrics={metrics} />
-
-      <div className="flex flex-col gap-4">
-        <SectionHeader count={configurationRequests.length} title="Configuration Approvals" />
-        <SectionFrame>
-          {loading ? (
-            <div className="px-6 text-[14px] leading-6 text-[#737373]">Loading configuration approvals...</div>
-          ) : error ? (
-            <div className="px-6 text-[14px] leading-6 text-[#B42318]">Configuration approvals could not be loaded.</div>
-          ) : configurationRequests.length === 0 ? (
-            <div className="px-6"><EmptyTableState message="No configuration approvals found." /></div>
-          ) : (
-            <ConfigurationApprovalsTable currentUserIdentifier={currentUserIdentifier} onReview={onReview} requests={configurationRequests} />
-          )}
-        </SectionFrame>
-      </div>
+      <RequestsMetrics
+        activeMetric={activeMetric}
+        metrics={metrics}
+        onMetricSelect={handleMetricSelect}
+      />
 
       <div className="flex flex-col gap-4 pb-10">
-        <SectionHeader count={benefitRequests.length} title="Benefit Requests" />
+        <RequestsBoardToolbar
+          activeMetric={activeMetric}
+          activeTab={activeTab}
+          benefitCount={filteredBenefitRequests.length}
+          configurationCount={filteredConfigurationRequests.length}
+          onClearFilter={() => setActiveMetric(null)}
+          onTabChange={setActiveTab}
+        />
         <SectionFrame>
           {loading ? (
-            <div className="px-6 text-[14px] leading-6 text-[#737373]">Loading benefit requests...</div>
-          ) : error ? (
-            <div className="px-6 text-[14px] leading-6 text-[#B42318]">Benefit requests could not be loaded.</div>
-          ) : benefitRequests.length === 0 ? (
-            <div className="px-6"><EmptyTableState message="No benefit requests found." /></div>
+            <div className="px-6 text-[14px] leading-6 text-[#737373]">Loading requests...</div>
+          ) : activeError ? (
+            <div className="px-6 text-[14px] leading-6 text-[#B42318]">{activeError}</div>
+          ) : activeCount === 0 ? (
+            <div className="px-6">
+              <EmptyTableState
+                message={
+                  activeTab === "benefit"
+                    ? activeMetric
+                      ? "No benefit requests match this filter."
+                      : "No benefit requests found."
+                    : activeMetric
+                      ? "No configuration approvals match this filter."
+                      : "No configuration approvals found."
+                }
+              />
+            </div>
+          ) : activeTab === "benefit" ? (
+            <BenefitRequestsTable currentUserIdentifier={currentUserIdentifier} onReview={onBenefitReview} requests={filteredBenefitRequests} />
           ) : (
-            <BenefitRequestsTable currentUserIdentifier={currentUserIdentifier} onReview={onReview} requests={benefitRequests} />
+            <ConfigurationApprovalsTable currentUserIdentifier={currentUserIdentifier} onReview={onConfigurationReview} requests={filteredConfigurationRequests} />
           )}
         </SectionFrame>
       </div>

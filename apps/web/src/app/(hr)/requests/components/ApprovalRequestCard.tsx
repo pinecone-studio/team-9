@@ -2,6 +2,7 @@ import { CheckCircle2, CircleX, Eye, Hourglass } from "lucide-react";
 
 import type { ApprovalRequestRecord } from "./approval-requests.graphql";
 import {
+  formatApprovalAction,
   formatApprovalRequestName,
   formatApprovalRole,
   formatApprovalStatus,
@@ -59,7 +60,7 @@ export default function ApprovalRequestCard({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] leading-5 text-[#51565B]">
           <span>
             {request.entity_type === "benefit" ? "Benefit" : "Rule"}{" "}
-            {request.action_type}
+            {formatApprovalAction(request.action_type)}
           </span>
           <span>Requester: {request.requested_by}</span>
           <span>Approver: {formatApprovalRole(request.target_role)}</span>

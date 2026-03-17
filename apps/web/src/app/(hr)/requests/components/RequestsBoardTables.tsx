@@ -6,12 +6,14 @@ import {
   Settings2,
 } from "lucide-react";
 
-import type { ApprovalRequestRecord } from "./approval-requests.graphql";
+import type {
+  ApprovalRequestRecord,
+} from "./approval-requests.graphql";
+import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
   formatApprovalRole,
   formatApprovalRequestName,
   formatPersonLabel,
-  formatProgressLabel,
   formatRequestChangeSummary,
 } from "./approval-request-utils";
 import {
@@ -38,7 +40,7 @@ function StatusBadge({
   status,
 }: {
   reviewedAt?: string | null;
-  status: ApprovalRequestRecord["status"];
+  status: ApprovalRequestRecord["status"] | BenefitRequestRecord["status"];
 }) {
   if (status === "approved") {
     return (
@@ -46,6 +48,18 @@ function StatusBadge({
         <span className="inline-flex items-center gap-[6px] rounded-[4px] bg-[#DCFCE7] px-2 py-[2px] text-[12px] leading-4 font-medium text-[#016630]">
           <CheckCircle2 className="h-3 w-3" />
           Approved
+        </span>
+        {reviewedAt ? <span className="text-[11px] leading-4 text-[#737373]">{formatShortDateTime(reviewedAt)}</span> : null}
+      </div>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <div className="flex flex-col items-start gap-1">
+        <span className="inline-flex items-center gap-[6px] rounded-[4px] border border-[#CBD5E1] bg-[#F8FAFC] px-2 py-[2px] text-[12px] leading-4 font-medium text-[#475569]">
+          <CircleX className="h-3 w-3" />
+          Cancelled
         </span>
         {reviewedAt ? <span className="text-[11px] leading-4 text-[#737373]">{formatShortDateTime(reviewedAt)}</span> : null}
       </div>
@@ -123,36 +137,6 @@ export function ConfigurationApprovalsTable({
                 <td className="border-b border-[#EDEDED] px-2 py-3">{formatPersonLabel(request.requested_by)}</td>
                 <td className="border-b border-[#EDEDED] px-2 py-3">{formatShortDate(request.created_at)}</td>
                 <td className="border-b border-[#EDEDED] px-2 py-3">{request.reviewed_by ? formatPersonLabel(request.reviewed_by) : formatApprovalRole(request.target_role)}</td>
-                <td className="border-b border-[#EDEDED] px-2 py-3"><StatusBadge reviewedAt={request.reviewed_at} status={request.status} /></td>
-                <td className="border-b border-[#EDEDED] px-6 py-3 text-center"><ReviewButton isOwnRequest={isOwnRequest} onClick={() => onReview(request.id)} status={request.status} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-export function BenefitRequestsTable({
-  currentUserIdentifier,
-  onReview,
-  requests,
-}: RequestTableProps) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-left">
-        <thead><tr className="text-[14px] leading-5 font-medium text-[#0A0A0A]"><th className="border-b border-[#E5E5E5] px-8 py-[10px]">Employee</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Benefit</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Submitted</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Approved By</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Progress</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Status</th><th className="border-b border-[#E5E5E5] px-6 py-[10px] text-center">Action</th></tr></thead>
-        <tbody>
-          {requests.map((request) => {
-            const isOwnRequest = request.requested_by.trim().toLowerCase() === currentUserIdentifier.trim().toLowerCase();
-            return (
-              <tr className={`text-[14px] leading-5 text-[#737373] ${request.status !== "pending" ? "opacity-80" : ""}`} key={request.id}>
-                <td className="border-b border-[#EDEDED] px-8 py-3"><div className="flex flex-col"><span className="font-medium text-[#0A0A0A]">{formatPersonLabel(request.requested_by)}</span><span className="text-[12px] leading-4 text-[#737373]">{request.entity_type === "benefit" ? "Benefit request" : "Configuration request"}</span></div></td>
-                <td className="border-b border-[#EDEDED] px-2 py-3"><div className="flex flex-col"><span className="font-medium text-[#0A0A0A]">{formatApprovalRequestName(request)}</span><span className="text-[12px] leading-4 text-[#737373]">{request.entity_type === "benefit" ? "Benefit" : "Rule"}</span></div></td>
-                <td className="border-b border-[#EDEDED] px-2 py-3">{formatShortDate(request.created_at)}</td>
-                <td className="border-b border-[#EDEDED] px-2 py-3">{request.reviewed_by ? formatPersonLabel(request.reviewed_by) : formatApprovalRole(request.target_role)}</td>
-                <td className={`border-b border-[#EDEDED] px-2 py-3 ${request.status === "pending" ? "text-[#E17100]" : "text-[#737373]"}`}>{formatProgressLabel(request)}</td>
                 <td className="border-b border-[#EDEDED] px-2 py-3"><StatusBadge reviewedAt={request.reviewed_at} status={request.status} /></td>
                 <td className="border-b border-[#EDEDED] px-6 py-3 text-center"><ReviewButton isOwnRequest={isOwnRequest} onClick={() => onReview(request.id)} status={request.status} /></td>
               </tr>

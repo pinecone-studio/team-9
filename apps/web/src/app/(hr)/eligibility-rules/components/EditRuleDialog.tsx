@@ -8,12 +8,18 @@ import EditRuleDialogFields from "./EditRuleDialogFields";
 import RuleApprovalSection, {
   type ApprovalRoleValue,
 } from "./RuleApprovalSection";
-import { getUnitOptions, parseOptionsJson } from "./edit-rule-dialog.utils";
+import { buildRuleOptionsJson, validateRuleInput } from "./add-rule-dialog.helpers";
+import { parseOptionsJson } from "./edit-rule-dialog.utils";
+import { formatRulePreview } from "./rule-backend-formatters";
+import { getTemplateByRuleType } from "./rule-backend-metadata";
 import type { RuleCardModel } from "../types";
 
 type EditRuleDialogProps = {
   onClose: () => void;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (payload: {
+    approvalRole: ApprovalRoleValue;
+    id: string;
+  }) => Promise<void>;
   onSave: (payload: {
     approvalRole: ApprovalRoleValue;
     description: string;
@@ -35,49 +41,57 @@ export default function EditRuleDialog({
   submitting = false,
 }: EditRuleDialogProps) {
   const parsedOptions = parseOptionsJson(rule.optionsJson);
+  const template = getTemplateByRuleType(rule.ruleType, { employeeRoles: [] });
   const [name, setName] = useState(rule.name);
   const [description, setDescription] = useState(rule.description);
   const [value, setValue] = useState(rule.metricValue ?? "");
   const [measurement, setMeasurement] = useState(rule.defaultUnit ?? "");
-  const [enumOptionsInput, setEnumOptionsInput] = useState(parsedOptions.options.join(", "));
   const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(ApprovalRole.HrAdmin);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const enumOptions = enumOptionsInput.split(",").map((item) => item.trim()).filter(Boolean);
-  const configLabel = parsedOptions.configLabel ?? rule.metricLabel ?? "";
-  const unitOptions = getUnitOptions(configLabel, rule.valueType);
-
-  const onEnumOptionsInputChange = (next: string) => {
-    setEnumOptionsInput(next);
-    const parsed = next.split(",").map((item) => item.trim()).filter(Boolean);
-    if (parsed.length > 0 && !parsed.includes(value)) setValue(parsed[0]);
-  };
+  const enumOptions = parsedOptions.options;
+  const configLabel = parsedOptions.configLabel ?? template.configLabel;
+  const unitOptions = template.unitOptions;
+  const helpText = template.helpText;
+  const previewText = formatRulePreview({
+    configLabel,
+    ruleLabel: rule.categoryName.replace(/ Rules$/, ""),
+    unit: measurement,
+    value,
+    valueType: rule.valueType,
+  });
 
   async function handleSave() {
     setValidationError(null);
-    if ((rule.valueType === RuleValueType.Number || rule.valueType === RuleValueType.Date) && !Number.isFinite(Number(value))) {
-      return setValidationError("Default requirement must be a valid number.");
-    }
-    if (rule.valueType === RuleValueType.Enum && (enumOptions.length === 0 || !enumOptions.includes(value))) {
-      return setValidationError(enumOptions.length === 0 ? "Enum type requires at least one option." : "Default requirement must match one of enum options.");
-    }
+    const validationMessage = validateRuleInput({
+      description,
+      enumOptions,
+      name,
+      value,
+      valueType: rule.valueType,
+    });
+    if (validationMessage) return setValidationError(validationMessage);
 
     await onSave({
       approvalRole,
       description: description.trim(),
       id: rule.id,
-      measurement: rule.valueType === RuleValueType.Number || rule.valueType === RuleValueType.Date ? measurement.trim() || undefined : undefined,
+      measurement:
+        rule.valueType === RuleValueType.Number || rule.valueType === RuleValueType.Date
+          ? measurement.trim() || undefined
+          : undefined,
       name: name.trim(),
-      optionsJson: rule.valueType === RuleValueType.Boolean
-        ? JSON.stringify({ configLabel, options: [true, false] })
-        : rule.valueType === RuleValueType.Enum
-          ? JSON.stringify({ configLabel, options: enumOptions })
-          : JSON.stringify({ configLabel }),
-      value: rule.valueType === RuleValueType.Number || rule.valueType === RuleValueType.Date
-        ? JSON.stringify(Number(value))
-        : rule.valueType === RuleValueType.Boolean
-          ? JSON.stringify(value.toLowerCase() === "true")
-          : JSON.stringify(value),
+      optionsJson: buildRuleOptionsJson({
+        configLabel,
+        enumOptions,
+        valueType: rule.valueType,
+      }),
+      value:
+        rule.valueType === RuleValueType.Number || rule.valueType === RuleValueType.Date
+          ? JSON.stringify(Number(value))
+          : rule.valueType === RuleValueType.Boolean
+            ? JSON.stringify(value.toLowerCase() === "true")
+            : JSON.stringify(value),
     });
   }
 
@@ -91,16 +105,16 @@ export default function EditRuleDialog({
           </div>
 
           <EditRuleDialogFields
+            configHelpText={helpText}
             description={description}
             enumOptions={enumOptions}
-            enumOptionsInput={enumOptionsInput}
             measurement={measurement}
             name={name}
             onDescriptionChange={setDescription}
-            onEnumOptionsInputChange={onEnumOptionsInputChange}
             onMeasurementChange={setMeasurement}
             onNameChange={setName}
             onValueChange={setValue}
+            previewText={previewText}
             unitOptions={unitOptions}
             validationError={validationError}
             value={value}
@@ -113,7 +127,7 @@ export default function EditRuleDialog({
           />
 
           <div className="flex w-full items-center justify-between gap-[9px]">
-            <button className="flex h-[38px] items-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-white" disabled={submitting} onClick={() => void onDelete(rule.id)} type="button">
+            <button className="flex h-[38px] items-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-white" disabled={submitting} onClick={() => void onDelete({ approvalRole, id: rule.id })} type="button">
               <Trash2 className="h-[18px] w-[18px]" />
               <span className="text-[14px] leading-4 font-medium">Delete</span>
             </button>

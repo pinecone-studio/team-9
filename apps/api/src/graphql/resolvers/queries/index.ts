@@ -1,4 +1,5 @@
 import { getEmployeeByEmail } from './get-employee-by-email';
+import { listBenefitRequests } from './list-benefit-requests';
 import { countActiveContracts } from './count-active-contracts';
 import { countPendingBenefitRequests } from './count-pending-benefit-requests';
 import { getApprovalRequestById } from './get-approval-request-by-id';
@@ -24,6 +25,7 @@ import type {
 	QueryEmployeeEligibilityArgs,
 	QueryListAuditLogEntriesArgs,
 	QueryApprovalRequestsArgs,
+	QueryBenefitRequestsArgs,
 	QueryContractSignedUrlArgs,
 	QueryContractSignedUrlByBenefitArgs,
 } from '../../generated/resolvers-types';
@@ -52,6 +54,9 @@ export const queryResolvers = {
 
 	approvalRequest: (_: unknown, { id }: QueryApprovalRequestArgs, { DB }: GraphQLContext) =>
 		getApprovalRequestById(DB, id),
+
+	benefitRequests: (_: unknown, args: QueryBenefitRequestsArgs, { DB }: GraphQLContext) =>
+		listBenefitRequests(DB, args),
 
 	ruleCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listRuleCategories(DB),
 

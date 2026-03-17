@@ -1,16 +1,16 @@
 import { RuleValueType } from "@/shared/apollo/generated";
 
 type EditRuleDialogFieldsProps = {
+  configHelpText: string;
   description: string;
   enumOptions: string[];
-  enumOptionsInput: string;
   measurement: string;
   name: string;
   onDescriptionChange: (value: string) => void;
-  onEnumOptionsInputChange: (value: string) => void;
   onMeasurementChange: (value: string) => void;
   onNameChange: (value: string) => void;
   onValueChange: (value: string) => void;
+  previewText: string;
   unitOptions: string[];
   validationError: string | null;
   value: string;
@@ -19,16 +19,16 @@ type EditRuleDialogFieldsProps = {
 
 export default function EditRuleDialogFields(props: EditRuleDialogFieldsProps) {
   const {
+    configHelpText,
     description,
     enumOptions,
-    enumOptionsInput,
     measurement,
     name,
     onDescriptionChange,
-    onEnumOptionsInputChange,
     onMeasurementChange,
     onNameChange,
     onValueChange,
+    previewText,
     unitOptions,
     validationError,
     value,
@@ -56,6 +56,9 @@ export default function EditRuleDialogFields(props: EditRuleDialogFieldsProps) {
           ) : (
             <input className="h-9 rounded-[8px] border border-[#CBD5E1] bg-[rgba(255,255,255,0.002)] px-3 text-[14px] leading-[18px] text-black shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none" onChange={(event) => onValueChange(event.target.value)} step="any" type="number" value={value} />
           )}
+          <span className="text-[12px] leading-4 text-[#64748B]">
+            {configHelpText}
+          </span>
         </label>
         {showMeasurementSelector ? (
           <label className="flex flex-col gap-2">
@@ -66,13 +69,14 @@ export default function EditRuleDialogFields(props: EditRuleDialogFieldsProps) {
           </label>
         ) : null}
       </div>
-
-      {valueType === RuleValueType.Enum && (
-        <label className="flex flex-col gap-2">
-          <span className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Options (comma separated)</span>
-          <input className="h-9 rounded-[8px] border border-[#CBD5E1] bg-[rgba(255,255,255,0.002)] px-3 text-[14px] leading-[18px] text-black shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onEnumOptionsInputChange(event.target.value)} placeholder="e.g., Level 1, Level 2, Level 3" type="text" value={enumOptionsInput} />
-        </label>
-      )}
+      <div className="w-full rounded-[10px] border border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3">
+        <div className="text-[12px] leading-4 font-semibold uppercase tracking-[0.04em] text-[#64748B]">
+          Preview
+        </div>
+        <p className="mt-1 text-[14px] leading-5 text-[#0F172A]">
+          {previewText}
+        </p>
+      </div>
       {validationError && <p className="text-sm text-red-600">{validationError}</p>}
     </div>
   );

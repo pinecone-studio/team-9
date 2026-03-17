@@ -11,6 +11,7 @@ import { deleteEligibilityRule } from './delete-eligibility-rule';
 import { deleteRuleDefinition } from './delete-rule-definition';
 import { recalculateEmployeeEligibility } from './recalculate-employee-eligibility';
 import { reviewApprovalRequest } from './review-approval-request';
+import { reviewBenefitRequest } from './review-benefit-request';
 import { setBenefitStatus } from './set-benefit-status';
 import { submitBenefitCreateRequest } from './submit-benefit-create-request';
 import { submitBenefitUpdateRequest } from './submit-benefit-update-request';
@@ -33,6 +34,7 @@ import type {
 	MutationDeleteRuleDefinitionArgs,
 	MutationRecalculateEmployeeEligibilityArgs,
 	MutationReviewApprovalRequestArgs,
+	MutationReviewBenefitRequestArgs,
 	MutationSetBenefitStatusArgs,
 	MutationSubmitBenefitCreateRequestArgs,
 	MutationSubmitBenefitUpdateRequestArgs,
@@ -127,6 +129,9 @@ export const mutationResolvers = {
 		args: MutationReviewApprovalRequestArgs,
 		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
 	) => reviewApprovalRequest({ DB, CONTRACTS_BUCKET }, args),
+
+	reviewBenefitRequest: (_: unknown, args: MutationReviewBenefitRequestArgs, { DB }: GraphQLContext) =>
+		reviewBenefitRequest(DB, args),
 
 	uploadContract: (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
 		uploadContract({ DB, CONTRACTS_BUCKET }, input),

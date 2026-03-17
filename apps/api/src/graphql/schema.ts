@@ -68,6 +68,7 @@ export const typeDefs = /* GraphQL */ `
   enum ApprovalActionType {
     create
     update
+    delete
   }
 
   enum ApprovalRequestStatus {
@@ -91,6 +92,17 @@ export const typeDefs = /* GraphQL */ `
     created_at: String!
     reviewed_at: String
     is_active: Boolean!
+  }
+
+  type BenefitRequest {
+    id: ID!
+    employee: Employee!
+    benefit: Benefit!
+    status: String!
+    created_at: String!
+    updated_at: String!
+    reviewed_by: Employee
+    approval_role: ApprovalRole!
   }
 
   input ContractInput {
@@ -355,6 +367,12 @@ export const typeDefs = /* GraphQL */ `
     reviewComment: String
   }
 
+  input ReviewBenefitRequestInput {
+    id: ID!
+    approved: Boolean!
+    reviewedBy: String!
+  }
+
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
@@ -364,6 +382,7 @@ export const typeDefs = /* GraphQL */ `
     allBenefits: [Benefit]
     approvalRequests(status: ApprovalRequestStatus, targetRole: ApprovalRole): [ApprovalRequest!]!
     approvalRequest(id: ID!): ApprovalRequest
+    benefitRequests(targetRole: ApprovalRole): [BenefitRequest!]!
     ruleCategories: [RuleCategory!]!
     ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!
     eligibilityRules(benefitId: ID): [EligibilityRule!]!
@@ -387,6 +406,7 @@ export const typeDefs = /* GraphQL */ `
     submitRuleDefinitionCreateRequest(input: SubmitRuleDefinitionCreateRequestInput!): ApprovalRequest!
     submitRuleDefinitionUpdateRequest(input: SubmitRuleDefinitionUpdateRequestInput!): ApprovalRequest!
     reviewApprovalRequest(input: ReviewApprovalRequestInput!): ApprovalRequest!
+    reviewBenefitRequest(input: ReviewBenefitRequestInput!): BenefitRequest!
     setBenefitStatus(input: SetBenefitStatusInput!): Benefit!
     deleteBenefit(id: ID!): Boolean!
     createBenefitCategory(name: String!): BenefitCategory!

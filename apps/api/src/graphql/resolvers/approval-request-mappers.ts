@@ -10,7 +10,7 @@ type ApprovalRequestRow = {
   id: string;
   entityType: "rule" | "benefit";
   entityId: string | null;
-  actionType: "create" | "update";
+  actionType: "create" | "update" | "delete";
   status: "pending" | "approved" | "rejected";
   targetRole: "hr_admin" | "finance_manager";
   requestedBy: string;
@@ -28,7 +28,9 @@ export function mapApprovalEntityType(value: ApprovalRequestRow["entityType"]): 
 }
 
 export function mapApprovalActionType(value: ApprovalRequestRow["actionType"]): ApprovalActionType {
-  return value === "create" ? ApprovalActionType.Create : ApprovalActionType.Update;
+  if (value === "create") return ApprovalActionType.Create;
+  if (value === "update") return ApprovalActionType.Update;
+  return ApprovalActionType.Delete;
 }
 
 export function mapApprovalRequestStatus(value: ApprovalRequestRow["status"]): ApprovalRequestStatus {

@@ -2,7 +2,7 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const approvalRoles = ["hr_admin", "finance_manager"] as const;
 export const approvalEntityTypes = ["rule", "benefit"] as const;
-export const approvalActionTypes = ["create", "update"] as const;
+export const approvalActionTypes = ["create", "update", "delete"] as const;
 export const approvalRequestStatuses = ["pending", "approved", "rejected"] as const;
 
 export const approvalRequests = sqliteTable("approval_requests", {

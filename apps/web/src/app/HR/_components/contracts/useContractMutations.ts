@@ -8,7 +8,7 @@ import {
   normalizeEditableDate,
   readFileAsDataUrl,
 } from "./contracts-helpers";
-import type { ContractRow, UploadContractMutation } from "./contracts-types";
+import type { BackendContract, ContractRow, UploadContractMutation } from "./contracts-types";
 
 type MutationInput = {
   benefitId: string;
@@ -27,7 +27,7 @@ type BenefitRecord = {
 type UseContractMutationsProps = {
   acceptedCountByBenefitId: Map<string, number>;
   allBenefits: BenefitRecord[];
-  setContractsByBenefitId: Dispatch<SetStateAction<Record<string, any>>>;
+  setContractsByBenefitId: Dispatch<SetStateAction<Record<string, BackendContract | null>>>;
   setRenewContractTarget: Dispatch<SetStateAction<ContractRow | null>>;
   setSelectedContract: Dispatch<SetStateAction<ContractRow | null>>;
 };

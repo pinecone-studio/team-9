@@ -26,7 +26,6 @@ export default function ContractsContent() {
     allBenefits,
     benefitOptions,
     contractRows,
-    contractsByBenefitId,
     contractsLoading,
     filteredRows,
     isInitialContractsLoading,

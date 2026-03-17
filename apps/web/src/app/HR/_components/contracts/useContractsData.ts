@@ -163,15 +163,11 @@ export function useContractsData(searchText: string) {
     [data?.listBenefitEligibilitySummary],
   );
   const isInitialContractsLoading =
-    (loading && !data) ||
-    (contractBenefitIds.length > 0 &&
-      contractsLoading &&
-      Object.keys(contractsByBenefitId).length === 0);
+    (loading && !data) || (contractBenefitIds.length > 0 && contractsLoading && Object.keys(contractsByBenefitId).length === 0);
   return {
     acceptedCountByBenefitId,
     allBenefits,
     benefitOptions,
-    contractsByBenefitId,
     contractRows,
     contractsLoading,
     filteredRows,

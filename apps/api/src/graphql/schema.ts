@@ -397,7 +397,7 @@ export const typeDefs = /* GraphQL */ `
     allBenefits: [Benefit]
     approvalRequests(status: ApprovalRequestStatus, targetRole: ApprovalRole): [ApprovalRequest!]!
     approvalRequest(id: ID!): ApprovalRequest
-    benefitRequests(targetRole: ApprovalRole, employeeId: ID): [BenefitRequest!]!
+    benefitRequests(targetRole: ApprovalRole, employeeId: ID, benefitId: ID): [BenefitRequest!]!
     ruleCategories: [RuleCategory!]!
     ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!
     eligibilityRules(benefitId: ID): [EligibilityRule!]!

@@ -1,9 +1,4 @@
-type BenefitTimelineItem = {
-  id: string;
-  label: string;
-  timestamp: string;
-  tone: "neutral" | "warning";
-};
+import type { BenefitTimelineItem } from "./employee-benefit-request.helpers";
 
 type EmployeeBenefitDialogTimelineSectionProps = {
   items: BenefitTimelineItem[];

@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { getDb } from "../../../db";
 import { benefitRequests } from "../../../db/schema/benefit-requests";
@@ -9,6 +9,7 @@ import { mapBenefitRecord, mapEmployeeRecord } from "../../../utils/mappers";
 import type { ApprovalRole, BenefitRequest } from "../../generated/resolvers-types";
 
 type ListBenefitRequestsArgs = {
+  benefitId?: string | null;
   employeeId?: string | null;
   targetRole?: ApprovalRole | null;
 };
@@ -19,14 +20,22 @@ export async function listBenefitRequests(
 ): Promise<BenefitRequest[]> {
   try {
     const db = getDb({ DB });
+    const normalizedBenefitId = args.benefitId?.trim() || null;
     const normalizedEmployeeId = args.employeeId?.trim() || null;
     const requestRows = await db
       .select()
       .from(benefitRequests)
       .where(
-        normalizedEmployeeId
-          ? eq(benefitRequests.employeeId, normalizedEmployeeId)
-          : undefined,
+        normalizedEmployeeId && normalizedBenefitId
+          ? and(
+              eq(benefitRequests.employeeId, normalizedEmployeeId),
+              eq(benefitRequests.benefitId, normalizedBenefitId),
+            )
+          : normalizedEmployeeId
+            ? eq(benefitRequests.employeeId, normalizedEmployeeId)
+            : normalizedBenefitId
+              ? eq(benefitRequests.benefitId, normalizedBenefitId)
+              : undefined,
       )
       .orderBy(desc(benefitRequests.createdAt));
 

@@ -105,8 +105,6 @@ export const typeDefs = /* GraphQL */ `
     updated_at: String!
     reviewed_by: Employee
     approval_role: ApprovalRole!
-    contractVersionAccepted: String
-    contractAcceptedAt: String
     eligibilityStatus: String
     ruleEvaluationJson: String
     employeeDepartment: String!

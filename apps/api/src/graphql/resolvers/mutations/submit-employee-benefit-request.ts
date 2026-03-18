@@ -10,6 +10,11 @@ import type {
   BenefitRequest,
   MutationSubmitEmployeeBenefitRequestArgs,
 } from "../../generated/resolvers-types";
+import {
+  scheduleNotification,
+  sendEmployeeBenefitRequestSubmittedNotification,
+  type NotificationRuntime,
+} from "../../../notifications";
 import { listBenefitRequests } from "../queries/list-benefit-requests";
 
 const ACTIVE_STATUS = "active";
@@ -17,10 +22,10 @@ const ELIGIBLE_STATUS = "eligible";
 const PENDING_STATUS = "pending";
 
 export async function submitEmployeeBenefitRequest(
-  DB: D1Database,
+  env: NotificationRuntime,
   args: MutationSubmitEmployeeBenefitRequestArgs,
 ): Promise<BenefitRequest> {
-  const db = getDb({ DB });
+  const db = getDb({ DB: env.DB });
   const input = args.input;
   const benefitId = input.benefitId.trim();
   const employeeId = input.employeeId.trim();
@@ -199,12 +204,22 @@ export async function submitEmployeeBenefitRequest(
       throw error;
     }
 
-    const createdRequest = (await listBenefitRequests(DB, { employeeId })).find(
+    const createdRequest = (await listBenefitRequests(env.DB, { employeeId })).find(
       (request) => request.id === id,
     );
     if (!createdRequest) {
       throw new Error("Submitted benefit request could not be loaded");
     }
+
+    scheduleNotification(env, "employee_benefit_request_submitted", () =>
+      sendEmployeeBenefitRequestSubmittedNotification(env, {
+        approvalRole: createdRequest.approval_role,
+        benefitTitle: createdRequest.benefit.title,
+        employeeId: createdRequest.employee.id,
+        employeeName: createdRequest.employee.name,
+        requestId: createdRequest.id,
+      }),
+    );
 
     return createdRequest;
   } catch (error) {

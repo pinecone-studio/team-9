@@ -16,8 +16,13 @@ import {
 	validateFileSignature,
 } from './contract-upload-utils';
 import { prepareCreateBenefit } from './benefit-service';
+import {
+	scheduleNotification,
+	sendApprovalRequestSubmittedNotification,
+	type NotificationRuntime,
+} from '../../../notifications';
 
-type SubmitBenefitCreateEnv = {
+type SubmitBenefitCreateEnv = NotificationRuntime & {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
 };
@@ -123,6 +128,16 @@ export async function submitBenefitCreateRequest(
 		}
 		throw error;
 	}
+
+	scheduleNotification(env, 'approval_request_submitted', () =>
+		sendApprovalRequestSubmittedNotification(env, {
+			actionType: ApprovalActionType.Create,
+			entityType: ApprovalEntityType.Benefit,
+			requestId: id,
+			requestedBy,
+			targetRole: prepared.approvalRole,
+		}),
+	);
 
 	return mapApprovalRequest({
 		id,

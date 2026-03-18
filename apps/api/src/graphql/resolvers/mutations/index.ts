@@ -59,6 +59,10 @@ import { uploadContract, UploadContractInput } from './upload-contract';
 type GraphQLContext = {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
+	RESEND_API_KEY?: string;
+	RESEND_FROM_EMAIL?: string;
+	RESEND_FROM_NAME?: string;
+	waitUntil?: (promise: Promise<unknown>) => void;
 };
 
 export const mutationResolvers = {
@@ -70,8 +74,8 @@ export const mutationResolvers = {
 	deleteEmployee: (_: unknown, { id }: MutationDeleteEmployeeArgs, { DB }: GraphQLContext) =>
 		deleteEmployeeRecord(DB, id),
 
-	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, { DB }: GraphQLContext) =>
-		createApprovalRequest(DB, args),
+	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, context: GraphQLContext) =>
+		createApprovalRequest(context, args),
 
 	cancelEmployeeBenefitRequest: (
 		_: unknown,
@@ -88,14 +92,14 @@ export const mutationResolvers = {
 	submitBenefitCreateRequest: (
 		_: unknown,
 		args: MutationSubmitBenefitCreateRequestArgs,
-		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
-	) => submitBenefitCreateRequest({ DB, CONTRACTS_BUCKET }, args),
+		context: GraphQLContext,
+	) => submitBenefitCreateRequest(context, args),
 
 	submitBenefitUpdateRequest: (
 		_: unknown,
 		args: MutationSubmitBenefitUpdateRequestArgs,
-		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
-	) => submitBenefitUpdateRequest({ DB, CONTRACTS_BUCKET }, args),
+		context: GraphQLContext,
+	) => submitBenefitUpdateRequest(context, args),
 
 	submitRuleDefinitionCreateRequest: (
 		_: unknown,
@@ -155,17 +159,17 @@ export const mutationResolvers = {
 	reviewApprovalRequest: (
 		_: unknown,
 		args: MutationReviewApprovalRequestArgs,
-		{ DB, CONTRACTS_BUCKET }: GraphQLContext,
-	) => reviewApprovalRequest({ DB, CONTRACTS_BUCKET }, args),
+		context: GraphQLContext,
+	) => reviewApprovalRequest(context, args),
 
-	reviewBenefitRequest: (_: unknown, args: MutationReviewBenefitRequestArgs, { DB }: GraphQLContext) =>
-		reviewBenefitRequest(DB, args),
+	reviewBenefitRequest: (_: unknown, args: MutationReviewBenefitRequestArgs, context: GraphQLContext) =>
+		reviewBenefitRequest(context, args),
 
 	submitEmployeeBenefitRequest: (
 		_: unknown,
 		args: MutationSubmitEmployeeBenefitRequestArgs,
-		{ DB }: GraphQLContext,
-	) => submitEmployeeBenefitRequest(DB, args),
+		context: GraphQLContext,
+	) => submitEmployeeBenefitRequest(context, args),
 
 	uploadContract: (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
 		uploadContract({ DB, CONTRACTS_BUCKET }, input),

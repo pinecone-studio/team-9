@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { Show, SignOutButton } from "@clerk/nextjs";
+import { Show } from "@clerk/nextjs";
 import DashboardIcon from "@/app/HR/_icons/Dashboard";
 import RequestsIcon from "@/app/HR/_icons/Requests";
+import { SignOutAvatarButton } from "@/shared/auth/SignOutAvatarButton";
 
 type EmployeeNavProps = {
   employeeName: string;
@@ -81,15 +84,10 @@ export function EmployeeNav({ employeeName }: EmployeeNavProps) {
         </div>
 
         <Show when="signed-in">
-          <SignOutButton>
-            <button
-              aria-label="Log out"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] text-[14px] font-semibold leading-none text-slate-700 transition-colors hover:bg-white"
-              type="button"
-            >
-              {initials || "U"}
-            </button>
-          </SignOutButton>
+          <SignOutAvatarButton
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] text-[14px] font-semibold leading-none text-slate-700 transition-colors hover:bg-white"
+            displayName={employeeName}
+          />
         </Show>
         <Show when="signed-out">
           <Link

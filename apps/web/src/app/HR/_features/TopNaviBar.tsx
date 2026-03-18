@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Show, UserButton } from "@clerk/nextjs";
+import { Show } from "@clerk/nextjs";
 import type { LucideIcon } from "lucide-react";
 import {
   FilePenLine,
@@ -12,6 +12,7 @@ import {
   Users,
   Waypoints,
 } from "lucide-react";
+import { SignOutAvatarButton } from "@/shared/auth/SignOutAvatarButton";
 import BmsLogo from "../_icons/BmsLogo";
 
 export type HrNavKey =
@@ -144,14 +145,7 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
           </Show>
           <Show when="signed-in">
             <div className="relative rounded-full transition-transform hover:scale-[1.02]">
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: "!h-11 !w-11",
-                    userButtonTrigger: "!h-11 !w-11",
-                  },
-                }}
-              />
+              <SignOutAvatarButton className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] text-[14px] font-semibold leading-none text-slate-700 transition-colors hover:bg-white" />
             </div>
           </Show>
         </div>

@@ -73,6 +73,7 @@ export default function EmployeesPageContent({
       />
 
       <EmployeesDirectoryTable
+        employees={employees}
         eligibilityByEmployee={eligibilityByEmployee}
         filteredEmployees={filteredEmployees}
         onEmployeeSelect={setSelectedEmployee}
@@ -88,6 +89,7 @@ export default function EmployeesPageContent({
 
       {selectedEmployee ? (
         <EmployeeDirectoryDialog
+          allEmployees={employees}
           currentUserIdentifier={currentUserIdentifier}
           employee={selectedEmployee}
           onClose={() => setSelectedEmployee(null)}

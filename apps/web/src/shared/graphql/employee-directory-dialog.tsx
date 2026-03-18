@@ -8,6 +8,7 @@ import {
 } from "@/shared/apollo/generated";
 import type { Employee } from "@/shared/apollo/types";
 import EmployeeDirectoryDialogBenefits from "@/shared/graphql/employee-directory-dialog-benefits";
+import EmployeeEditDialog from "@/shared/graphql/employee-edit-dialog";
 import EmployeeDirectoryDialogOverview from "@/shared/graphql/employee-directory-dialog-overview";
 import EmployeeDirectoryDialogRecentActions from "@/shared/graphql/employee-directory-dialog-recent-actions";
 import { formatStatusLabel } from "@/shared/graphql/employee-directory-dialog-utils";
@@ -16,6 +17,7 @@ import { getStatusBadgeTone } from "@/shared/graphql/employees-page-view-utils";
 const BULK_OVERRIDE_KEY = "__bulk__";
 
 type EmployeeDirectoryDialogProps = {
+  allEmployees: Employee[];
   currentUserIdentifier: string | null;
   employee: Employee;
   onClose: () => void;
@@ -26,11 +28,13 @@ function LoadingBlock({ className }: { className: string }) {
 }
 
 export default function EmployeeDirectoryDialog({
+  allEmployees,
   currentUserIdentifier,
   employee,
   onClose,
 }: EmployeeDirectoryDialogProps) {
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [overridingKey, setOverridingKey] = useState<string | null>(null);
   const { data, error, loading, refetch } = useEmployeeDirectoryDialogQuery({
     fetchPolicy: "network-only",
@@ -131,6 +135,7 @@ export default function EmployeeDirectoryDialog({
                 <EmployeeDirectoryDialogOverview
                   benefits={employeeBenefits}
                   employee={dialogEmployee}
+                  onEditEmployee={() => setIsEditDialogOpen(true)}
                 />
                 <EmployeeDirectoryDialogBenefits
                   benefits={employeeBenefits}
@@ -149,6 +154,22 @@ export default function EmployeeDirectoryDialog({
           </div>
         </div>
       </div>
+
+      {isEditDialogOpen ? (
+        <EmployeeEditDialog
+          employee={dialogEmployee}
+          employees={allEmployees}
+          onClose={() => setIsEditDialogOpen(false)}
+          onDeleted={() => {
+            setIsEditDialogOpen(false);
+            onClose();
+          }}
+          onSaved={async () => {
+            await refetch();
+            setIsEditDialogOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

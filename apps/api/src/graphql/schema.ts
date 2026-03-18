@@ -167,6 +167,31 @@ export const typeDefs = /* GraphQL */ `
     isActive: Boolean!
   }
 
+  input CreateEmployeeInput {
+    name: String!
+    email: String!
+    position: String!
+    department: String!
+    employmentStatus: EmploymentStatus!
+    hireDate: String!
+    responsibilityLevel: Int!
+    okrSubmitted: Boolean!
+    lateArrivalCount: Int!
+  }
+
+  input UpdateEmployeeInput {
+    id: ID!
+    name: String
+    email: String
+    position: String
+    department: String
+    employmentStatus: EmploymentStatus
+    hireDate: String
+    responsibilityLevel: Int
+    okrSubmitted: Boolean
+    lateArrivalCount: Int
+  }
+
   enum EmploymentStatus {
     active
     probation
@@ -433,7 +458,9 @@ export const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
-    createEmployee(name: String!, email: String!, position: String!): Employee
+    createEmployee(input: CreateEmployeeInput!): Employee!
+    updateEmployee(input: UpdateEmployeeInput!): Employee!
+    deleteEmployee(id: ID!): Employee!
     createBenefit(input: CreateBenefitInput!): Benefit!
     updateBenefit(input: UpdateBenefitInput!): Benefit!
     createApprovalRequest(input: CreateApprovalRequestInput!): ApprovalRequest!

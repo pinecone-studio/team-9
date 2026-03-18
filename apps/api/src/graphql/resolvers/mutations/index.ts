@@ -4,6 +4,7 @@ import { createBenefit } from './create-benefit';
 import { createBenefitCategory } from './create-benefit-category';
 import { createEligibilityRule } from './create-eligibility-rule';
 import { createEmployeeRecord } from './create-employee-record';
+import { deleteEmployeeRecord } from './delete-employee-record';
 import { deleteBenefit } from './delete-benefit';
 import { createRuleCategory } from './create-rule-category';
 import { createRuleDefinition } from './create-rule-definition';
@@ -21,6 +22,7 @@ import { submitRuleDefinitionCreateRequest } from './submit-rule-definition-crea
 import { submitRuleDefinitionUpdateRequest } from './submit-rule-definition-update-request';
 import { submitEmployeeBenefitRequest } from './submit-employee-benefit-request';
 import { updateBenefit } from './update-benefit';
+import { updateEmployeeRecord } from './update-employee-record';
 import { updateEligibilityRule } from './update-eligibility-rule';
 import { updateRuleDefinition } from './update-rule-definition';
 import type {
@@ -31,6 +33,7 @@ import type {
 	MutationCancelEmployeeBenefitRequestArgs,
 	MutationCreateEmployeeArgs,
 	MutationDeleteBenefitArgs,
+	MutationDeleteEmployeeArgs,
 	MutationCreateRuleCategoryArgs,
 	MutationCreateRuleDefinitionArgs,
 	MutationDeleteBenefitCategoryArgs,
@@ -47,6 +50,7 @@ import type {
 	MutationSubmitRuleDefinitionCreateRequestArgs,
 	MutationSubmitRuleDefinitionUpdateRequestArgs,
 	MutationUpdateBenefitArgs,
+	MutationUpdateEmployeeArgs,
 	MutationUpdateEligibilityRuleArgs,
 	MutationUpdateRuleDefinitionArgs,
 } from '../../generated/resolvers-types';
@@ -59,6 +63,12 @@ type GraphQLContext = {
 
 export const mutationResolvers = {
 	createEmployee: (_: unknown, args: MutationCreateEmployeeArgs, { DB }: GraphQLContext) => createEmployeeRecord(DB, args),
+
+	updateEmployee: (_: unknown, args: MutationUpdateEmployeeArgs, { DB }: GraphQLContext) =>
+		updateEmployeeRecord(DB, args),
+
+	deleteEmployee: (_: unknown, { id }: MutationDeleteEmployeeArgs, { DB }: GraphQLContext) =>
+		deleteEmployeeRecord(DB, id),
 
 	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, { DB }: GraphQLContext) =>
 		createApprovalRequest(DB, args),

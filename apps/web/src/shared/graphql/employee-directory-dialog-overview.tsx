@@ -24,6 +24,7 @@ import {
 type EmployeeDirectoryDialogOverviewProps = {
   benefits: EmployeeDirectoryBenefit[];
   employee: EmployeeDirectoryEmployee;
+  onEditEmployee: () => void;
 };
 
 function SectionTitle({
@@ -61,6 +62,7 @@ function SummaryCard({
 export default function EmployeeDirectoryDialogOverview({
   benefits,
   employee,
+  onEditEmployee,
 }: EmployeeDirectoryDialogOverviewProps) {
   const groupedBenefits = groupBenefitsByStatus(benefits);
 
@@ -70,9 +72,8 @@ export default function EmployeeDirectoryDialogOverview({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionTitle icon={BriefcaseBusiness} title="Employee Overview" />
           <button
-            aria-disabled="true"
-            className="inline-flex cursor-default items-center gap-2 rounded-[8px] border border-[#E5E5E5] bg-white px-3 py-2 text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)]"
-            title="Employee editing is not available yet."
+            className="inline-flex items-center gap-2 rounded-[8px] border border-[#E5E5E5] bg-white px-3 py-2 text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#FAFAFA]"
+            onClick={onEditEmployee}
             type="button"
           >
             <Edit3 className="h-4 w-4" />

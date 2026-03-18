@@ -1,15 +1,6 @@
 import Link from "next/link";
-import type { ComponentType, SVGProps } from "react";
 
-import type { HrNavKey } from "./TopNaviBar";
-
-export type NavigationItem = {
-  hasNotification?: boolean;
-  href: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
-  key: HrNavKey;
-  label: string;
-};
+import type { HrNavKey, NavigationItem } from "./top-nav.types";
 
 type TopNavLinkItemProps = {
   activeKey: HrNavKey;
@@ -26,26 +17,28 @@ export default function TopNavLinkItem({
   const isActive = activeKey === key;
 
   return (
-    <li className="flex h-[54px] min-w-0 flex-1 items-center">
+    <li className="flex h-9 w-[126.86px] shrink-0 items-center">
       <Link
         aria-current={isActive ? "page" : undefined}
-        className={`group relative isolate flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl text-[12px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
-          isActive ? "text-slate-950" : "text-slate-500 hover:text-slate-700"
+        className={`group relative isolate flex h-9 w-[126.86px] items-center justify-center gap-2 rounded-[8px] px-[14px] py-2 font-sans text-[14px] leading-5 font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 ${
+          isActive
+            ? "bg-black text-white"
+            : "text-[#737373] hover:bg-black/[0.03] hover:text-[#525252]"
         }`}
         href={href}
       >
-        <span className="flex h-7 items-center justify-center">
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center">
           <Icon
-            className={`transition-colors ${
+            className={`shrink-0 transition-colors ${
               isActive
-                ? "h-[34px] w-[34px] text-slate-950"
-                : "h-6 w-6 text-slate-500 group-hover:text-slate-700"
+                ? "h-5 w-5 text-white"
+                : "h-5 w-5 text-[#737373] group-hover:text-[#525252]"
             }`}
           />
         </span>
-        <span className={isActive ? "font-semibold" : "font-medium"}>{label}</span>
+        <span className="text-center">{label}</span>
         {showNotificationDot ? (
-          <span className="absolute top-0 right-2 h-2.5 w-2.5 rounded-full bg-[#EF4444]" />
+          <span className="absolute top-0 right-[10px] h-2 w-2 rounded-full bg-[#FB2C36] shadow-[0_0_0_4px_rgba(251,44,54,0.1)]" />
         ) : null}
       </Link>
     </li>

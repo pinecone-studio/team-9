@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Geist } from "next/font/google";
-import TopNaviBar, { type HrNavKey } from "../_features/TopNaviBar";
+import TopNaviBar from "../_features/TopNaviBar";
+import type { HrNavKey } from "../_features/top-nav.types";
 
 type HrPageShellProps = {
   activeKey: HrNavKey;
@@ -27,7 +28,7 @@ export default function HrPageShell({
 }: HrPageShellProps) {
   return (
     <main
-      className={`${geist.className} bg-[#f5f4f4] px-[35px] py-8 ${
+      className={`${geist.className} bg-[#f5f4f4] px-[35px] pt-[37px] pb-8 ${
         lockViewport ? "h-dvh overflow-hidden" : "min-h-screen"
       }`}
     >

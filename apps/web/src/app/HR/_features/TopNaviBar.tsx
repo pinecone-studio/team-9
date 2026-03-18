@@ -1,24 +1,18 @@
 "use client";
 
-import { useQuery } from "@apollo/client/react";
-import { useEffect, useMemo } from "react";
+import Link from "next/link";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
-
-import AuditLogsIcon from "../_icons/AuditLogs";
-import BenefitsCatalogIcon from "../_icons/Benefits_catalog";
-import ContractsIcon from "../_icons/Contracts";
-import DashboardIcon from "../_icons/Dashboard";
-import EligibilityRulesIcon from "../_icons/EligibilityRules";
-import EmployeesIcon from "../_icons/Employees";
-import RequestsIcon from "../_icons/Requests";
-import TopNavLinkItem, { type NavigationItem } from "./TopNavLinkItem";
+import type { LucideIcon } from "lucide-react";
 import {
-  ContractsNavActivityDocument,
-  getStoredContractsLastSeenAt,
-  isContractRelatedActivity,
-  storeContractsLastSeenAt,
-  type ContractsNavActivityData,
-} from "./top-nav.contracts-activity";
+  FilePenLine,
+  FileText,
+  Grid2x2,
+  LayoutGrid,
+  Shield,
+  Users,
+  Waypoints,
+} from "lucide-react";
+import BmsLogo from "../_icons/BmsLogo";
 
 export type HrNavKey =
   | "dashboard"
@@ -29,49 +23,55 @@ export type HrNavKey =
   | "audit-logs"
   | "contracts";
 
+type NavigationItem = {
+  href: string;
+  icon: LucideIcon;
+  key: HrNavKey;
+  label: string;
+};
+
 const navigationItems = [
   {
     href: "/dashboard",
-    icon: DashboardIcon,
+    icon: LayoutGrid,
     key: "dashboard",
     label: "Dashboard",
   },
   {
-    href: "/benefits-catalog",
-    icon: BenefitsCatalogIcon,
-    key: "benefits-catalog",
-    label: "Benefits catalog",
-  },
-  {
-    href: "/employees",
-    icon: EmployeesIcon,
-    key: "employees",
-    label: "Employees",
-  },
-  {
     href: "/requests",
-    icon: RequestsIcon,
+    icon: FilePenLine,
     key: "requests",
     label: "Requests",
   },
   {
+    href: "/employees",
+    icon: Users,
+    key: "employees",
+    label: "Employees",
+  },
+  {
+    href: "/benefits-catalog",
+    icon: Grid2x2,
+    key: "benefits-catalog",
+    label: "Benefits",
+  },
+  {
     href: "/eligibility-rules",
-    icon: EligibilityRulesIcon,
+    icon: Waypoints,
     key: "eligibility-rules",
-    label: "Eligibility rules",
+    label: "Rules",
+  },
+  {
+    href: "/contracts",
+    icon: FileText,
+    key: "contracts",
+    label: "Contracts",
   },
   {
     href: "/audit-logs",
-    icon: AuditLogsIcon,
+    icon: Shield,
     key: "audit-logs",
     label: "Audit Logs",
-  },
-  {
-    hasNotification: true,
-    href: "/contracts",
-    icon: ContractsIcon,
-    key: "contracts",
-    label: "Contracts",
   },
 ] satisfies NavigationItem[];
 
@@ -79,66 +79,59 @@ type TopNaviBarProps = {
   activeKey: HrNavKey;
 };
 
-export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
-  const { data } = useQuery<ContractsNavActivityData>(ContractsNavActivityDocument, {
-    fetchPolicy: "cache-and-network",
-    pollInterval: 30000,
-  });
-
-  const latestContractChangeAt = useMemo(() => {
-    const entries = data?.listAuditLogEntries ?? [];
-    let latest = 0;
-
-    entries.forEach((entry) => {
-      if (!isContractRelatedActivity(entry)) {
-        return;
-      }
-
-      const timestamp = Date.parse(entry.createdAt);
-      if (!Number.isNaN(timestamp) && timestamp > latest) {
-        latest = timestamp;
-      }
-    });
-
-    return latest;
-  }, [data]);
-
-  useEffect(() => {
-    if (activeKey !== "contracts") {
-      return;
-    }
-
-    const seenAt = latestContractChangeAt || Date.now();
-    storeContractsLastSeenAt(seenAt);
-  }, [activeKey, latestContractChangeAt]);
-
-  const lastSeenContractChangeAt = getStoredContractsLastSeenAt();
-  const shouldShowContractsDot =
-    activeKey !== "contracts" &&
-    latestContractChangeAt > 0 &&
-    latestContractChangeAt > lastSeenContractChangeAt;
-
+function TopNavLogo() {
   return (
-    <div className="h-[78px] w-full max-w-[860px] rounded-2xl border border-[#e6e1e1] bg-white px-6 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-      <div className="flex h-full items-center gap-6">
+    <Link
+      aria-label="Go to Dashboard"
+      className="flex h-[38px] w-[86px] items-center text-black"
+      href="/dashboard"
+    >
+      <BmsLogo className="h-[38px] w-[86px]" />
+    </Link>
+  );
+}
+
+export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
+  return (
+    <div className="relative z-[2] w-full max-w-[1120px] rounded-[16px] border border-[rgba(229,229,229,0.6)] bg-[rgba(255,255,255,0.95)] px-5 py-3 font-sans shadow-[0_67px_27px_rgba(0,0,0,0.01),0_37px_22px_rgba(0,0,0,0.04),0_17px_17px_rgba(0,0,0,0.06),0_4px_9px_rgba(0,0,0,0.07)] backdrop-blur-[4px]">
+      <div className="flex h-[44px] items-center gap-4">
+        <div className="shrink-0">
+          <TopNavLogo />
+        </div>
+
         <nav aria-label="HR sections" className="min-w-0 flex-1 overflow-hidden">
-          <ul className="flex w-full items-start justify-between gap-2">
-            {navigationItems.map((item) => (
-              <TopNavLinkItem
-                activeKey={activeKey}
-                item={item}
-                key={item.key}
-                showNotificationDot={
-                  item.key === "contracts" ? shouldShowContractsDot : Boolean(item.hasNotification)
-                }
-              />
-            ))}
+          <ul className="flex h-9 w-full items-center justify-center gap-[2px]">
+            {navigationItems.map(({ href, icon: Icon, key, label }) => {
+              const isActive = activeKey === key;
+
+              return (
+                <li key={key} className="flex min-w-0 items-center">
+                  <Link
+                    aria-current={isActive ? "page" : undefined}
+                    className={`group relative isolate inline-flex h-9 items-center justify-center gap-2 rounded-[8px] px-[14px] text-[14px] leading-5 font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "text-[#737373] hover:text-[#171717]"
+                    }`}
+                    href={href}
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center">
+                      <Icon
+                        className={`transition-colors ${
+                          isActive
+                            ? "h-5 w-5 text-white"
+                            : "h-5 w-5 text-[#737373] group-hover:text-[#171717]"
+                        }`}
+                        strokeWidth={2}
+                      />
+                    </span>
+                    <span>{label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
-
-        <div className="flex h-full w-8 shrink-0 items-center justify-center">
-          <div className="h-11 w-px bg-[#e6e1e1]" />
-        </div>
 
         <div className="top-nav-user-button shrink-0">
           <Show when="signed-out">
@@ -152,7 +145,7 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
             </SignInButton>
           </Show>
           <Show when="signed-in">
-            <div className="rounded-full transition-transform hover:scale-[1.02]">
+            <div className="relative rounded-full transition-transform hover:scale-[1.02]">
               <UserButton
                 appearance={{
                   elements: {

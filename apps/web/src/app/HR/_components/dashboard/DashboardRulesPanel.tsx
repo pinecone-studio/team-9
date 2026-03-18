@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Settings } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import {
   formatRuleDefaultValue,
   formatRuleValueType,
@@ -20,7 +20,7 @@ export default function DashboardRulesPanel({ rules }: DashboardRulesPanelProps)
     .slice(0, 4);
 
   return (
-    <section className="box-border flex h-[490px] w-full flex-col rounded-[14px] border border-[#E5E5E5] bg-white py-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
+    <section className="box-border flex h-[490px] w-full flex-col gap-6 rounded-[14px] border border-[#E5E5E5] bg-white py-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
       <div className="flex w-full flex-col gap-4 px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-[16px] leading-4 font-semibold text-[#0A0A0A]">
@@ -42,13 +42,13 @@ export default function DashboardRulesPanel({ rules }: DashboardRulesPanelProps)
             className="inline-flex h-8 items-center gap-1.5 rounded-[8px] border border-[#E5E5E5] bg-white px-3 text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)]"
             href="/eligibility-rules"
           >
-            <Settings className="h-4 w-4" />
-            Manage
+            <ArrowRight className="h-4 w-4" />
+            See More
           </Link>
         </div>
       </div>
 
-      <div className="mt-6 flex w-full flex-col gap-3 px-6">
+      <div className="flex w-full flex-col gap-3 px-6">
         {visibleRules.map((rule) => (
           <article
             className="box-border flex h-[86px] w-full flex-col rounded-[10px] border border-[#E5E5E5] bg-[rgba(245,245,245,0.3)] p-3"

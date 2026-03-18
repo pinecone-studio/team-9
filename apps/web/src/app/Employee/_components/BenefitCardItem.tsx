@@ -1,5 +1,6 @@
 import {
   getBadgeClass,
+  getOverrideBadgeClass,
   splitSubsidyLabel,
   StatusBadgeIcon,
 } from "./benefit-card-ui";
@@ -19,31 +20,46 @@ function BenefitCardBody({ card }: { card: EmployeeBenefitCard }) {
         <h3 className="text-[16px] font-semibold leading-[21px] text-[#060B10]">
           {card.title}
         </h3>
-        <span
-          className={[
-            "inline-flex h-[22px] items-center justify-center gap-[6px] rounded-[4px] px-2 py-[2px]",
-            "text-[12px] font-medium leading-4",
-            getBadgeClass(card.status),
-          ].join(" ")}
-        >
-          <StatusBadgeIcon status={card.status} />
-          <span className="flex items-center text-center">{card.status}</span>
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {card.isOverridden ? (
+            <span
+              className={[
+                "inline-flex h-[22px] items-center justify-center rounded-[4px] px-2 py-[2px]",
+                "text-[12px] font-medium leading-4",
+                getOverrideBadgeClass(),
+              ].join(" ")}
+            >
+              Overridden
+            </span>
+          ) : null}
+          <span
+            className={[
+              "inline-flex h-[22px] items-center justify-center gap-[6px] rounded-[4px] px-2 py-[2px]",
+              "text-[12px] font-medium leading-4",
+              getBadgeClass(card.status),
+            ].join(" ")}
+          >
+            <StatusBadgeIcon status={card.status} />
+            <span className="flex items-center text-center">{card.status}</span>
+          </span>
+        </div>
       </div>
       <p className="text-[14px] font-normal leading-[18px] text-[#51565B]">
         {card.description}
       </p>
-      {card.dots.length > 0 && card.passed ? (
+      {card.passed && (card.dots.length > 0 || card.isOverridden) ? (
         <div className="flex h-4 w-full items-center gap-[9px]">
-          <div className="flex h-2 w-fit items-center gap-[2px]">
-            {card.dots.map((dot, dotIndex) => (
-              <span
-                className="inline-flex h-2 w-2 rounded-full"
-                key={`${card.id}-dot-${dotIndex}`}
-                style={{ backgroundColor: dot }}
-              />
-            ))}
-          </div>
+          {card.dots.length > 0 ? (
+            <div className="flex h-2 w-fit items-center gap-[2px]">
+              {card.dots.map((dot, dotIndex) => (
+                <span
+                  className="inline-flex h-2 w-2 rounded-full"
+                  key={`${card.id}-dot-${dotIndex}`}
+                  style={{ backgroundColor: dot }}
+                />
+              ))}
+            </div>
+          ) : null}
           <span className="flex items-center text-[12px] font-normal leading-4 text-[#737373]">
             {card.passed}
           </span>

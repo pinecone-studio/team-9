@@ -65,6 +65,12 @@ export default function EmployeeBenefitDialog({
     pendingRequest,
   });
   const isSubmitDisabled = loading || submitting || (card.requiresContract && !acceptedContract);
+  const overrideMessage = card.isOverridden
+    ? card.overrideReason?.trim() ||
+      (card.passed
+        ? `Eligibility rules currently show ${card.passed.replace(" before override", "")}. Access remains available because HR applied a manual override.`
+        : "Access remains available because HR applied a manual override.")
+    : null;
 
   const resolvedErrorMessage =
     errorMessage ?? error?.message ?? null;
@@ -78,6 +84,7 @@ export default function EmployeeBenefitDialog({
           errorMessage={resolvedErrorMessage}
           loading={loading}
           onViewContract={() => void handleViewContract()}
+          overrideMessage={overrideMessage}
           request={approvedRequest}
           requiresContract={card.requiresContract}
           ruleItems={eligibilityItems}
@@ -91,6 +98,7 @@ export default function EmployeeBenefitDialog({
           loading={loading}
           onCancel={() => void handleCancel()}
           onViewContract={() => void handleViewContract()}
+          overrideMessage={overrideMessage}
           request={pendingRequest}
           requestLoading={loading}
           requiresContract={card.requiresContract}
@@ -103,6 +111,7 @@ export default function EmployeeBenefitDialog({
           errorMessage={resolvedErrorMessage}
           loading={loading}
           onViewContract={() => void handleViewContract()}
+          overrideMessage={overrideMessage}
           requiresContract={card.requiresContract}
           ruleItems={eligibilityItems}
         />
@@ -117,6 +126,7 @@ export default function EmployeeBenefitDialog({
           onAcceptedContractChange={setAcceptedContract}
           onSubmit={() => void handleSubmit()}
           onViewContract={() => void handleViewContract()}
+          overrideMessage={overrideMessage}
           requiresContract={card.requiresContract}
           ruleItems={eligibilityItems}
           submitting={submitting}

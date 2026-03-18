@@ -18,6 +18,7 @@ type EmployeeActiveBenefitDialogContentProps = {
   errorMessage: string | null;
   loading: boolean;
   onViewContract: () => void;
+  overrideMessage: string | null;
   request: ActiveBenefitRequest | null;
   requiresContract: boolean;
   ruleItems: BenefitDialogRuleItem[];
@@ -29,6 +30,7 @@ export default function EmployeeActiveBenefitDialogContent({
   errorMessage,
   loading,
   onViewContract,
+  overrideMessage,
   request,
   requiresContract,
   ruleItems,
@@ -51,7 +53,11 @@ export default function EmployeeActiveBenefitDialogContent({
         />
       ) : null}
 
-      <EmployeeBenefitDialogEligibilitySection items={ruleItems} loading={loading} />
+      <EmployeeBenefitDialogEligibilitySection
+        items={ruleItems}
+        loading={loading}
+        overrideMessage={overrideMessage}
+      />
 
       {loading ? (
         <p className="text-[13px] leading-5 text-[#64748B]">Loading activation history...</p>

@@ -16,6 +16,7 @@ type EmployeeEligibleBenefitDialogContentProps = {
   onAcceptedContractChange: (accepted: boolean) => void;
   onSubmit: () => void;
   onViewContract: () => void;
+  overrideMessage: string | null;
   requiresContract: boolean;
   ruleItems: BenefitDialogRuleItem[];
   submitting: boolean;
@@ -31,6 +32,7 @@ export default function EmployeeEligibleBenefitDialogContent({
   onAcceptedContractChange,
   onSubmit,
   onViewContract,
+  overrideMessage,
   requiresContract,
   ruleItems,
   submitting,
@@ -47,7 +49,11 @@ export default function EmployeeEligibleBenefitDialogContent({
         />
       ) : null}
 
-      <EmployeeBenefitDialogEligibilitySection items={ruleItems} loading={loading} />
+      <EmployeeBenefitDialogEligibilitySection
+        items={ruleItems}
+        loading={loading}
+        overrideMessage={overrideMessage}
+      />
 
       {errorMessage ? (
         <p className="rounded-[8px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] leading-5 text-[#B91C1C]">

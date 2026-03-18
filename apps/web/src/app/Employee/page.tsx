@@ -9,6 +9,10 @@ export default async function EmployeePage() {
     redirect("/auth/login");
   }
 
+  if (!access.employee) {
+    redirect("/auth/login?error=unauthorized-email");
+  }
+
   if (access.hasHrAccess) {
     redirect("/dashboard");
   }

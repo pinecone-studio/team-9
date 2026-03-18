@@ -13,6 +13,10 @@ export default async function HrLayout({ children }: HrLayoutProps) {
     redirect("/auth/login");
   }
 
+  if (!access.employee) {
+    redirect("/auth/login?error=unauthorized-email");
+  }
+
   if (!access.hasHrAccess) {
     redirect("/Employee");
   }

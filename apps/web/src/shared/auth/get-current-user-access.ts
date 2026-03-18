@@ -110,5 +110,9 @@ export async function getDefaultAppPath() {
     return "/auth/login";
   }
 
+  if (!access.employee) {
+    return "/auth/login?error=unauthorized-email";
+  }
+
   return access.hasHrAccess ? "/dashboard" : "/Employee";
 }

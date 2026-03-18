@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import type { LucideIcon } from "lucide-react";
 import {
   FilePenLine,
@@ -135,14 +135,12 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
 
         <div className="top-nav-user-button shrink-0">
           <Show when="signed-out">
-            <SignInButton mode="modal">
-              <button
-                className="inline-flex h-11 items-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] px-4 text-[13px] font-medium text-slate-700 transition-colors hover:bg-white"
-                type="button"
-              >
-                Sign in
-              </button>
-            </SignInButton>
+            <Link
+              className="inline-flex h-11 items-center rounded-full border border-[#d8d7d4] bg-[#f8f7f4] px-4 text-[13px] font-medium text-slate-700 transition-colors hover:bg-white"
+              href="/auth/login"
+            >
+              Sign in
+            </Link>
           </Show>
           <Show when="signed-in">
             <div className="relative rounded-full transition-transform hover:scale-[1.02]">

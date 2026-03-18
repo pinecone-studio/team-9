@@ -6,6 +6,7 @@ import { useSignIn, useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { verifyWorkEmailAccess } from "./actions";
 import CodeStep from "./CodeStep";
 import EmailStep from "./EmailStep";
 import getErrorMessage from "./getErrorMessage";
@@ -116,17 +117,19 @@ export default function LoginForm() {
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const normalizedEmail = emailAddress.trim().toLowerCase();
-
-    if (!normalizedEmail) {
-      setErrorMessage("Enter your work email.");
-      return;
-    }
-
     setErrorMessage(null);
     setIsSubmitting(true);
 
     try {
+      const accessResult = await verifyWorkEmailAccess(emailAddress);
+
+      if (!accessResult.ok) {
+        setErrorMessage(accessResult.message);
+        return;
+      }
+
+      const { normalizedEmail } = accessResult;
+
       try {
         await startSignInCodeFlow(normalizedEmail);
       } catch (error) {

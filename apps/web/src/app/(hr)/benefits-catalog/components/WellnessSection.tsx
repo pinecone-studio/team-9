@@ -3,12 +3,11 @@
 import { useState } from "react";
 
 import AddBenefitCard from "./AddBenefitCard";
-import AddBenefitDialog from "./AddBenefitDialog";
+import BenefitRequestNotice from "./BenefitRequestNotice";
 import BenefitsCatalogSkeleton from "./BenefitsCatalogSkeleton";
-import CreateCategoryDialog from "./CreateCategoryDialog";
 import DraftBenefitCard from "./DraftBenefitCard";
-import EditBenefitDialog from "./EditBenefitDialog";
 import WellnessCategorySection from "./WellnessCategorySection";
+import WellnessSectionDialogs from "./WellnessSectionDialogs";
 import WellnessSectionNotice from "./WellnessSectionNotice";
 import { useWellnessCatalogState } from "./useWellnessCatalogState";
 
@@ -30,6 +29,8 @@ export default function WellnessSection({
   searchQuery = "",
 }: WellnessSectionProps) {
   const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] = useState(false);
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const {
     benefitSections,
     closeAddDialog,
@@ -45,6 +46,7 @@ export default function WellnessSection({
     openDraftBenefitDialog,
     openNewBenefitDialog,
     refetch,
+    refetchApprovalRequests,
     selectedBenefit,
     setDraftBenefit,
     setSelectedBenefit,
@@ -60,8 +62,8 @@ export default function WellnessSection({
 
   return (
     <>
+      <BenefitRequestNotice message={noticeMessage} onClose={() => setNoticeMessage(null)} />
       {showSkeleton ? <BenefitsCatalogSkeleton /> : null}
-
       {!loading && error ? (
         <WellnessSectionNotice
           accentClassName="text-[#B42318]"
@@ -69,7 +71,6 @@ export default function WellnessSection({
           message="Benefits data could not be loaded."
         />
       ) : null}
-
       {showEmptyState ? (
         <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
           <div className="rounded-[8px] border border-dashed border-[#DBDEE1] bg-white p-6 text-[14px] text-[#51565B]">
@@ -77,7 +78,6 @@ export default function WellnessSection({
           </div>
         </section>
       ) : null}
-
       {showDraftOnlyState && draftBenefit ? (
         <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0">
           <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
@@ -106,6 +106,7 @@ export default function WellnessSection({
                 onContinueDraft={openDraftBenefitDialog}
                 onDeleteDraft={() => setDraftBenefit(null)}
                 onEditBenefit={setSelectedBenefit}
+                onOpenRequest={setSelectedRequestId}
                 section={section}
                 shouldShowDraftCard={shouldShowDraftCard}
               />
@@ -131,48 +132,36 @@ export default function WellnessSection({
         </section>
       ) : null}
 
-      {isAddDialogOpen ? (
-        <AddBenefitDialog
-          currentUserIdentifier={currentUserIdentifier}
-          defaultCategoryId={dialogCategoryId}
-          initialDraft={dialogDraft}
-          onClose={closeAddDialog}
-          onCreated={() => refetch()}
-          onDraftChange={setDraftBenefit}
-        />
-      ) : null}
-
-      {selectedBenefit ? (
-        <EditBenefitDialog
-          approvalRole={selectedBenefit.approvalRole}
-          benefitId={selectedBenefit.id}
-          benefitName={selectedBenefit.title}
-          category={selectedBenefit.category}
-          categoryId={selectedBenefit.categoryId}
-          currentUserIdentifier={currentUserIdentifier}
-          description={selectedBenefit.description}
-          enabled={selectedBenefit.enabled}
-          isCore={selectedBenefit.isCore}
-          onClose={() => setSelectedBenefit(null)}
-          onDeleted={handleBenefitDeleted}
-          onSaved={() => refetch()}
-          requiresContract={selectedBenefit.requiresContract}
-          subsidyPercent={selectedBenefit.subsidyPercent ?? 0}
-          vendorName={selectedBenefit.vendorName ?? ""}
-        />
-      ) : null}
-
-      {isCreateCategoryDialogOpen ? (
-        <CreateCategoryDialog
-          creating={creatingCategory}
-          onClose={() => setIsCreateCategoryDialogOpen(false)}
-          onCreated={(categoryId) => {
-            setIsCreateCategoryDialogOpen(false);
-            openNewBenefitDialog(categoryId);
-          }}
-          onSubmit={handleCreateCategory}
-        />
-      ) : null}
+      <WellnessSectionDialogs
+        creatingCategory={creatingCategory}
+        currentUserIdentifier={currentUserIdentifier}
+        dialogCategoryId={dialogCategoryId}
+        dialogDraft={dialogDraft}
+        isAddDialogOpen={isAddDialogOpen}
+        isCreateCategoryDialogOpen={isCreateCategoryDialogOpen}
+        onCategoryClose={() => setIsCreateCategoryDialogOpen(false)}
+        onCategoryCreated={(categoryId) => {
+          setIsCreateCategoryDialogOpen(false);
+          openNewBenefitDialog(categoryId);
+        }}
+        onCategorySubmit={handleCreateCategory}
+        onCloseAddDialog={closeAddDialog}
+        onDraftChange={setDraftBenefit}
+        onEditDeleted={handleBenefitDeleted}
+        onEditClose={() => setSelectedBenefit(null)}
+        onEditSaved={async () => {
+          await refetchApprovalRequests();
+          await refetch();
+        }}
+        onRequestClose={() => setSelectedRequestId(null)}
+        onRequestReviewed={async () => {
+          await refetchApprovalRequests();
+          await refetch();
+        }}
+        onSubmitted={setNoticeMessage}
+        pendingRequestId={selectedRequestId}
+        selectedBenefit={selectedBenefit}
+      />
     </>
   );
 }

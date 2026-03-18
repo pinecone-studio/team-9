@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { getDb } from "../../../db";
+import { benefitEligibility } from "../../../db/schema/benefit-eligibility";
 import { benefitRequests } from "../../../db/schema/benefit-requests";
 import { benefits } from "../../../db/schema/benefits";
 import { benefitCategories } from "../../../db/schema/benefit-categories";
@@ -60,6 +61,8 @@ export async function listBenefitRequests(
         email: employees.email,
         employmentStatus: employees.employmentStatus,
         hireDate: employees.hireDate,
+        lateArrivalCount: employees.lateArrivalCount,
+        okrSubmitted: employees.okrSubmitted,
         role: employees.role,
         responsibilityLevel: employees.responsibilityLevel,
       })
@@ -84,8 +87,22 @@ export async function listBenefitRequests(
       .leftJoin(benefitCategories, eq(benefitCategories.id, benefits.categoryId))
       .where(inArray(benefits.id, benefitIds));
 
+    const eligibilityRows = await db
+      .select({
+        benefitId: benefitEligibility.benefitId,
+        employeeId: benefitEligibility.employeeId,
+        ruleEvaluationJson: benefitEligibility.ruleEvaluationJson,
+        status: benefitEligibility.status,
+      })
+      .from(benefitEligibility)
+      .where(inArray(benefitEligibility.benefitId, benefitIds));
+
     const employeeMap = new Map(employeeRows.map((row) => [row.id, mapEmployeeRecord(row)]));
+    const employeeDetailsMap = new Map(employeeRows.map((row) => [row.id, row]));
     const benefitMap = new Map(benefitRows.map((row) => [row.id, mapBenefitRecord(row)]));
+    const eligibilityMap = new Map(
+      eligibilityRows.map((row) => [`${row.employeeId}:${row.benefitId}`, row]),
+    );
 
     const mappedRequests: Array<BenefitRequest | null> = requestRows.map((request) => {
       try {
@@ -94,6 +111,9 @@ export async function listBenefitRequests(
         if (!employee || !benefit) {
           return null;
         }
+
+        const eligibility = eligibilityMap.get(`${request.employeeId}:${request.benefitId}`) ?? null;
+        const employeeDetails = employeeDetailsMap.get(request.employeeId);
 
         return {
           id: request.id,
@@ -106,6 +126,13 @@ export async function listBenefitRequests(
           updated_at: request.updatedAt,
           reviewed_by: request.reviewedBy ? employeeMap.get(request.reviewedBy) ?? null : null,
           approval_role: benefit.approvalRole,
+          eligibilityStatus: eligibility?.status ?? null,
+          ruleEvaluationJson: eligibility?.ruleEvaluationJson ?? null,
+          employeeDepartment: employee.department,
+          employeeEmploymentStatus: employee.employmentStatus,
+          employeeResponsibilityLevel: employee.responsibilityLevel,
+          employeeOkrSubmitted: Boolean(employeeDetails?.okrSubmitted ?? false),
+          employeeLateArrivalCount: employeeDetails?.lateArrivalCount ?? 0,
         } satisfies BenefitRequest;
       } catch (error) {
         console.error("[benefitRequests] Failed to map request row.", {

@@ -52,6 +52,12 @@ query EmployeeDashboardData($employeeId: ID!) {
     status
     rulesApplied
   }
+  approvalRequests(status: pending) {
+    entity_id
+    entity_type
+    action_type
+    status
+  }
 }
 
 query EmployeeBenefitRequests($employeeId: ID!) {

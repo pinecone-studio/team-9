@@ -21,6 +21,7 @@ type AddBenefitDialogProps = {
   onClose: () => void;
   onCreated?: () => void | Promise<unknown>;
   onDraftChange?: (draft: BenefitDraft | null) => void;
+  onSubmitted?: (message: string) => void;
 };
 
 export default function AddBenefitDialog({
@@ -30,6 +31,7 @@ export default function AddBenefitDialog({
   onClose,
   onCreated,
   onDraftChange,
+  onSubmitted,
 }: AddBenefitDialogProps) {
   const [name, setName] = useState(initialDraft?.name ?? "");
   const [description, setDescription] = useState(initialDraft?.description ?? "");
@@ -76,6 +78,7 @@ export default function AddBenefitDialog({
     onClose,
     onCreated,
     onDraftChange,
+    onSubmitted,
     requiresContract,
     subsidyPercent,
     vendorName,
@@ -97,7 +100,7 @@ export default function AddBenefitDialog({
     !categoryId ||
     name.trim().length === 0 ||
     description.trim().length === 0 ||
-    vendorName.trim().length === 0 ||
+    (requiresContract && vendorName.trim().length === 0) ||
     !Number.isInteger(parsedSubsidy) ||
     parsedSubsidy < 0 ||
     parsedSubsidy > 100 ||

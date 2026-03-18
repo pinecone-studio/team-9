@@ -1,4 +1,7 @@
-import { mapBenefitSections } from "./employee-dashboard-benefits";
+import {
+  getPendingBenefitIds,
+  mapBenefitSections,
+} from "./employee-dashboard-benefits";
 import { mapRequests } from "./employee-dashboard-requests";
 import {
   findFirstBooleanMetric,
@@ -15,6 +18,7 @@ import type {
 } from "./employee-types";
 
 type BuildDashboardViewDataInput = {
+  approvalRequests: NonNullable<DashboardQueryResult["approvalRequests"]>;
   benefitStatusOverrides: Map<string, EmployeeBenefitStatusOverride>;
   employeeEligibility: NonNullable<DashboardQueryResult["employeeEligibility"]>;
   employeeEmail: string | null;
@@ -48,6 +52,7 @@ export function buildEmptyDashboardData(
 }
 
 export function buildEmployeeDashboardViewData({
+  approvalRequests,
   benefitStatusOverrides,
   employeeEligibility,
   employeeEmail,
@@ -71,11 +76,13 @@ export function buildEmployeeDashboardViewData({
             .map((summary) => summary.benefitId),
         )
       : null;
+  const pendingBenefitIds = getPendingBenefitIds(approvalRequests);
   const baseSections = mapBenefitSections(
     rawEligibility,
     benefitStatusOverrides,
     benefitRuleCountByBenefitId,
     activeBenefitIds,
+    pendingBenefitIds,
   );
   const baseBenefits = baseSections.flatMap((section) => section.items);
   const benefitNameById = new Map(baseBenefits.map((benefit) => [benefit.id, benefit.title]));
@@ -85,6 +92,7 @@ export function buildEmployeeDashboardViewData({
     requestsPayload.statusByBenefitId,
     benefitRuleCountByBenefitId,
     activeBenefitIds,
+    pendingBenefitIds,
   );
   const allBenefits = sections.flatMap((section) => section.items);
   const okrSubmitted =

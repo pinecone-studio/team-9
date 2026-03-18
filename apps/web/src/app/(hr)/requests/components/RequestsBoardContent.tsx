@@ -11,6 +11,7 @@ import {
   EmptyTableState,
 } from "./RequestsBoardTables";
 import BenefitRequestsTable from "./BenefitRequestsTable";
+import RequestsBoardSkeleton from "./RequestsBoardSkeleton";
 import {
   type RequestsMetricKey,
   RequestsMetrics,
@@ -27,6 +28,7 @@ type RequestsBoardContentProps = {
   benefitRequests: BenefitRequestRecord[];
   benefitError?: string | null;
   currentUserIdentifier: string;
+  currentUserRole: string;
   configurationError?: string | null;
   loading: boolean;
   metrics: Record<string, number>;
@@ -48,6 +50,7 @@ export default function RequestsBoardContent({
   configurationRequests,
   configurationError,
   currentUserIdentifier,
+  currentUserRole,
   loading,
   metrics,
   onBenefitReview,
@@ -98,6 +101,10 @@ export default function RequestsBoardContent({
     );
   };
 
+  if (loading) {
+    return <RequestsBoardSkeleton />;
+  }
+
   return (
     <section className="flex w-full flex-col gap-6 pt-8">
       <div className="flex flex-col gap-3">
@@ -123,9 +130,7 @@ export default function RequestsBoardContent({
           onTabChange={setActiveTab}
         />
         <SectionFrame>
-          {loading ? (
-            <div className="px-6 text-[14px] leading-6 text-[#737373]">Loading requests...</div>
-          ) : activeError ? (
+          {activeError ? (
             <div className="px-6 text-[14px] leading-6 text-[#B42318]">{activeError}</div>
           ) : activeCount === 0 ? (
             <div className="px-6">
@@ -142,7 +147,7 @@ export default function RequestsBoardContent({
               />
             </div>
           ) : activeTab === "benefit" ? (
-            <BenefitRequestsTable currentUserIdentifier={currentUserIdentifier} onReview={onBenefitReview} requests={filteredBenefitRequests} />
+            <BenefitRequestsTable currentUserIdentifier={currentUserIdentifier} currentUserRole={currentUserRole} onReview={onBenefitReview} requests={filteredBenefitRequests} />
           ) : (
             <ConfigurationApprovalsTable currentUserIdentifier={currentUserIdentifier} onReview={onConfigurationReview} requests={filteredConfigurationRequests} />
           )}

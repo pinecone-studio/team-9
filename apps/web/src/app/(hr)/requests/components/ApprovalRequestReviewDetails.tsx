@@ -1,4 +1,7 @@
 import type { ApprovalRequestQuery } from "./approval-requests.graphql";
+import ApprovalRequestBenefitCreateDetails from "./ApprovalRequestBenefitCreateDetails";
+import ApprovalRequestBenefitUpdateDetails from "./ApprovalRequestBenefitUpdateDetails";
+import ApprovalRequestRuleDetails from "./ApprovalRequestRuleDetails";
 import { DetailRow, RuleAssignments } from "./ApprovalRequestReviewShared";
 import {
   BenefitSnapshotSection,
@@ -19,6 +22,26 @@ export default function ApprovalRequestReviewDetails({
 }) {
   const parsedPayload = parseApprovalPayload(request);
   const snapshot = parseApprovalSnapshot(request);
+
+  if (
+    request.entity_type === "benefit" &&
+    request.action_type === "create" &&
+    !(parsedPayload.entityType === "benefit" && parsedPayload.employeeRequest)
+  ) {
+    return <ApprovalRequestBenefitCreateDetails request={request} />;
+  }
+
+  if (
+    request.entity_type === "benefit" &&
+    request.action_type === "update" &&
+    !(parsedPayload.entityType === "benefit" && parsedPayload.employeeRequest)
+  ) {
+    return <ApprovalRequestBenefitUpdateDetails request={request} />;
+  }
+
+  if (request.entity_type === "rule") {
+    return <ApprovalRequestRuleDetails request={request} />;
+  }
 
   if (parsedPayload.entityType === "benefit") {
     const benefit = parsedPayload.benefit;

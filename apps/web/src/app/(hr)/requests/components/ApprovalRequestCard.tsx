@@ -1,6 +1,7 @@
 import { CheckCircle2, CircleX, Eye, Hourglass } from "lucide-react";
 
 import type { ApprovalRequestRecord } from "./approval-requests.graphql";
+import { useResolvedPersonName } from "./RequestPeopleContext";
 import {
   formatApprovalAction,
   formatApprovalRequestName,
@@ -46,6 +47,7 @@ export default function ApprovalRequestCard({
   request,
 }: ApprovalRequestCardProps) {
   const reviewLabel = request.status === "pending" ? "Review" : "View";
+  const requesterName = useResolvedPersonName(request.requested_by);
 
   return (
     <section className="mx-auto flex w-full max-w-[1300px] items-center justify-between rounded-[10px] border border-[#E5E7EB] bg-white px-6 py-5">
@@ -62,7 +64,7 @@ export default function ApprovalRequestCard({
             {request.entity_type === "benefit" ? "Benefit" : "Rule"}{" "}
             {formatApprovalAction(request.action_type)}
           </span>
-          <span>Requester: {request.requested_by}</span>
+          <span>Requester: {requesterName}</span>
           <span>Approver: {formatApprovalRole(request.target_role)}</span>
           <span>Created {formatRelativeTimestamp(request.created_at)}</span>
         </div>

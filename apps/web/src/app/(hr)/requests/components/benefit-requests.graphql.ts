@@ -6,15 +6,24 @@ export type BenefitRequestRecord = {
   approval_role: ApprovalRoleValue;
   benefit: {
     category: string;
+    description: string;
     id: string;
+    requiresContract: boolean;
+    subsidyPercent?: number | null;
     title: string;
+    vendorName?: string | null;
   };
+  contractAcceptedAt?: string | null;
+  contractVersionAccepted?: string | null;
   created_at: string;
   employee: {
+    department: string;
     email: string;
+    employmentStatus: string;
     id: string;
     name: string;
     position: string;
+    responsibilityLevel: number;
   };
   id: string;
   reviewed_by?: {
@@ -33,6 +42,18 @@ export type BenefitRequestsQuery = {
 
 export type ReviewBenefitRequestMutation = {
   reviewBenefitRequest: BenefitRequestRecord;
+};
+
+export type BenefitRequestContractQuery = {
+  contractSignedUrlByBenefit: {
+    contractId: string;
+    expiresAt: string;
+    signedUrl: string;
+  };
+};
+
+export type BenefitRequestContractVariables = {
+  benefitId: string;
 };
 
 export type ReviewBenefitRequestVariables = {
@@ -56,12 +77,21 @@ export const BENEFIT_REQUESTS_QUERY = gql`
         name
         email
         position
+        department
+        employmentStatus
+        responsibilityLevel
       }
       benefit {
         id
         title
         category
+        description
+        requiresContract
+        subsidyPercent
+        vendorName
       }
+      contractAcceptedAt
+      contractVersionAccepted
       reviewed_by {
         id
         name
@@ -85,18 +115,37 @@ export const REVIEW_BENEFIT_REQUEST_MUTATION = gql`
         name
         email
         position
+        department
+        employmentStatus
+        responsibilityLevel
       }
       benefit {
         id
         title
         category
+        description
+        requiresContract
+        subsidyPercent
+        vendorName
       }
+      contractAcceptedAt
+      contractVersionAccepted
       reviewed_by {
         id
         name
         email
         position
       }
+    }
+  }
+`;
+
+export const BENEFIT_REQUEST_CONTRACT_QUERY = gql`
+  query BenefitRequestContract($benefitId: ID!) {
+    contractSignedUrlByBenefit(benefitId: $benefitId) {
+      contractId
+      expiresAt
+      signedUrl
     }
   }
 `;

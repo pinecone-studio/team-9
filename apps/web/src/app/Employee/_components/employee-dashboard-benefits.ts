@@ -9,11 +9,29 @@ import type { EmployeeBenefitCard, EmployeeBenefitSection } from "./employee-typ
 type EmployeeEligibility = NonNullable<DashboardQueryResult["employeeEligibility"]>;
 type BenefitSummary = NonNullable<DashboardQueryResult["listBenefitEligibilitySummary"]>;
 
+export function getPendingBenefitIds(
+  approvalRequests: NonNullable<DashboardQueryResult["approvalRequests"]>,
+) {
+  return new Set(
+    approvalRequests
+      .filter(
+        (request) =>
+          request.entity_type === "benefit" &&
+          request.status === "pending" &&
+          (request.action_type === "update" || request.action_type === "delete") &&
+          typeof request.entity_id === "string" &&
+          request.entity_id.trim().length > 0,
+      )
+      .map((request) => request.entity_id!.trim()),
+  );
+}
+
 export function mapBenefitSections(
   eligibilities: EmployeeEligibility,
   statusOverridesByBenefitId: Map<string, EmployeeBenefitStatusOverride>,
   benefitRuleCountByBenefitId: Map<string, number>,
   activeBenefitIds: Set<string> | null,
+  hiddenBenefitIds: Set<string> = new Set(),
 ) {
   const latestByBenefitId = new Map<string, EmployeeEligibility[number]>();
 
@@ -37,6 +55,10 @@ export function mapBenefitSections(
   const byCategory = new Map<string, EmployeeBenefitCard[]>();
 
   for (const eligibility of latestByBenefitId.values()) {
+    if (hiddenBenefitIds.has(eligibility.benefit.id)) {
+      continue;
+    }
+
     const isExplicitlyActive =
       !activeBenefitIds || activeBenefitIds.has(eligibility.benefit.id);
 

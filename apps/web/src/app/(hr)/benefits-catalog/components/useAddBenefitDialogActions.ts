@@ -11,6 +11,7 @@ import {
   hasBenefitDraftContent,
   type BenefitDraft,
 } from "./benefit-draft";
+import { getBenefitRequestNoticeMessage } from "./benefit-request-notice";
 import { buildContractUploadInput } from "./contract-upload-client";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
 type UseAddBenefitDialogActionsProps = {
@@ -26,6 +27,7 @@ type UseAddBenefitDialogActionsProps = {
   onClose: () => void;
   onCreated?: () => void | Promise<unknown>;
   onDraftChange?: (draft: BenefitDraft | null) => void;
+  onSubmitted?: (message: string) => void;
   requiresContract: boolean;
   subsidyPercent: string;
   vendorName: string;
@@ -44,6 +46,7 @@ export function useAddBenefitDialogActions({
   onClose,
   onCreated,
   onDraftChange,
+  onSubmitted,
   requiresContract,
   subsidyPercent,
   vendorName,
@@ -109,8 +112,8 @@ export function useAddBenefitDialogActions({
       return;
     }
 
-    if (!trimmedVendorName) {
-      setErrorMessage("Vendor name is required.");
+    if (requiresContract && !trimmedVendorName) {
+      setErrorMessage("Vendor name is required when contract is enabled.");
       return;
     }
 
@@ -140,7 +143,7 @@ export function useAddBenefitDialogActions({
               description: trimmedDescription,
               categoryId,
               subsidyPercent: parsedSubsidy,
-              vendorName: trimmedVendorName,
+              vendorName: trimmedVendorName || null,
               requiresContract,
               isCore: coreBenefitEnabled,
               approvalRole,
@@ -161,6 +164,7 @@ export function useAddBenefitDialogActions({
       });
 
       onDraftChange?.(null);
+      onSubmitted?.(getBenefitRequestNoticeMessage(approvalRole));
       await onCreated?.();
       onClose();
     } catch (error) {

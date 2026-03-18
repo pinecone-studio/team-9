@@ -5,6 +5,7 @@ import { formatShortDate, formatShortDateTime } from "./approval-request-time-fo
 
 type BenefitRequestsTableProps = {
   currentUserIdentifier: string;
+  currentUserRole: string;
   onReview: (requestId: string) => void;
   requests: BenefitRequestRecord[];
 };
@@ -49,15 +50,17 @@ function StatusBadge({
 }
 
 function ReviewButton({
+  canReview,
   isOwnRequest,
   onClick,
   status,
 }: {
+  canReview: boolean;
   isOwnRequest: boolean;
   onClick: () => void;
   status: BenefitRequestRecord["status"];
 }) {
-  const label = status === "pending" && !isOwnRequest ? "Review" : "View";
+  const label = status === "pending" && !isOwnRequest && canReview ? "Review" : "View";
   return (
     <button className="inline-flex h-8 items-center justify-center rounded-[8px] px-3 text-[14px] leading-5 font-medium text-[#0A0A0A] transition-colors hover:bg-[#F5F5F5]" onClick={onClick} type="button">
       {label}
@@ -67,16 +70,22 @@ function ReviewButton({
 
 export default function BenefitRequestsTable({
   currentUserIdentifier,
+  currentUserRole,
   onReview,
   requests,
 }: BenefitRequestsTableProps) {
+  const normalizedUserIdentifier = currentUserIdentifier.trim().toLowerCase();
+  const normalizedUserRole = currentUserRole.trim().toLowerCase();
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-left">
         <thead><tr className="text-[14px] leading-5 font-medium text-[#0A0A0A]"><th className="border-b border-[#E5E5E5] px-8 py-[10px]">Employee</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Benefit</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Submitted</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Approved By</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Progress</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Status</th><th className="border-b border-[#E5E5E5] px-6 py-[10px] text-center">Action</th></tr></thead>
         <tbody>
           {requests.map((request) => {
-            const isOwnRequest = request.employee.email.trim().toLowerCase() === currentUserIdentifier.trim().toLowerCase();
+            const isOwnRequest =
+              request.employee.email.trim().toLowerCase() === normalizedUserIdentifier;
+            const canReview = request.approval_role === normalizedUserRole;
             const progressLabel =
               request.status === "approved"
                 ? "Approved"
@@ -93,7 +102,7 @@ export default function BenefitRequestsTable({
                 <td className="border-b border-[#EDEDED] px-2 py-3">{request.reviewed_by ? request.reviewed_by.name : request.approval_role === "finance_manager" ? "Finance" : "HR"}</td>
                 <td className={`border-b border-[#EDEDED] px-2 py-3 ${request.status === "pending" ? "text-[#E17100]" : "text-[#737373]"}`}>{progressLabel}</td>
                 <td className="border-b border-[#EDEDED] px-2 py-3"><StatusBadge reviewedAt={request.updated_at} status={request.status} /></td>
-                <td className="border-b border-[#EDEDED] px-6 py-3 text-center"><ReviewButton isOwnRequest={isOwnRequest} onClick={() => onReview(request.id)} status={request.status} /></td>
+                <td className="border-b border-[#EDEDED] px-6 py-3 text-center"><ReviewButton canReview={canReview} isOwnRequest={isOwnRequest} onClick={() => onReview(request.id)} status={request.status} /></td>
               </tr>
             );
           })}

@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useState } from "react";
+import { useApprovalRequestsQuery } from "@/shared/apollo/generated";
 
 import {
   BENEFIT_CATALOG_QUERY,
@@ -37,6 +38,10 @@ export function useWellnessCatalogState({
       notifyOnNetworkStatusChange: true,
     },
   );
+  const { data: approvalRequestsData, refetch: refetchApprovalRequests } = useApprovalRequestsQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+  });
   const eligibilitySummaryByBenefitId = new Map(
     (data?.listBenefitEligibilitySummary ?? []).map((summary) => [
       summary.benefitId,
@@ -87,6 +92,7 @@ export function useWellnessCatalogState({
   const benefitSections = buildBenefitSections(
     filteredBenefitRecords,
     includeEmptyCategories ? data?.benefitCategories ?? [] : [],
+    approvalRequestsData?.approvalRequests ?? [],
   );
 
   function openNewBenefitDialog(defaultCategoryId?: string | null) {
@@ -155,6 +161,7 @@ export function useWellnessCatalogState({
     openDraftBenefitDialog,
     openNewBenefitDialog,
     refetch,
+    refetchApprovalRequests,
     selectedBenefit,
     setDraftBenefit,
     setSelectedBenefit,

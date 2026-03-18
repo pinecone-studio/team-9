@@ -9,6 +9,10 @@ export default async function EmployeePage() {
     redirect("/auth/login");
   }
 
+  if (access.employeeLookupFailed) {
+    redirect("/auth/login?error=access-lookup-failed");
+  }
+
   if (!access.employee) {
     redirect("/auth/login?error=unauthorized-email");
   }

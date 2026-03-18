@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getDefaultAppPath } from "@/shared/auth/get-current-user-access";
 import LoginForm from "./LoginForm";
 import {
+  ACCESS_LOOKUP_FAILURE_QUERY,
+  EMAIL_LOOKUP_FAILURE_MESSAGE,
   UNAUTHORIZED_EMAIL_MESSAGE,
   UNAUTHORIZED_EMAIL_QUERY,
 } from "./messages";
@@ -21,12 +23,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const errorParam = Array.isArray(resolvedSearchParams.error)
     ? resolvedSearchParams.error[0]
     : resolvedSearchParams.error;
+  const hasLookupFailureError = errorParam === ACCESS_LOOKUP_FAILURE_QUERY;
   const hasUnauthorizedEmailError = errorParam === UNAUTHORIZED_EMAIL_QUERY;
 
   if (userId) {
     const appPath = await getDefaultAppPath();
 
-    if (appPath !== `/auth/login?error=${UNAUTHORIZED_EMAIL_QUERY}`) {
+    if (
+      appPath !== `/auth/login?error=${ACCESS_LOOKUP_FAILURE_QUERY}` &&
+      appPath !== `/auth/login?error=${UNAUTHORIZED_EMAIL_QUERY}`
+    ) {
       redirect(appPath);
     }
   }
@@ -41,10 +47,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </h1>
           </div>
 
-          {userId ? (
+          {userId && hasUnauthorizedEmailError ? (
             <UnauthorizedSessionReset
               redirectUrl={`/auth/login?error=${UNAUTHORIZED_EMAIL_QUERY}`}
             />
+          ) : null}
+          {hasLookupFailureError ? (
+            <p className="mb-4 rounded-xl border border-[#E2B4B4] bg-[#FFF5F5] px-4 py-3 text-sm text-[#8A1C1C]">
+              {EMAIL_LOOKUP_FAILURE_MESSAGE}
+            </p>
           ) : null}
           {hasUnauthorizedEmailError ? (
             <p className="mb-4 rounded-xl border border-[#E2B4B4] bg-[#FFF5F5] px-4 py-3 text-sm text-[#8A1C1C]">

@@ -13,6 +13,10 @@ export default async function HrLayout({ children }: HrLayoutProps) {
     redirect("/auth/login");
   }
 
+  if (access.employeeLookupFailed) {
+    redirect("/auth/login?error=access-lookup-failed");
+  }
+
   if (!access.employee) {
     redirect("/auth/login?error=unauthorized-email");
   }

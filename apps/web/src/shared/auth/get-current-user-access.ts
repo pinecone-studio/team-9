@@ -9,6 +9,7 @@ import {
 export type CurrentUserAccess = {
   email: string | null;
   employee: EmployeeRecord | null;
+  employeeLookupFailed: boolean;
   hasHrAccess: boolean;
   isAuthenticated: boolean;
   role: string | null;
@@ -19,6 +20,7 @@ const HR_ROLES = new Set(["finance_manager", "hr_admin"]);
 const UNAUTHENTICATED_ACCESS: CurrentUserAccess = {
   email: null,
   employee: null,
+  employeeLookupFailed: false,
   hasHrAccess: false,
   isAuthenticated: false,
   role: null,
@@ -68,11 +70,13 @@ export async function getCurrentUserAccess(): Promise<CurrentUserAccess> {
     user?.emailAddresses[0]?.emailAddress?.trim().toLowerCase() ??
     null;
   let employee: EmployeeRecord | null = null;
+  let employeeLookupFailed = false;
 
   if (email) {
     try {
       employee = await getEmployeeRecordByEmail(email);
     } catch (error) {
+      employeeLookupFailed = true;
       console.error("Failed to resolve employee access.", error);
     }
   }
@@ -96,6 +100,7 @@ export async function getCurrentUserAccess(): Promise<CurrentUserAccess> {
   return {
     email,
     employee,
+    employeeLookupFailed,
     hasHrAccess,
     isAuthenticated: true,
     role,
@@ -108,6 +113,10 @@ export async function getDefaultAppPath() {
 
   if (!access.isAuthenticated) {
     return "/auth/login";
+  }
+
+  if (access.employeeLookupFailed) {
+    return "/auth/login?error=access-lookup-failed";
   }
 
   if (!access.employee) {

@@ -192,8 +192,8 @@ async function fetchEmployeeRecordFromEmployeesQuery(
 export async function getEmployeeRecordByEmail(email: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const employeeFromD1 = await fetchEmployeeRecordFromD1(normalizedEmail);
-  let resolvedNoMatch = false;
-  let hadLookupFailure = false;
+  let resolvedNoMatchCount = 0;
+  let lookupFailureCount = 0;
 
   if (employeeFromD1) {
     return employeeFromD1;
@@ -210,7 +210,7 @@ export async function getEmployeeRecordByEmail(email: string) {
         return employee;
       }
 
-      resolvedNoMatch = true;
+      resolvedNoMatchCount += 1;
       console.warn("[auth] employeeByEmail returned no match.", {
         email: normalizedEmail,
         endpoint,
@@ -226,13 +226,13 @@ export async function getEmployeeRecordByEmail(email: string) {
           return employee;
         }
 
-        resolvedNoMatch = true;
+        resolvedNoMatchCount += 1;
         console.warn("[auth] employees query returned no match.", {
           email: normalizedEmail,
           endpoint,
         });
       } catch (employeesError) {
-        hadLookupFailure = true;
+        lookupFailureCount += 1;
         console.error("[auth] Employee lookup failed for endpoint.", {
           email: normalizedEmail,
           endpoint,
@@ -250,13 +250,13 @@ export async function getEmployeeRecordByEmail(email: string) {
     }
   }
 
-  if (resolvedNoMatch) {
-    return null;
-  }
-
-  if (hadLookupFailure) {
+  if (lookupFailureCount > 0) {
     throw new Error("Failed to load employee access.");
   }
 
-  throw new Error("Failed to load employee access.");
+  if (resolvedNoMatchCount > 0) {
+    return null;
+  }
+
+  throw new Error("Failed to resolve employee access.");
 }

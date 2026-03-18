@@ -4,4 +4,5 @@ export const EMAIL_LOOKUP_FAILURE_MESSAGE =
 export const UNAUTHORIZED_EMAIL_MESSAGE =
   "This work email doesn't have access. Use a work email already registered in the database.";
 
+export const ACCESS_LOOKUP_FAILURE_QUERY = "access-lookup-failed";
 export const UNAUTHORIZED_EMAIL_QUERY = "unauthorized-email";

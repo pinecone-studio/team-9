@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useBenefitCatalogPageQuery } from "@/shared/apollo/generated";
 import {
   BenefitContractForContractsDocument,
-  buildContractRow,
   formatDate,
   deriveStatus,
 } from "./contracts-helpers";

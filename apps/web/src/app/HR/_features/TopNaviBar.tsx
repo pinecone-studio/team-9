@@ -1,13 +1,9 @@
 "use client";
 
-import { gql } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import type { LucideIcon } from "lucide-react";
 import {
-  Boxes,
   FilePenLine,
   FileText,
   Grid2x2,
@@ -28,7 +24,6 @@ export type HrNavKey =
   | "contracts";
 
 type NavigationItem = {
-  hasNotification?: boolean;
   href: string;
   icon: LucideIcon;
   key: HrNavKey;
@@ -43,7 +38,6 @@ const navigationItems = [
     label: "Dashboard",
   },
   {
-    hasNotification: true,
     href: "/requests",
     icon: FilePenLine,
     key: "requests",
@@ -68,14 +62,12 @@ const navigationItems = [
     label: "Rules",
   },
   {
-    hasNotification: true,
     href: "/contracts",
     icon: FileText,
     key: "contracts",
     label: "Contracts",
   },
   {
-    hasNotification: true,
     href: "/audit-logs",
     icon: Shield,
     key: "audit-logs",
@@ -86,37 +78,6 @@ const navigationItems = [
 type TopNaviBarProps = {
   activeKey: HrNavKey;
 };
-
-const CONTRACTS_LAST_SEEN_KEY = "hr_contracts_last_seen_at";
-
-const ContractsNavActivityDocument = gql`
-  query ContractsNavActivity {
-    listAuditLogEntries {
-      id
-      entityType
-      action
-      metadata
-      createdAt
-    }
-  }
-`;
-
-type ContractsNavActivityEntry = {
-  action: string;
-  createdAt: string;
-  entityType: string;
-  id: string;
-  metadata?: string | null;
-};
-
-type ContractsNavActivityData = {
-  listAuditLogEntries: ContractsNavActivityEntry[];
-};
-
-function isContractRelatedActivity(entry: ContractsNavActivityEntry) {
-  const searchableText = `${entry.entityType} ${entry.action} ${entry.metadata ?? ""}`;
-  return /contract/i.test(searchableText);
-}
 
 function TopNavLogo() {
   return (
@@ -131,53 +92,6 @@ function TopNavLogo() {
 }
 
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
-  const [lastSeenContractChangeAt, setLastSeenContractChangeAt] = useState(0);
-  const { data } = useQuery<ContractsNavActivityData>(ContractsNavActivityDocument, {
-    fetchPolicy: "cache-and-network",
-    pollInterval: 30000,
-  });
-
-  const latestContractChangeAt = useMemo(() => {
-    const entries = data?.listAuditLogEntries ?? [];
-    let latest = 0;
-
-    entries.forEach((entry) => {
-      if (!isContractRelatedActivity(entry)) {
-        return;
-      }
-
-      const timestamp = Date.parse(entry.createdAt);
-      if (!Number.isNaN(timestamp) && timestamp > latest) {
-        latest = timestamp;
-      }
-    });
-
-    return latest;
-  }, [data]);
-
-  useEffect(() => {
-    const storedValue =
-      typeof window !== "undefined" ? window.localStorage.getItem(CONTRACTS_LAST_SEEN_KEY) : null;
-    const parsedValue = Number(storedValue);
-
-    if (!Number.isNaN(parsedValue) && parsedValue > 0) {
-      setLastSeenContractChangeAt(parsedValue);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (activeKey !== "contracts") {
-      return;
-    }
-
-    const seenAt = latestContractChangeAt || Date.now();
-    setLastSeenContractChangeAt(seenAt);
-    window.localStorage.setItem(CONTRACTS_LAST_SEEN_KEY, String(seenAt));
-  }, [activeKey, latestContractChangeAt]);
-
-  const shouldShowContractsDot =
-    latestContractChangeAt > 0 && latestContractChangeAt > lastSeenContractChangeAt;
-
   return (
     <div className="relative z-[2] w-full max-w-[1120px] rounded-[16px] border border-[rgba(229,229,229,0.6)] bg-[rgba(255,255,255,0.95)] px-5 py-3 font-sans shadow-[0_67px_27px_rgba(0,0,0,0.01),0_37px_22px_rgba(0,0,0,0.04),0_17px_17px_rgba(0,0,0,0.06),0_4px_9px_rgba(0,0,0,0.07)] backdrop-blur-[4px]">
       <div className="flex h-[44px] items-center gap-4">
@@ -187,8 +101,7 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
 
         <nav aria-label="HR sections" className="min-w-0 flex-1 overflow-hidden">
           <ul className="flex h-9 w-full items-center justify-center gap-[2px]">
-            {navigationItems.map(
-              ({ hasNotification, href, icon: Icon, key, label }) => {
+            {navigationItems.map(({ href, icon: Icon, key, label }) => {
               const isActive = activeKey === key;
 
               return (

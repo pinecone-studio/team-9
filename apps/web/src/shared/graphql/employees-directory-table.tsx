@@ -12,6 +12,7 @@ import {
 type EmployeesDirectoryTableProps = {
   eligibilityByEmployee: Record<string, EligibilitySummary>;
   filteredEmployees: Employee[];
+  onEmployeeSelect: (employee: Employee) => void;
   searchTerm: string;
   setSearchTerm: (value: string) => void;
 };
@@ -19,6 +20,7 @@ type EmployeesDirectoryTableProps = {
 export default function EmployeesDirectoryTable({
   eligibilityByEmployee,
   filteredEmployees,
+  onEmployeeSelect,
   searchTerm,
   setSearchTerm,
 }: EmployeesDirectoryTableProps) {
@@ -50,7 +52,7 @@ export default function EmployeesDirectoryTable({
 
       <div className="max-h-[320px] overflow-auto border-t border-[#E5E5E5] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <table className="w-full min-w-[980px] border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-[#E5E5E5] text-left">
               <th className="px-8 py-2.5 text-[14px] leading-5 font-medium text-[#0A0A0A]">
                 Employee
@@ -79,10 +81,22 @@ export default function EmployeesDirectoryTable({
                 eligible: 0,
                 locked: 0,
               };
-              const flags = getFlags(employee.name, employee.employmentStatus);
+              const flags = getFlags(employee);
 
               return (
-                <tr className="transition-colors hover:bg-[#FAFAFA]" key={employee.id}>
+                <tr
+                  className="cursor-pointer transition-colors hover:bg-[#FAFAFA]"
+                  key={employee.id}
+                  onClick={() => onEmployeeSelect(employee)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onEmployeeSelect(employee);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
                   <td className="px-8 py-3.5 text-[14px] leading-5 font-medium text-[#0A0A0A]">
                     {employee.name}
                   </td>

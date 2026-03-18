@@ -8,6 +8,8 @@ query EmployeesPage {
     employmentStatus
     hireDate
     responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
   }
 }
 
@@ -132,6 +134,55 @@ query EmployeeBenefitDialog($benefitId: ID!, $employeeId: ID!) {
   }
 }
 
+query EmployeeDirectoryDialog($employeeId: ID!) {
+  employee(id: $employeeId) {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
+  }
+  employeeEligibility(employeeId: $employeeId) {
+    status
+    computedAt
+    ruleEvaluationJson
+    failedRuleMessages
+    overrideBy
+    overrideReason
+    overrideExpiresAt
+    benefit {
+      id
+      title
+      category
+      vendorName
+      requiresContract
+    }
+  }
+  benefitRequests(employeeId: $employeeId) {
+    id
+    status
+    contractAcceptedAt
+    created_at
+    updated_at
+    benefit {
+      id
+      title
+      category
+    }
+    reviewed_by {
+      id
+      name
+      email
+      position
+    }
+  }
+}
+
 mutation RecalculateEmployeeEligibility($employeeId: ID!) {
   recalculateEmployeeEligibility(employeeId: $employeeId) {
     status
@@ -172,5 +223,26 @@ mutation CancelEmployeeBenefitRequest(
     status
     contractVersionAccepted
     contractAcceptedAt
+  }
+}
+
+mutation OverrideEmployeeBenefitEligibility(
+  $input: OverrideEmployeeBenefitEligibilityInput!
+) {
+  overrideEmployeeBenefitEligibility(input: $input) {
+    status
+    computedAt
+    ruleEvaluationJson
+    failedRuleMessages
+    overrideBy
+    overrideReason
+    overrideExpiresAt
+    benefit {
+      id
+      title
+      category
+      vendorName
+      requiresContract
+    }
   }
 }

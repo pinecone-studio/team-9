@@ -10,6 +10,7 @@ import { createRuleDefinition } from './create-rule-definition';
 import { deleteBenefitCategory } from './delete-benefit-category';
 import { deleteEligibilityRule } from './delete-eligibility-rule';
 import { deleteRuleDefinition } from './delete-rule-definition';
+import { overrideEmployeeBenefitEligibility } from './override-employee-benefit-eligibility';
 import { recalculateEmployeeEligibility } from './recalculate-employee-eligibility';
 import { reviewApprovalRequest } from './review-approval-request';
 import { reviewBenefitRequest } from './review-benefit-request';
@@ -35,6 +36,7 @@ import type {
 	MutationDeleteBenefitCategoryArgs,
 	MutationDeleteEligibilityRuleArgs,
 	MutationDeleteRuleDefinitionArgs,
+	MutationOverrideEmployeeBenefitEligibilityArgs,
 	MutationRecalculateEmployeeEligibilityArgs,
 	MutationReviewApprovalRequestArgs,
 	MutationReviewBenefitRequestArgs,
@@ -66,6 +68,12 @@ export const mutationResolvers = {
 		args: MutationCancelEmployeeBenefitRequestArgs,
 		{ DB }: GraphQLContext,
 	) => cancelEmployeeBenefitRequest(DB, args),
+
+	overrideEmployeeBenefitEligibility: (
+		_: unknown,
+		args: MutationOverrideEmployeeBenefitEligibilityArgs,
+		{ DB }: GraphQLContext,
+	) => overrideEmployeeBenefitEligibility(DB, args),
 
 	submitBenefitCreateRequest: (
 		_: unknown,

@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { Employee } from "@/shared/apollo/types";
 
 type FlagTone = "critical" | "warning";
 
@@ -7,17 +7,16 @@ export type EmployeeFlag = {
   tone: FlagTone;
 };
 
-type OverviewCardProps = {
-  caption: string;
-  icon: ComponentType<{ className?: string }>;
-  subtitle: string;
-  title: string;
-};
+const LATE_ARRIVAL_CRITICAL_THRESHOLD = 3;
 
-const flaggedEmployeesByName: Record<string, EmployeeFlag[]> = {
-  "Bataa M.": [{ label: "OKR missing", tone: "warning" }],
-  "Oyunaa T.": [{ label: "Attendance exceeded", tone: "critical" }],
-};
+type EmployeeFlagSource = Pick<
+  Employee,
+  "employmentStatus" | "lateArrivalCount" | "okrSubmitted"
+>;
+
+function pluralizeLateArrivals(count: number) {
+  return `${count} late arrival${count === 1 ? "" : "s"}`;
+}
 
 export function normalizeStatus(status: string) {
   return status.trim().toLowerCase();
@@ -41,23 +40,28 @@ export function getStatusBadgeTone(status: string) {
   return "bg-[#F4F4F5] text-[#52525B]";
 }
 
-export function getFlags(name: string, status: string): EmployeeFlag[] {
-  const seededFlags = flaggedEmployeesByName[name] ?? [];
-  const normalizedStatus = normalizeStatus(status);
+export function getFlags(employee: EmployeeFlagSource): EmployeeFlag[] {
+  const flags: EmployeeFlag[] = [];
 
-  if (normalizedStatus !== "probation") {
-    return seededFlags;
+  if (!employee.okrSubmitted) {
+    flags.push({ label: "OKR missing", tone: "warning" });
   }
 
-  const hasProbationFlag = seededFlags.some(
-    (flag) => flag.label.toLowerCase() === "on probation",
-  );
-
-  if (hasProbationFlag) {
-    return seededFlags;
+  if (employee.lateArrivalCount > 0) {
+    flags.push({
+      label: pluralizeLateArrivals(employee.lateArrivalCount),
+      tone:
+        employee.lateArrivalCount >= LATE_ARRIVAL_CRITICAL_THRESHOLD
+          ? "critical"
+          : "warning",
+    });
   }
 
-  return [...seededFlags, { label: "On probation", tone: "warning" }];
+  if (normalizeStatus(employee.employmentStatus) === "probation") {
+    flags.push({ label: "On probation", tone: "warning" });
+  }
+
+  return flags;
 }
 
 export function getFlagTone(flagTone: FlagTone) {
@@ -66,24 +70,4 @@ export function getFlagTone(flagTone: FlagTone) {
   }
 
   return "border-[#FFD230] bg-[#FFFBEB] text-[#BB4D00]";
-}
-
-export function OverviewCard({
-  caption,
-  icon: Icon,
-  subtitle,
-  title,
-}: OverviewCardProps) {
-  return (
-    <article className="flex min-h-[146px] flex-col justify-center rounded-[8px] border border-[#DBDEE1] bg-white px-6 py-5">
-      <div className="flex items-center gap-2 text-[#737373]">
-        <Icon className="h-5 w-5" />
-        <p className="text-[14px] leading-5 font-medium">{title}</p>
-      </div>
-      <p className="mt-4 text-[48px] leading-[0.9] font-bold text-[#0A0A0A]">
-        {caption}
-      </p>
-      <p className="mt-2 text-[12px] leading-4 text-[#737373]">{subtitle}</p>
-    </article>
-  );
 }

@@ -7,6 +7,8 @@ type EmployeeRow = {
 	email: string;
 	employmentStatus: string;
 	hireDate: string;
+	lateArrivalCount: number | null;
+	okrSubmitted: boolean | number | null;
 	role: string;
 	responsibilityLevel: number | null;
 };
@@ -38,6 +40,11 @@ export function mapEmployeeRecord(record: EmployeeRow): Employee {
 		email: record.email,
 		employmentStatus: record.employmentStatus,
 		hireDate: record.hireDate,
+		lateArrivalCount:
+			typeof record.lateArrivalCount === 'number' && Number.isFinite(record.lateArrivalCount)
+				? record.lateArrivalCount
+				: 0,
+		okrSubmitted: record.okrSubmitted === true || Number(record.okrSubmitted) === 1,
 		position: record.role,
 		responsibilityLevel: normalizedResponsibilityLevel,
 	};

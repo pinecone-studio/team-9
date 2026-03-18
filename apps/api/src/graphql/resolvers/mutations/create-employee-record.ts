@@ -32,6 +32,8 @@ export async function createEmployeeRecord(DB: D1Database, args: MutationCreateE
 		email: args.email,
 		employmentStatus: 'active',
 		hireDate: now,
+		lateArrivalCount: 0,
+		okrSubmitted: false,
 		position: args.position,
 		responsibilityLevel: 1,
 	};

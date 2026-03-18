@@ -1,6 +1,14 @@
-import type { EmployeeBenefitRequestsQuery } from "@/shared/apollo/generated";
+import type {
+  EmployeeBenefitDialogQuery,
+  EmployeeBenefitRequestsQuery,
+} from "@/shared/apollo/generated";
 
-export type PendingBenefitRequest = EmployeeBenefitRequestsQuery["benefitRequests"][number];
+type BenefitRequestRecord =
+  | EmployeeBenefitDialogQuery["benefitRequests"][number]
+  | EmployeeBenefitRequestsQuery["benefitRequests"][number];
+
+export type ActiveBenefitRequest = BenefitRequestRecord;
+export type PendingBenefitRequest = BenefitRequestRecord;
 
 export type BenefitTimelineItem = {
   id: string;
@@ -33,21 +41,36 @@ export function formatApprovalRoleLabel(role: PendingBenefitRequest["approval_ro
   return role === "finance_manager" ? "Finance" : "HR";
 }
 
-export function findPendingBenefitRequest(
-  requests: EmployeeBenefitRequestsQuery["benefitRequests"],
+function findBenefitRequest(
+  requests: readonly BenefitRequestRecord[],
   benefitId: string,
+  statuses: readonly string[],
 ) {
-  const pendingRequests = requests
+  const matchingRequests = requests
     .filter((request) => {
       const normalizedStatus = request.status.trim().toLowerCase();
-      return normalizedStatus === "pending" && request.benefit.id === benefitId;
+      return statuses.includes(normalizedStatus) && request.benefit.id === benefitId;
     })
     .sort(
       (left, right) =>
         new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
     );
 
-  return pendingRequests[0] ?? null;
+  return matchingRequests[0] ?? null;
+}
+
+export function findApprovedBenefitRequest(
+  requests: readonly BenefitRequestRecord[],
+  benefitId: string,
+) {
+  return findBenefitRequest(requests, benefitId, ["approved"]);
+}
+
+export function findPendingBenefitRequest(
+  requests: readonly BenefitRequestRecord[],
+  benefitId: string,
+) {
+  return findBenefitRequest(requests, benefitId, ["pending"]);
 }
 
 export function buildPendingTimelineItems(
@@ -67,15 +90,47 @@ export function buildPendingTimelineItems(
     {
       id: `${request.id}-review`,
       label: `Sent for ${formatApprovalRoleLabel(request.approval_role)} review`,
-      timestamp: formatDialogDateTime(request.updated_at || request.created_at),
+      timestamp: formatDialogDateTime(request.created_at),
       tone: "warning",
     },
   ];
 }
 
-export function buildContractAgreementNote(request: PendingBenefitRequest | null) {
+export function buildActiveTimelineItems(
+  request: ActiveBenefitRequest | null,
+): BenefitTimelineItem[] {
   if (!request) {
-    return "This agreement was locked when the request was submitted.";
+    return [];
+  }
+
+  return [
+    {
+      id: `${request.id}-submitted`,
+      label: "Request submitted",
+      timestamp: formatDialogDateTime(request.created_at),
+      tone: "neutral",
+    },
+    {
+      id: `${request.id}-review`,
+      label: `Sent for ${formatApprovalRoleLabel(request.approval_role)} review`,
+      timestamp: formatDialogDateTime(request.created_at),
+      tone: "warning",
+    },
+    {
+      id: `${request.id}-approved`,
+      label: `Approved by ${formatApprovalRoleLabel(request.approval_role)}`,
+      timestamp: formatDialogDateTime(request.updated_at || request.created_at),
+      tone: "neutral",
+    },
+  ];
+}
+
+export function buildContractAgreementNote(
+  request: PendingBenefitRequest | ActiveBenefitRequest | null,
+  fallback = "This agreement was locked when the request was submitted.",
+) {
+  if (!request) {
+    return fallback;
   }
 
   const details = [];
@@ -87,5 +142,5 @@ export function buildContractAgreementNote(request: PendingBenefitRequest | null
     details.push(`Version ${request.contractVersionAccepted}`);
   }
 
-  return details.join(" • ") || "This agreement was locked when the request was submitted.";
+  return details.join(" • ") || fallback;
 }

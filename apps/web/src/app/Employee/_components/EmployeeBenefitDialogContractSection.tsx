@@ -75,7 +75,7 @@ export default function EmployeeBenefitDialogContractSection({
         >
           <input
             checked={acceptedContract}
-            className="mt-0.5 h-4 w-4 rounded-[2px] border border-[#D1D5DB]"
+            className="mt-0.5 h-4 w-4 rounded-[2px] border border-[#D1D5DB] accent-black disabled:cursor-not-allowed disabled:opacity-100"
             disabled={agreementDisabled}
             onChange={(event) => onAcceptedContractChange?.(event.target.checked)}
             type="checkbox"

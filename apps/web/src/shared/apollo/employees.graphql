@@ -83,7 +83,7 @@ query EmployeeBenefitRequests($employeeId: ID!) {
   }
 }
 
-query EmployeeBenefitDialog($benefitId: ID!) {
+query EmployeeBenefitDialog($benefitId: ID!, $employeeId: ID!) {
   benefitContract(benefitId: $benefitId) {
     id
     vendorName
@@ -103,6 +103,32 @@ query EmployeeBenefitDialog($benefitId: ID!) {
     value
     default_unit
     priority
+  }
+  benefitRequests(employeeId: $employeeId, benefitId: $benefitId) {
+    id
+    status
+    contractVersionAccepted
+    contractAcceptedAt
+    created_at
+    updated_at
+    approval_role
+    employee {
+      id
+      name
+      email
+      position
+    }
+    benefit {
+      id
+      title
+      category
+    }
+    reviewed_by {
+      id
+      name
+      email
+      position
+    }
   }
 }
 

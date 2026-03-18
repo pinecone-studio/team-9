@@ -1,14 +1,17 @@
 "use client";
 import {
   useEmployeeBenefitDialogQuery,
-  useEmployeeBenefitRequestsQuery,
 } from "@/shared/apollo/generated";
+import EmployeeActiveBenefitDialogContent from "./EmployeeActiveBenefitDialogContent";
 import EmployeeBenefitDialogLayout from "./EmployeeBenefitDialogLayout";
 import EmployeeEligibleBenefitDialogContent from "./EmployeeEligibleBenefitDialogContent";
 import EmployeeLockedBenefitDialogContent from "./EmployeeLockedBenefitDialogContent";
 import EmployeePendingBenefitDialogContent from "./EmployeePendingBenefitDialogContent";
 import { buildBenefitDialogRuleItems } from "./employee-benefit-dialog.helpers";
-import { findPendingBenefitRequest } from "./employee-benefit-request.helpers";
+import {
+  findApprovedBenefitRequest,
+  findPendingBenefitRequest,
+} from "./employee-benefit-request.helpers";
 import type { EmployeeBenefitCard } from "./employee-types";
 import { useEmployeeBenefitDialogActions } from "./useEmployeeBenefitDialogActions";
 
@@ -27,22 +30,19 @@ export default function EmployeeBenefitDialog({
   onClose,
   onSubmitted,
 }: EmployeeBenefitDialogProps) {
+  const isActive = card.status === "Active";
   const isPending = card.status === "Pending";
   const isLocked = card.status === "Locked";
   const { data, error, loading } = useEmployeeBenefitDialogQuery({
     fetchPolicy: "network-only",
-    variables: { benefitId: card.id },
+    variables: { benefitId: card.id, employeeId },
   });
-  const { data: requestsData, error: requestsError, loading: requestsLoading } =
-    useEmployeeBenefitRequestsQuery({
-      fetchPolicy: "network-only",
-      skip: !isPending,
-      variables: { employeeId },
-    });
   const contract = data?.benefitContract ?? null;
   const eligibilityItems = buildBenefitDialogRuleItems(card, data?.eligibilityRules ?? []);
+  const benefitRequests = data?.benefitRequests ?? [];
+  const approvedRequest = findApprovedBenefitRequest(benefitRequests, card.id);
   const pendingRequest = findPendingBenefitRequest(
-    requestsData?.benefitRequests ?? [],
+    benefitRequests,
     card.id,
   );
   const {
@@ -67,11 +67,22 @@ export default function EmployeeBenefitDialog({
   const isSubmitDisabled = loading || submitting || (card.requiresContract && !acceptedContract);
 
   const resolvedErrorMessage =
-    errorMessage ?? error?.message ?? requestsError?.message ?? null;
+    errorMessage ?? error?.message ?? null;
 
   return (
     <EmployeeBenefitDialogLayout card={card} onClose={onClose}>
-      {isPending ? (
+      {isActive ? (
+        <EmployeeActiveBenefitDialogContent
+          contract={contract}
+          contractLoading={contractLoading}
+          errorMessage={resolvedErrorMessage}
+          loading={loading}
+          onViewContract={() => void handleViewContract()}
+          request={approvedRequest}
+          requiresContract={card.requiresContract}
+          ruleItems={eligibilityItems}
+        />
+      ) : isPending ? (
         <EmployeePendingBenefitDialogContent
           cancelling={cancelling}
           contract={contract}
@@ -81,7 +92,7 @@ export default function EmployeeBenefitDialog({
           onCancel={() => void handleCancel()}
           onViewContract={() => void handleViewContract()}
           request={pendingRequest}
-          requestLoading={requestsLoading}
+          requestLoading={loading}
           requiresContract={card.requiresContract}
           ruleItems={eligibilityItems}
         />

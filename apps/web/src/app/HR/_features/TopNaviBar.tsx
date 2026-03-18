@@ -1,10 +1,7 @@
 "use client";
 
-import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import type { ComponentType, SVGProps } from "react";
+import { useEffect, useMemo } from "react";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 
 import AuditLogsIcon from "../_icons/AuditLogs";
@@ -14,6 +11,14 @@ import DashboardIcon from "../_icons/Dashboard";
 import EligibilityRulesIcon from "../_icons/EligibilityRules";
 import EmployeesIcon from "../_icons/Employees";
 import RequestsIcon from "../_icons/Requests";
+import TopNavLinkItem, { type NavigationItem } from "./TopNavLinkItem";
+import {
+  ContractsNavActivityDocument,
+  getStoredContractsLastSeenAt,
+  isContractRelatedActivity,
+  storeContractsLastSeenAt,
+  type ContractsNavActivityData,
+} from "./top-nav.contracts-activity";
 
 export type HrNavKey =
   | "dashboard"
@@ -23,14 +28,6 @@ export type HrNavKey =
   | "eligibility-rules"
   | "audit-logs"
   | "contracts";
-
-type NavigationItem = {
-  hasNotification?: boolean;
-  href: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
-  key: HrNavKey;
-  label: string;
-};
 
 const navigationItems = [
   {
@@ -82,39 +79,7 @@ type TopNaviBarProps = {
   activeKey: HrNavKey;
 };
 
-const CONTRACTS_LAST_SEEN_KEY = "hr_contracts_last_seen_at";
-
-const ContractsNavActivityDocument = gql`
-  query ContractsNavActivity {
-    listAuditLogEntries {
-      id
-      entityType
-      action
-      metadata
-      createdAt
-    }
-  }
-`;
-
-type ContractsNavActivityEntry = {
-  action: string;
-  createdAt: string;
-  entityType: string;
-  id: string;
-  metadata?: string | null;
-};
-
-type ContractsNavActivityData = {
-  listAuditLogEntries: ContractsNavActivityEntry[];
-};
-
-function isContractRelatedActivity(entry: ContractsNavActivityEntry) {
-  const searchableText = `${entry.entityType} ${entry.action} ${entry.metadata ?? ""}`;
-  return /contract/i.test(searchableText);
-}
-
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
-  const [lastSeenContractChangeAt, setLastSeenContractChangeAt] = useState(0);
   const { data } = useQuery<ContractsNavActivityData>(ContractsNavActivityDocument, {
     fetchPolicy: "cache-and-network",
     pollInterval: 30000,
@@ -139,67 +104,35 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
   }, [data]);
 
   useEffect(() => {
-    const storedValue =
-      typeof window !== "undefined" ? window.localStorage.getItem(CONTRACTS_LAST_SEEN_KEY) : null;
-    const parsedValue = Number(storedValue);
-
-    if (!Number.isNaN(parsedValue) && parsedValue > 0) {
-      setLastSeenContractChangeAt(parsedValue);
-    }
-  }, []);
-
-  useEffect(() => {
     if (activeKey !== "contracts") {
       return;
     }
 
     const seenAt = latestContractChangeAt || Date.now();
-    setLastSeenContractChangeAt(seenAt);
-    window.localStorage.setItem(CONTRACTS_LAST_SEEN_KEY, String(seenAt));
+    storeContractsLastSeenAt(seenAt);
   }, [activeKey, latestContractChangeAt]);
 
+  const lastSeenContractChangeAt = getStoredContractsLastSeenAt();
   const shouldShowContractsDot =
-    latestContractChangeAt > 0 && latestContractChangeAt > lastSeenContractChangeAt;
+    activeKey !== "contracts" &&
+    latestContractChangeAt > 0 &&
+    latestContractChangeAt > lastSeenContractChangeAt;
 
   return (
     <div className="h-[78px] w-full max-w-[860px] rounded-2xl border border-[#e6e1e1] bg-white px-6 font-sans shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
       <div className="flex h-full items-center gap-6">
         <nav aria-label="HR sections" className="min-w-0 flex-1 overflow-hidden">
           <ul className="flex w-full items-start justify-between gap-2">
-            {navigationItems.map(
-              ({ hasNotification, href, icon: Icon, key, label }) => {
-              const isActive = activeKey === key;
-
-              return (
-                <li key={key} className="flex h-[54px] min-w-0 flex-1 items-center">
-                  <Link
-                    aria-current={isActive ? "page" : undefined}
-                    className={`group relative isolate flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl text-[12px] leading-none whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
-                      isActive
-                        ? "text-slate-950"
-                        : "text-slate-500 hover:text-slate-700"
-                    }`}
-                    href={href}
-                  >
-                    <span className="flex h-7 items-center justify-center">
-                      <Icon
-                        className={`transition-colors ${
-                          isActive
-                            ? "h-[34px] w-[34px] text-slate-950"
-                            : "h-6 w-6 text-slate-500 group-hover:text-slate-700"
-                        }`}
-                      />
-                    </span>
-                    <span className={isActive ? "font-semibold" : "font-medium"}>
-                      {label}
-                    </span>
-                    {(key === "contracts" ? shouldShowContractsDot : hasNotification) ? (
-                      <span className="absolute top-0 right-2 h-2.5 w-2.5 rounded-full bg-[#EF4444]" />
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            })}
+            {navigationItems.map((item) => (
+              <TopNavLinkItem
+                activeKey={activeKey}
+                item={item}
+                key={item.key}
+                showNotificationDot={
+                  item.key === "contracts" ? shouldShowContractsDot : Boolean(item.hasNotification)
+                }
+              />
+            ))}
           </ul>
         </nav>
 

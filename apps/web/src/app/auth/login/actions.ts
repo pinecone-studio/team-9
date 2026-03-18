@@ -6,28 +6,46 @@ import {
   UNAUTHORIZED_EMAIL_MESSAGE,
 } from "./messages";
 
-export async function verifyWorkEmailAccess(email: string) {
+type VerifyWorkEmailAccessResult =
+  | {
+      normalizedEmail: string;
+      ok: true;
+    }
+  | {
+      message: string;
+      ok: false;
+    };
+
+export async function verifyWorkEmailAccess(
+  email: string,
+): Promise<VerifyWorkEmailAccessResult> {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!normalizedEmail) {
-    throw new Error("Enter your work email.");
+    return {
+      message: "Enter your work email.",
+      ok: false,
+    };
   }
 
   try {
     const employee = await getEmployeeRecordByEmail(normalizedEmail);
 
     if (!employee) {
-      throw new Error(UNAUTHORIZED_EMAIL_MESSAGE);
+      return {
+        message: UNAUTHORIZED_EMAIL_MESSAGE,
+        ok: false,
+      };
     }
 
     return {
       normalizedEmail: employee.email.trim().toLowerCase(),
+      ok: true,
     };
-  } catch (error) {
-    if (error instanceof Error && error.message === UNAUTHORIZED_EMAIL_MESSAGE) {
-      throw error;
-    }
-
-    throw new Error(EMAIL_LOOKUP_FAILURE_MESSAGE);
+  } catch {
+    return {
+      message: EMAIL_LOOKUP_FAILURE_MESSAGE,
+      ok: false,
+    };
   }
 }

@@ -121,7 +121,14 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const { normalizedEmail } = await verifyWorkEmailAccess(emailAddress);
+      const accessResult = await verifyWorkEmailAccess(emailAddress);
+
+      if (!accessResult.ok) {
+        setErrorMessage(accessResult.message);
+        return;
+      }
+
+      const { normalizedEmail } = accessResult;
 
       try {
         await startSignInCodeFlow(normalizedEmail);

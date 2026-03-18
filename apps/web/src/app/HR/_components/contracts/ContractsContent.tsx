@@ -73,7 +73,6 @@ export default function ContractsContent() {
     ],
     [contractRows],
   );
-  const kpiCards = useMemo(() => buildContractKpiCards(contractRows), [contractRows]);
 
   return (
     <section className="flex w-full max-w-[1280px] flex-col items-start gap-5 py-6">

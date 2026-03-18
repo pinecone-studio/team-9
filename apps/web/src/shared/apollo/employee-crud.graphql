@@ -1,0 +1,44 @@
+mutation CreateEmployeeRecord($input: CreateEmployeeInput!) {
+  createEmployee(input: $input) {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
+  }
+}
+
+mutation UpdateEmployeeRecord($input: UpdateEmployeeInput!) {
+  updateEmployee(input: $input) {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
+  }
+}
+
+mutation DeleteEmployeeRecord($id: ID!) {
+  deleteEmployee(id: $id) {
+    id
+    name
+    email
+    position
+    department
+    employmentStatus
+    hireDate
+    responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
+  }
+}

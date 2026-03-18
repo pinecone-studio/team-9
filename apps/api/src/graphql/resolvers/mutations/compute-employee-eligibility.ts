@@ -11,6 +11,26 @@ import { buildEmployeeMetrics } from '../../../utils/build-employee-metrics';
 import { evaluateBenefit } from '../../../utils/eveluate-benefit';
 import type { Operator, RuleType } from '../../generated/resolvers-types';
 
+type ExistingEligibilityRow = {
+	overrideBy: string | null;
+	overrideExpiresAt: string | null;
+	status: string;
+};
+
+function hasActiveOverride(record: ExistingEligibilityRow | undefined) {
+	if (!record?.overrideBy) {
+		return false;
+	}
+
+	if (!record.overrideExpiresAt) {
+		return true;
+	}
+
+	const expiresAt = Date.parse(record.overrideExpiresAt);
+
+	return Number.isFinite(expiresAt) && expiresAt > Date.now();
+}
+
 export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string): Promise<void> => {
 	try {
 		const db = getDb(env);
@@ -31,8 +51,30 @@ export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string)
 		});
 
 		const benefitList = await db.select().from(benefits);
+		const existingEligibilityRows = await db
+			.select({
+				benefitId: benefitEligibility.benefitId,
+				overrideBy: benefitEligibility.overrideBy,
+				overrideExpiresAt: benefitEligibility.overrideExpiresAt,
+				status: benefitEligibility.status,
+			})
+			.from(benefitEligibility)
+			.where(eq(benefitEligibility.employeeId, employeeId));
+		const existingEligibilityByBenefit = new Map(
+			existingEligibilityRows.map((row) => [row.benefitId, row]),
+		);
 
 		for (const benefit of benefitList) {
+			const existingEligibility = existingEligibilityByBenefit.get(benefit.id);
+			const shouldPreserveStatus =
+				existingEligibility?.status === 'active' ||
+				existingEligibility?.status === 'pending' ||
+				hasActiveOverride(existingEligibility);
+
+			if (shouldPreserveStatus) {
+				continue;
+			}
+
 			const assignedRules = await db
 				.select({
 					id: benefitRules.id,
@@ -83,6 +125,9 @@ export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string)
 						status: evaluation.status,
 						ruleEvaluationJson: JSON.stringify(evaluation.results),
 						computedAt: new Date().toISOString(),
+						overrideBy: null,
+						overrideExpiresAt: null,
+						overrideReason: null,
 					},
 				});
 		}

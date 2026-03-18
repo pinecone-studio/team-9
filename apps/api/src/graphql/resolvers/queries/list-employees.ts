@@ -16,6 +16,8 @@ export async function listEmployees(DB: D1Database): Promise<Employee[]> {
 			email: employees.email,
 			employmentStatus: employees.employmentStatus,
 			hireDate: employees.hireDate,
+			lateArrivalCount: employees.lateArrivalCount,
+			okrSubmitted: employees.okrSubmitted,
 			role: employees.role,
 			responsibilityLevel: employees.responsibilityLevel,
 		})

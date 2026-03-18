@@ -21,6 +21,8 @@ export async function getEmployeeByEmail(DB: D1Database, email: string): Promise
 			email: employees.email,
 			employmentStatus: employees.employmentStatus,
 			hireDate: employees.hireDate,
+			lateArrivalCount: employees.lateArrivalCount,
+			okrSubmitted: employees.okrSubmitted,
 			role: employees.role,
 			responsibilityLevel: employees.responsibilityLevel,
 		})

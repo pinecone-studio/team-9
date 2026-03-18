@@ -8,6 +8,8 @@ export const typeDefs = /* GraphQL */ `
     employmentStatus: String!
     hireDate: String!
     responsibilityLevel: Int!
+    okrSubmitted: Boolean!
+    lateArrivalCount: Int!
     benefits: [Benefit]
   }
 
@@ -35,6 +37,10 @@ export const typeDefs = /* GraphQL */ `
     status: String!
     ruleEvaluationJson: String!
     computedAt: String!
+    failedRuleMessages: [String!]!
+    overrideBy: ID
+    overrideReason: String
+    overrideExpiresAt: String
   }
 
   type Contract {
@@ -395,6 +401,13 @@ export const typeDefs = /* GraphQL */ `
     cancelledBy: String!
   }
 
+  input OverrideEmployeeBenefitEligibilityInput {
+    employeeId: ID!
+    benefitId: ID
+    overrideBy: String!
+    reason: String
+  }
+
   type Query {
     employees: [Employee]
     employee(id: ID!): Employee
@@ -432,6 +445,9 @@ export const typeDefs = /* GraphQL */ `
     reviewBenefitRequest(input: ReviewBenefitRequestInput!): BenefitRequest!
     submitEmployeeBenefitRequest(input: SubmitEmployeeBenefitRequestInput!): BenefitRequest!
     cancelEmployeeBenefitRequest(input: CancelEmployeeBenefitRequestInput!): BenefitRequest!
+    overrideEmployeeBenefitEligibility(
+      input: OverrideEmployeeBenefitEligibilityInput!
+    ): [BenefitEligibility!]!
     setBenefitStatus(input: SetBenefitStatusInput!): Benefit!
     deleteBenefit(id: ID!): Boolean!
     createBenefitCategory(name: String!): BenefitCategory!

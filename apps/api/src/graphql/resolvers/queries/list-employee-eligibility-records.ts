@@ -1,11 +1,52 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 
 import { getDb } from '../../../db';
 import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
+import { benefitRules } from '../../../db/schema/benefit-rules';
 import { benefitCategories } from '../../../db/schema/benefit-categories';
 import { benefits } from '../../../db/schema/benefits';
+import { rules } from '../../../db/schema/rules';
 import { mapBenefitRecord } from '../../../utils/mappers';
 import type { BenefitEligibility } from '../../generated/resolvers-types';
+
+type EvaluationResult = {
+	passed?: boolean;
+};
+
+type RuleMetadata = {
+	errorMessage: string;
+};
+
+function getFailedRuleMessages(
+	isCoreBenefit: boolean,
+	ruleEvaluationJson: string,
+	ruleMetadata: RuleMetadata[],
+): string[] {
+	try {
+		const evaluationResults = JSON.parse(ruleEvaluationJson) as EvaluationResult[];
+		const failedMessages = evaluationResults.flatMap((result, index) => {
+			if (result.passed !== false) {
+				return [];
+			}
+
+			const rule = ruleMetadata[index];
+
+			if (rule?.errorMessage) {
+				return [rule.errorMessage];
+			}
+
+			if (isCoreBenefit && index === 0) {
+				return ['Employee must not be terminated to stay eligible for this benefit.'];
+			}
+
+			return ['This benefit is currently locked by an eligibility rule.'];
+		});
+
+		return Array.from(new Set(failedMessages));
+	} catch {
+		return [];
+	}
+}
 
 export async function listEmployeeEligibilityRecords(DB: D1Database, employeeId: string): Promise<BenefitEligibility[]> {
 	try {
@@ -27,12 +68,40 @@ export async function listEmployeeEligibilityRecords(DB: D1Database, employeeId:
 				status: benefitEligibility.status,
 				ruleEvaluationJson: benefitEligibility.ruleEvaluationJson,
 				computedAt: benefitEligibility.computedAt,
+				overrideBy: benefitEligibility.overrideBy,
+				overrideExpiresAt: benefitEligibility.overrideExpiresAt,
+				overrideReason: benefitEligibility.overrideReason,
+				isCore: benefits.isCore,
 			})
 			.from(benefitEligibility)
 			.innerJoin(benefits, eq(benefits.id, benefitEligibility.benefitId))
 			.leftJoin(benefitCategories, eq(benefitCategories.id, benefits.categoryId))
 			.where(eq(benefitEligibility.employeeId, employeeId))
 			.orderBy(asc(benefits.name));
+
+		if (rows.length === 0) {
+			return [];
+		}
+
+		const benefitIds = Array.from(new Set(rows.map((row) => row.id)));
+		const ruleRows = await db
+			.select({
+				benefitId: benefitRules.benefitId,
+				errorMessage: benefitRules.errorMessage,
+				priority: benefitRules.priority,
+			})
+			.from(benefitRules)
+			.innerJoin(rules, eq(rules.id, benefitRules.ruleId))
+			.where(inArray(benefitRules.benefitId, benefitIds))
+			.orderBy(asc(benefitRules.benefitId), asc(benefitRules.priority));
+		const ruleMetadataByBenefit = new Map<string, RuleMetadata[]>();
+
+		ruleRows.forEach((rule) => {
+			const currentRules = ruleMetadataByBenefit.get(rule.benefitId) ?? [];
+
+			currentRules.push({ errorMessage: rule.errorMessage });
+			ruleMetadataByBenefit.set(rule.benefitId, currentRules);
+		});
 
 		return rows.map((row) => ({
 			benefit: mapBenefitRecord({
@@ -51,6 +120,14 @@ export async function listEmployeeEligibilityRecords(DB: D1Database, employeeId:
 			status: row.status,
 			ruleEvaluationJson: row.ruleEvaluationJson,
 			computedAt: row.computedAt,
+			failedRuleMessages: getFailedRuleMessages(
+				row.isCore,
+				row.ruleEvaluationJson,
+				ruleMetadataByBenefit.get(String(row.id)) ?? [],
+			),
+			overrideBy: row.overrideBy,
+			overrideExpiresAt: row.overrideExpiresAt,
+			overrideReason: row.overrideReason,
 		}));
 	} catch (error) {
 		throw new Error(

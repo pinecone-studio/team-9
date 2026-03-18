@@ -5,21 +5,18 @@ import {
   CalendarDays,
   ClipboardList,
   Edit3,
-  History,
   type LucideIcon,
   ShieldCheck,
 } from "lucide-react";
 import type {
   EmployeeDirectoryBenefit,
   EmployeeDirectoryEmployee,
-  EmployeeDirectoryRequest,
 } from "@/shared/graphql/employee-directory-dialog-utils";
 import {
   formatDateLabel,
   formatStatusLabel,
   getBooleanSignalClass,
   getProbationSignal,
-  getRequestStatusClass,
   getTenureLabel,
   groupBenefitsByStatus,
 } from "@/shared/graphql/employee-directory-dialog-utils";
@@ -27,10 +24,6 @@ import {
 type EmployeeDirectoryDialogOverviewProps = {
   benefits: EmployeeDirectoryBenefit[];
   employee: EmployeeDirectoryEmployee;
-  onBulkOverride: () => void;
-  overrideDisabled: boolean;
-  overridingAll: boolean;
-  requests: EmployeeDirectoryRequest[];
 };
 
 function SectionTitle({
@@ -68,13 +61,8 @@ function SummaryCard({
 export default function EmployeeDirectoryDialogOverview({
   benefits,
   employee,
-  onBulkOverride,
-  overrideDisabled,
-  overridingAll,
-  requests,
 }: EmployeeDirectoryDialogOverviewProps) {
   const groupedBenefits = groupBenefitsByStatus(benefits);
-  const latestRequests = requests.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -119,39 +107,6 @@ export default function EmployeeDirectoryDialogOverview({
           <SummaryCard accentClassName="text-[#E7000B]" label="Locked" value={groupedBenefits.locked.length} />
           <SummaryCard accentClassName="text-[#E17100]" label="Pending" value={groupedBenefits.pending.length} />
         </div>
-      </section>
-
-      <section className="space-y-4 border-t border-[#E5E5E5] pt-6">
-        <SectionTitle icon={ShieldCheck} title="Admin Actions" />
-        <button
-          className="inline-flex items-center gap-2 rounded-[8px] border border-[#E5E5E5] bg-white px-4 py-2 text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={overrideDisabled}
-          onClick={onBulkOverride}
-          type="button"
-        >
-          <ShieldCheck className="h-4 w-4" />
-          {overridingAll ? "Overriding..." : "Override Eligibility"}
-        </button>
-      </section>
-
-      <section className="space-y-4 border-t border-[#E5E5E5] pt-6">
-        <SectionTitle icon={History} title="Recent User Actions" />
-        {latestRequests.length === 0 ? (
-          <div className="rounded-[8px] border border-dashed border-[#E5E5E5] px-4 py-6 text-center text-[14px] leading-5 text-[#737373]">
-            No user actions recorded yet.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {latestRequests.map((request) => (
-              <article className="rounded-[8px] border border-[#E5E5E5] px-4 py-3" key={request.id}>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div><p className="text-[14px] leading-5 font-medium text-[#0A0A0A]">{request.benefit.title}</p><p className="text-[12px] leading-4 text-[#737373]">{formatDateLabel(request.created_at)}</p></div>
-                  <span className={`rounded-[4px] px-2 py-1 text-[12px] leading-4 font-medium ${getRequestStatusClass(request.status)}`}>{formatStatusLabel(request.status)}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );

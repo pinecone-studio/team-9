@@ -34,6 +34,27 @@ export function formatDateLabel(value: string) {
   }).format(parsedDate);
 }
 
+export function formatDateTimeLabel(value: string) {
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Unknown";
+  }
+
+  const datePart = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(parsedDate);
+  const timePart = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+  }).format(parsedDate);
+
+  return `${datePart} at ${timePart}`;
+}
+
 export function formatStatusLabel(value: string) {
   return value
     .split(/[_\s]+/)
@@ -90,6 +111,32 @@ export function getRequestStatusClass(status: string) {
   }
 
   return "bg-[#FEF2F2] text-[#C10007]";
+}
+
+export function summarizeRequestAction(request: EmployeeDirectoryRequest) {
+  const benefitTitle = request.benefit.title;
+  const normalizedStatus = normalizeStatus(request.status);
+
+  if (normalizedStatus === "approved") {
+    return `Benefit request approved ${benefitTitle}`;
+  }
+
+  if (normalizedStatus === "rejected") {
+    return `Benefit request rejected ${benefitTitle}`;
+  }
+
+  if (normalizedStatus === "cancelled") {
+    return `Benefit request cancelled ${benefitTitle}`;
+  }
+
+  return `Benefit request submitted ${benefitTitle}`;
+}
+
+export function normalizeRequestActor(
+  request: EmployeeDirectoryRequest,
+  employeeName: string,
+) {
+  return request.reviewed_by?.name?.trim() || employeeName;
 }
 
 export function groupBenefitsByStatus(benefits: EmployeeDirectoryBenefit[]) {

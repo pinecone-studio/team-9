@@ -9,6 +9,7 @@ import {
 import type { Employee } from "@/shared/apollo/types";
 import EmployeeDirectoryDialogBenefits from "@/shared/graphql/employee-directory-dialog-benefits";
 import EmployeeDirectoryDialogOverview from "@/shared/graphql/employee-directory-dialog-overview";
+import EmployeeDirectoryDialogRecentActions from "@/shared/graphql/employee-directory-dialog-recent-actions";
 import { formatStatusLabel } from "@/shared/graphql/employee-directory-dialog-utils";
 import { getStatusBadgeTone } from "@/shared/graphql/employees-page-view-utils";
 
@@ -130,16 +131,18 @@ export default function EmployeeDirectoryDialog({
                 <EmployeeDirectoryDialogOverview
                   benefits={employeeBenefits}
                   employee={dialogEmployee}
-                  onBulkOverride={() => void handleOverride()}
-                  overrideDisabled={overrideDisabled}
-                  overridingAll={overridingKey === BULK_OVERRIDE_KEY}
-                  requests={benefitRequests}
                 />
                 <EmployeeDirectoryDialogBenefits
                   benefits={employeeBenefits}
+                  onBulkOverride={() => void handleOverride()}
                   onOverrideBenefit={(benefitId) => void handleOverride(benefitId)}
                   overrideDisabled={overrideDisabled}
+                  overridingAll={overridingKey === BULK_OVERRIDE_KEY}
                   overridingBenefitId={overridingKey}
+                />
+                <EmployeeDirectoryDialogRecentActions
+                  employeeName={dialogEmployee.name}
+                  requests={benefitRequests}
                 />
               </div>
             )}

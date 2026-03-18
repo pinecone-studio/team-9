@@ -5,6 +5,7 @@ import { approvalRequests } from '../../../db/schema/approval-requests';
 import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
 import { benefits } from '../../../db/schema/benefits';
 import { contracts } from '../../../db/schema/contracts';
+import { employees } from '../../../db/schema/employees';
 import { deleteFromR2 } from '../../../lib/r2';
 import {
 	ApprovalRequestStatus,
@@ -19,6 +20,7 @@ import {
 } from '../../generated/resolvers-types';
 import { mapApprovalRequest } from '../approval-request-mappers';
 import { applyCreateBenefit, applyUpdateBenefit } from './benefit-service';
+import { computeEmployeeEligibility } from './compute-employee-eligibility';
 import { deleteRuleDefinition } from './delete-rule-definition';
 import { applyCreateRuleDefinition, applyUpdateRuleDefinition } from './rule-definition-service';
 
@@ -120,6 +122,15 @@ async function createBenefitContractRecord(
 	});
 
 	await db.update(benefits).set({ activeContractId: contractId }).where(eq(benefits.id, benefitId));
+}
+
+async function recomputeAllEmployeeEligibility(DB: D1Database) {
+	const db = getDb({ DB });
+	const employeeRows = await db.select({ id: employees.id }).from(employees);
+
+	for (const employee of employeeRows) {
+		await computeEmployeeEligibility({ DB }, employee.id);
+	}
 }
 
 export async function reviewApprovalRequest(
@@ -268,6 +279,8 @@ export async function reviewApprovalRequest(
           }
           await createBenefitContractRecord(env.DB, entityId, vendorName, benefitPayload.contractUpload);
         }
+
+        await recomputeAllEmployeeEligibility(env.DB);
       }
     }
   } else if (existing.entityType === ApprovalEntityType.Benefit) {

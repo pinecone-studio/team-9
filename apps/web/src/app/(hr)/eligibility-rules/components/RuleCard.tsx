@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 
 import type { RuleCardModel } from "../types";
+import { formatRelativeTimestamp } from "@/app/(hr)/requests/components/approval-request-time-formatters";
 
 type RuleCardProps = RuleCardModel & {
   onEdit?: () => void;
+  onOpenRequest?: (requestId: string) => void;
 };
 
 export default function RuleCard({
@@ -16,26 +18,44 @@ export default function RuleCard({
   metricValue,
   name,
   onEdit,
+  onOpenRequest,
+  pendingRequest,
   usageCount,
 }: RuleCardProps) {
   const [showUsage, setShowUsage] = useState(false);
 
   return (
-    <article className="flex h-[196px] w-full min-w-0 flex-col items-start justify-center gap-[14px] rounded-[8px] border border-[#DBDEE1] bg-white p-4 xl:max-w-[420px]">
-      <div className="flex h-6 w-full items-center justify-between">
-        <div className="flex h-6 min-w-0 flex-1 items-center">
-          <h3 className="truncate text-[16px] leading-[21px] font-semibold text-[#060B10]">
-            {name}
-          </h3>
+    <article className={`flex h-[196px] w-full min-w-0 flex-col items-start justify-center gap-[14px] rounded-[8px] border bg-white p-4 xl:max-w-[420px] ${
+      pendingRequest ? "border-[#FACC15] bg-[#FFFDF5]" : "border-[#DBDEE1]"
+    }`}>
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex h-6 w-full items-center justify-between">
+          <div className="flex h-6 min-w-0 flex-1 items-center">
+            <h3 className="truncate text-[16px] leading-[21px] font-semibold text-[#060B10]">
+              {name}
+            </h3>
+            <button
+              className="ml-2 flex h-6 shrink-0 items-center justify-center gap-1 rounded-[2px] px-[13px] pr-[13px] pl-2 text-[#5D5D5D]"
+              onClick={onEdit}
+              type="button"
+            >
+              <Pencil className="h-4 w-4" />
+              <span className="text-[14px] leading-[18px] font-medium">edit</span>
+            </button>
+          </div>
+        </div>
+        {pendingRequest ? (
           <button
-            className="ml-2 flex h-6 shrink-0 items-center justify-center gap-1 rounded-[2px] px-[13px] pr-[13px] pl-2 text-[#5D5D5D]"
-            onClick={onEdit}
+            className="inline-flex items-center gap-2 rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-3 py-1 text-left text-[12px] leading-4 font-medium text-[#92400E]"
+            onClick={() => onOpenRequest?.(pendingRequest.id)}
             type="button"
           >
-            <Pencil className="h-4 w-4" />
-            <span className="text-[14px] leading-[18px] font-medium">edit</span>
+            <span>Pending {pendingRequest.actionType} approval</span>
+            <span className="text-[#A16207]">
+              {formatRelativeTimestamp(pendingRequest.createdAt)}
+            </span>
           </button>
-        </div>
+        ) : null}
       </div>
       <p className="max-w-[360px] text-[14px] leading-[18px] font-normal text-[#51565B]">
         {description}

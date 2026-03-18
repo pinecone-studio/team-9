@@ -1,5 +1,14 @@
 import type { Operator, RuleType, RuleValueType } from "@/shared/apollo/generated";
 
+export type PendingRuleRequest = {
+  actionType: "create" | "delete" | "update";
+  createdAt: string;
+  id: string;
+  requestedBy: string;
+  status: "approved" | "pending" | "rejected";
+  targetRole: "finance_manager" | "hr_admin";
+};
+
 export type RuleCardModel = {
   categoryId: string;
   categoryName: string;
@@ -15,6 +24,7 @@ export type RuleCardModel = {
   name: string;
   optionsJson?: string | null;
   operator: Operator;
+  pendingRequest?: PendingRuleRequest | null;
   ruleType: RuleType;
   usageCount: number;
   valueType: RuleValueType;

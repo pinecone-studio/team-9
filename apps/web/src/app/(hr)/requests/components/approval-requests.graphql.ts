@@ -26,6 +26,14 @@ export type ApprovalRequestsQuery = {
   approvalRequests: ApprovalRequestRecord[];
 };
 
+export type RequestsEmployeesDirectoryQuery = {
+  employees?: Array<{
+    email: string;
+    id: string;
+    name: string;
+  }> | null;
+};
+
 export type ApprovalRequestQuery = {
   approvalRequest?: ApprovalRequestRecord | null;
 };
@@ -64,6 +72,16 @@ export const APPROVAL_REQUESTS_QUERY = gql`
       created_at
       reviewed_at
       is_active
+    }
+  }
+`;
+
+export const REQUESTS_EMPLOYEES_DIRECTORY_QUERY = gql`
+  query RequestsEmployeesDirectory {
+    employees {
+      id
+      name
+      email
     }
   }
 `;

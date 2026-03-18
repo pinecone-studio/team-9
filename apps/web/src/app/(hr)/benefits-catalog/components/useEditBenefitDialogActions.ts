@@ -7,6 +7,7 @@ import {
   isMissingIsActiveFieldError,
   validateBenefitSaveInput,
 } from "./useEditBenefitDialogActions.helpers";
+import { getBenefitRequestNoticeMessage } from "./benefit-request-notice";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
 import {
   DELETE_BENEFIT_MUTATION,
@@ -34,6 +35,7 @@ type UseEditBenefitDialogActionsProps = {
   onClose: () => void;
   onDeleted?: (benefitId: string) => void | Promise<unknown>;
   onSaved?: () => void | Promise<unknown>;
+  onSubmitted?: (message: string) => void;
   requiresContract: boolean;
   subsidyPercentValue: string;
   vendorNameValue: string;
@@ -55,6 +57,7 @@ export function useEditBenefitDialogActions({
   onClose,
   onDeleted,
   onSaved,
+  onSubmitted,
   requiresContract,
   subsidyPercentValue,
   vendorNameValue,
@@ -135,6 +138,7 @@ export function useEditBenefitDialogActions({
         },
       });
 
+      onSubmitted?.(getBenefitRequestNoticeMessage(approvalRole));
       try {
         await onSaved?.();
       } catch {

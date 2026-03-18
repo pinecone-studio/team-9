@@ -1,6 +1,15 @@
 import type { ComponentType } from "react";
 import type { LucideProps } from "lucide-react";
 
+export type PendingBenefitRequest = {
+  actionType: "create" | "delete" | "update";
+  createdAt: string;
+  id: string;
+  requestedBy: string;
+  status: "approved" | "pending" | "rejected";
+  targetRole: "finance_manager" | "hr_admin";
+};
+
 export type BenefitBadge = {
   icon: ComponentType<LucideProps>;
   label: string;
@@ -24,6 +33,7 @@ export type BenefitCard = {
   icon: ComponentType<LucideProps>;
   isCore: boolean;
   eligibleEmployees: number;
+  pendingRequest?: PendingBenefitRequest | null;
   requiresContract: boolean;
   subsidyPercent?: number | null;
   title: string;

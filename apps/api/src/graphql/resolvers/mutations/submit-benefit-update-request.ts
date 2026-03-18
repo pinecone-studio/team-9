@@ -1,3 +1,4 @@
+import { and, eq } from 'drizzle-orm';
 import { getDb } from '../../../db';
 import { approvalRequests } from '../../../db/schema/approval-requests';
 import { deleteFromR2, uploadContractToR2 } from '../../../lib/r2';
@@ -80,6 +81,22 @@ export async function submitBenefitUpdateRequest(
 
 	if (!requestedBy) {
 		throw new Error('requestedBy is required');
+	}
+
+	const [existingPendingRequest] = await db
+		.select({ id: approvalRequests.id })
+		.from(approvalRequests)
+		.where(
+			and(
+				eq(approvalRequests.entityType, ApprovalEntityType.Benefit),
+				eq(approvalRequests.entityId, input.benefit.id),
+				eq(approvalRequests.status, ApprovalRequestStatus.Pending),
+			),
+		)
+		.limit(1);
+
+	if (existingPendingRequest) {
+		throw new Error('This benefit already has a pending approval request.');
 	}
 
 	if (prepared.requiresContract && !prepared.vendorName) {

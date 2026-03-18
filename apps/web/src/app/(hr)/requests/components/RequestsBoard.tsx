@@ -6,17 +6,23 @@ import { useMemo, useState } from "react";
 import RequestsBoardContent from "./RequestsBoardContent";
 import ApprovalRequestReviewDialog from "./ApprovalRequestReviewDialog";
 import BenefitRequestReviewDialog from "./BenefitRequestReviewDialog";
+import { RequestPeopleProvider } from "./RequestPeopleContext";
 import {
   APPROVAL_REQUESTS_QUERY,
   type ApprovalRequestRecord,
   type ApprovalRequestsQuery,
+  REQUESTS_EMPLOYEES_DIRECTORY_QUERY,
+  type RequestsEmployeesDirectoryQuery,
 } from "./approval-requests.graphql";
 import {
   BENEFIT_REQUESTS_QUERY,
   type BenefitRequestRecord,
   type BenefitRequestsQuery,
 } from "./benefit-requests.graphql";
-import { isToday } from "./approval-request-time-formatters";
+import {
+  buildEmployeeDirectory,
+  buildRequestsBoardMetrics,
+} from "./requests-board.utils";
 
 const EMPTY_REQUESTS: ApprovalRequestRecord[] = [];
 const EMPTY_BENEFIT_REQUESTS: BenefitRequestRecord[] = [];
@@ -39,6 +45,14 @@ export default function RequestsBoard({
       nextFetchPolicy: "cache-first",
       notifyOnNetworkStatusChange: true,
     });
+  const { data: employeesDirectoryData } = useQuery<RequestsEmployeesDirectoryQuery>(
+    REQUESTS_EMPLOYEES_DIRECTORY_QUERY,
+    {
+      fetchPolicy: "cache-first",
+      nextFetchPolicy: "cache-first",
+      notifyOnNetworkStatusChange: false,
+    },
+  );
   const {
     data: benefitRequestData,
     error: benefitRequestError,
@@ -48,7 +62,6 @@ export default function RequestsBoard({
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
     notifyOnNetworkStatusChange: true,
-    variables: { targetRole: normalizedRole },
   });
 
   const requests = data?.approvalRequests ?? EMPTY_REQUESTS;
@@ -58,10 +71,14 @@ export default function RequestsBoard({
   }, [normalizedRole, requests]);
 
   const configurationRequests = useMemo(() => {
-    return roleScopedRequests
-      .filter((request) => request.entity_type !== "benefit")
+    return requests
+      .filter(
+        (request) =>
+          (request.entity_type === "benefit" || request.entity_type === "rule") &&
+          (request.action_type === "create" || request.action_type === "update"),
+      )
       .sort((left, right) => right.created_at.localeCompare(left.created_at));
-  }, [roleScopedRequests]);
+  }, [requests]);
 
   const selectedBenefitRequest = useMemo(
     () =>
@@ -70,62 +87,28 @@ export default function RequestsBoard({
   );
 
   const metrics = useMemo(
-    () => ({
-      approvedToday:
-        configurationRequests.filter(
-          (request) => request.status === "approved" && isToday(request.reviewed_at),
-        ).length +
-        benefitRequests.filter(
-          (request) => request.status === "approved" && isToday(request.updated_at),
-        ).length,
-      awaitingYourApproval:
-        configurationRequests.filter(
-          (request) =>
-            request.status === "pending" &&
-            request.requested_by.trim().toLowerCase() !==
-              currentUserIdentifier.trim().toLowerCase(),
-        ).length +
-        benefitRequests.filter(
-          (request) =>
-            request.status === "pending" &&
-            request.employee.email.trim().toLowerCase() !==
-              currentUserIdentifier.trim().toLowerCase(),
-        ).length,
-      awaitingFinance:
-        requests.filter(
-          (request) =>
-            request.status === "pending" && request.target_role === "finance_manager",
-        ).length +
-        benefitRequests.filter(
-          (request) =>
-            request.status === "pending" &&
-            request.approval_role === "finance_manager",
-        ).length,
-      pendingOverrides: roleScopedRequests.filter(
-        (request) =>
-          request.status === "pending" &&
-          (request.action_type === "update" || request.action_type === "delete"),
-      ).length,
-      pendingRequests:
-        configurationRequests.filter((request) => request.status === "pending").length +
-        benefitRequests.filter((request) => request.status === "pending").length,
-      rejectedToday:
-        configurationRequests.filter(
-          (request) => request.status === "rejected" && isToday(request.reviewed_at),
-        ).length +
-        benefitRequests.filter(
-          (request) => request.status === "rejected" && isToday(request.updated_at),
-        ).length,
-    }),
+    () =>
+      buildRequestsBoardMetrics({
+        benefitRequests,
+        configurationRequests,
+        currentUserIdentifier,
+        requests,
+        roleScopedRequests,
+      }),
     [benefitRequests, configurationRequests, currentUserIdentifier, requests, roleScopedRequests],
+  );
+  const employeeDirectory = useMemo(
+    () => buildEmployeeDirectory(employeesDirectoryData?.employees),
+    [employeesDirectoryData?.employees],
   );
 
   return (
-    <>
+    <RequestPeopleProvider value={employeeDirectory}>
       <RequestsBoardContent
         benefitRequests={benefitRequests}
         configurationRequests={configurationRequests}
         currentUserIdentifier={currentUserIdentifier}
+        currentUserRole={currentUserRole}
         benefitError={benefitRequestError?.message ?? null}
         configurationError={error?.message ?? null}
         loading={loading || benefitRequestLoading}
@@ -145,11 +128,12 @@ export default function RequestsBoard({
       {selectedBenefitRequest ? (
         <BenefitRequestReviewDialog
           currentUserIdentifier={currentUserIdentifier}
+          currentUserRole={currentUserRole}
           onClose={() => setSelectedBenefitRequestId(null)}
           onReviewed={refetchBenefitRequests}
           request={selectedBenefitRequest}
         />
       ) : null}
-    </>
+    </RequestPeopleProvider>
   );
 }

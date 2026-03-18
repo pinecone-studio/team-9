@@ -2,9 +2,7 @@ import "server-only";
 
 import type { EmployeeRecord } from "@/shared/auth/get-employee-record-by-email";
 import { postGraphql } from "./employee-dashboard-api";
-import {
-  hasMissingActiveBenefitRecords,
-} from "./employee-dashboard-benefits";
+import { hasMissingActiveBenefitRecords } from "./employee-dashboard-benefits";
 import {
   BENEFIT_REQUESTS_QUERY,
   EMPLOYEE_DASHBOARD_QUERY,
@@ -17,10 +15,7 @@ import {
   buildEmployeeDashboardViewData,
   buildEmptyDashboardData,
 } from "./employee-dashboard-view-data";
-import type {
-  EmployeeDashboardViewData,
-  EmployeeEligibilitySignals,
-} from "./employee-types";
+import type { EmployeeDashboardViewData } from "./employee-types";
 
 export async function getEmployeeDashboardData({
   employee,
@@ -29,17 +24,10 @@ export async function getEmployeeDashboardData({
   employee: EmployeeRecord | null;
   employeeName: string;
 }): Promise<EmployeeDashboardViewData> {
-  const emptySignals: EmployeeEligibilitySignals = {
-    employmentStatus: employee?.employmentStatus ?? "Unknown",
-    lateArrivals30Days: null,
-    okrSubmitted: null,
-    responsibilityLevel: employee?.responsibilityLevel ?? null,
-  };
-
   if (!employee?.id) {
     return buildEmptyDashboardData(
-      emptySignals.employmentStatus,
-      emptySignals.responsibilityLevel,
+      employee?.employmentStatus ?? "Unknown",
+      employee?.responsibilityLevel ?? null,
     );
   }
 
@@ -98,6 +86,7 @@ export async function getEmployeeDashboardData({
   }
 
   return buildEmployeeDashboardViewData({
+    approvalRequests: dashboardData?.approvalRequests ?? [],
     benefitStatusOverrides: new Map(),
     employeeEligibility,
     employeeEmail: employee.email,

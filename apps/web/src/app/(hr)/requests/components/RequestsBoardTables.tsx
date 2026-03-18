@@ -11,9 +11,12 @@ import type {
 } from "./approval-requests.graphql";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
+  resolveRequestPersonName,
+  useRequestPeople,
+} from "./RequestPeopleContext";
+import {
   formatApprovalRole,
   formatApprovalRequestName,
-  formatPersonLabel,
   formatRequestChangeSummary,
 } from "./approval-request-utils";
 import {
@@ -122,6 +125,8 @@ export function ConfigurationApprovalsTable({
   onReview,
   requests,
 }: RequestTableProps) {
+  const people = useRequestPeople();
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-left">
@@ -129,14 +134,18 @@ export function ConfigurationApprovalsTable({
         <tbody>
           {requests.map((request) => {
             const isOwnRequest = request.requested_by.trim().toLowerCase() === currentUserIdentifier.trim().toLowerCase();
+            const requesterName = resolveRequestPersonName(people, request.requested_by);
+            const reviewerName = request.reviewed_by
+              ? resolveRequestPersonName(people, request.reviewed_by)
+              : formatApprovalRole(request.target_role);
             return (
               <tr key={request.id} className="text-[14px] leading-5 text-[#737373]">
                 <td className="border-b border-[#EDEDED] px-8 py-3"><EntityBadge request={request} /></td>
                 <td className="border-b border-[#EDEDED] px-2 py-3"><span className="font-medium text-[#0A0A0A]">{formatApprovalRequestName(request)}</span></td>
                 <td className="border-b border-[#EDEDED] px-2 py-3">{formatRequestChangeSummary(request)}</td>
-                <td className="border-b border-[#EDEDED] px-2 py-3">{formatPersonLabel(request.requested_by)}</td>
+                <td className="border-b border-[#EDEDED] px-2 py-3">{requesterName}</td>
                 <td className="border-b border-[#EDEDED] px-2 py-3">{formatShortDate(request.created_at)}</td>
-                <td className="border-b border-[#EDEDED] px-2 py-3">{request.reviewed_by ? formatPersonLabel(request.reviewed_by) : formatApprovalRole(request.target_role)}</td>
+                <td className="border-b border-[#EDEDED] px-2 py-3">{reviewerName}</td>
                 <td className="border-b border-[#EDEDED] px-2 py-3"><StatusBadge reviewedAt={request.reviewed_at} status={request.status} /></td>
                 <td className="border-b border-[#EDEDED] px-6 py-3 text-center"><ReviewButton isOwnRequest={isOwnRequest} onClick={() => onReview(request.id)} status={request.status} /></td>
               </tr>

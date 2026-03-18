@@ -1,5 +1,13 @@
-import { Operator, RuleType, RuleValueType } from "@/shared/apollo/generated";
-import type { RuleCardModel, RuleSectionView } from "../types";
+import {
+  ApprovalActionType,
+  ApprovalEntityType,
+  ApprovalRequestStatus,
+  type ApprovalRequestsQuery,
+  Operator,
+  RuleType,
+  RuleValueType,
+} from "@/shared/apollo/generated";
+import type { PendingRuleRequest, RuleCardModel, RuleSectionView } from "../types";
 
 export function toTitleCase(value?: string | null) {
   if (!value) return undefined;
@@ -25,9 +33,7 @@ export function getMetricLabelFromOptionsJson(
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return undefined;
     const candidate = (parsed as { configLabel?: unknown }).configLabel;
     return typeof candidate === "string" ? candidate : undefined;
-  } catch {
-    return undefined;
-  }
+  } catch { return undefined; }
 }
 
 export function getFallbackCategoryId(sectionTitle: string): string {
@@ -75,9 +81,7 @@ export function parseLinkedBenefits(value: string | null | undefined): Array<{ i
       if (typeof record.id !== "string" || typeof record.name !== "string") return null;
       return { id: record.id, name: record.name };
     }).filter((item): item is { id: string; name: string } => item !== null);
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 export function normalizeSearchText(value: string): string {
@@ -111,6 +115,7 @@ export function buildSections(
     usage_count: number;
     value_type: RuleValueType;
   }>,
+  approvalRequests: ApprovalRequestsQuery["approvalRequests"],
   sectionTitles: string[],
   searchTerm: string,
 ): RuleSectionView[] {
@@ -118,6 +123,17 @@ export function buildSections(
   for (const title of sectionTitles) grouped.set(title, []);
 
   for (const row of definitions) {
+    const pendingRequest = approvalRequests
+      .filter(
+        (request) =>
+          request.entity_type === ApprovalEntityType.Rule &&
+          request.entity_id === row.id &&
+          request.status === ApprovalRequestStatus.Pending &&
+          (request.action_type === ApprovalActionType.Update ||
+            request.action_type === ApprovalActionType.Delete),
+      )
+      .sort((left, right) => right.created_at.localeCompare(left.created_at))[0];
+
     const card: RuleCardModel = {
       categoryId: row.category_id,
       categoryName: row.category_name,
@@ -133,13 +149,22 @@ export function buildSections(
       name: row.name,
       optionsJson: row.options_json,
       operator: row.default_operator,
+      pendingRequest: pendingRequest
+        ? ({
+            actionType: pendingRequest.action_type,
+            createdAt: pendingRequest.created_at,
+            id: pendingRequest.id,
+            requestedBy: pendingRequest.requested_by,
+            status: pendingRequest.status,
+            targetRole: pendingRequest.target_role,
+          } satisfies PendingRuleRequest)
+        : null,
       ruleType: row.rule_type,
       usageCount: row.usage_count,
       valueType: row.value_type,
     };
 
-    const sectionTitle = grouped.has(row.category_name) ? row.category_name : "Threshold Rules";
-    grouped.get(sectionTitle)?.push(card);
+    grouped.get(grouped.has(row.category_name) ? row.category_name : "Threshold Rules")?.push(card);
   }
 
   const normalizedSearch = normalizeSearchText(searchTerm);

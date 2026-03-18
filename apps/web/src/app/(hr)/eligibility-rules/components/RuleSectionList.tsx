@@ -6,15 +6,17 @@ import {
   ApprovalEntityType,
   ApprovalRole,
   RuleValueType,
+  useApprovalRequestsQuery,
   useCreateRuleApprovalRequestMutation,
   useDeleteRuleApprovalRequestMutation,
   useEligibilityRulesPageDataQuery,
   useUpdateRuleApprovalRequestMutation,
 } from "@/shared/apollo/generated";
 import type { Operator, RuleType } from "@/shared/apollo/generated";
-
 import AddRuleDialog from "./AddRuleDialog";
 import EditRuleDialog from "./EditRuleDialog";
+import { getRuleRequestNoticeMessage } from "./rule-request-notice-message";
+import RulePendingRequestDialog from "./RulePendingRequestDialog";
 import RuleRequestNotice from "./RuleRequestNotice";
 import RuleSectionsView from "./RuleSectionsView";
 import type { ApprovalRoleValue } from "./RuleApprovalSection";
@@ -26,7 +28,6 @@ type RuleSectionListProps = {
   currentUserIdentifier: string;
   searchTerm?: string;
 };
-
 export default function RuleSectionList({
   currentUserIdentifier,
   searchTerm = "",
@@ -34,16 +35,17 @@ export default function RuleSectionList({
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleCardModel | null>(null);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { data, error, loading, refetch } = useEligibilityRulesPageDataQuery({ fetchPolicy: "network-only" });
+  const { data: approvalRequestsData, refetch: refetchApprovalRequests } = useApprovalRequestsQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+  });
   const [createRuleApprovalRequest] = useCreateRuleApprovalRequestMutation();
   const [updateRuleApprovalRequest] = useUpdateRuleApprovalRequestMutation();
   const [deleteRuleApprovalRequest] = useDeleteRuleApprovalRequestMutation();
-
-  const sections = useMemo(
-    () => buildSections(data?.ruleDefinitions ?? [], sectionMeta.map((meta) => meta.title), searchTerm),
-    [data?.ruleDefinitions, searchTerm],
-  );
+  const sections = useMemo(() => buildSections(data?.ruleDefinitions ?? [], approvalRequestsData?.approvalRequests ?? [], sectionMeta.map((meta) => meta.title), searchTerm), [approvalRequestsData?.approvalRequests, data?.ruleDefinitions, searchTerm]);
   const categoryNameToId = useMemo(() => {
     const map = new Map<string, string>();
     for (const definition of data?.ruleDefinitions ?? []) map.set(definition.category_name, definition.category_id);
@@ -60,12 +62,6 @@ export default function RuleSectionList({
       ),
     [data?.employees],
   );
-
-  function getRoleNoticeMessage(role: ApprovalRoleValue) {
-    const targetLabel = role === "finance_manager" ? "Finance" : "HR";
-    return `Tanii huselt ${targetLabel}-ruu ilgeegdlee. Ta yvuulsan huseltee Requests hesgees harna.`;
-  }
-
   async function handleAddRule(input: { approvalRole: ApprovalRoleValue; defaultOperator: Operator; defaultUnit?: string; description: string; name: string; optionsJson?: string; ruleType: RuleType; value: string; valueType: RuleValueType }) {
     if (!activeSection) return;
     setSubmitting(true);
@@ -91,7 +87,7 @@ export default function RuleSectionList({
         targetRole: input.approvalRole,
       } } });
       if (!result.data?.createApprovalRequest.id) throw new Error("Failed to submit rule request");
-      setNoticeMessage(getRoleNoticeMessage(input.approvalRole));
+      setNoticeMessage(getRuleRequestNoticeMessage(input.approvalRole));
       await refetch();
       setActiveSection(null);
     } finally {
@@ -120,7 +116,7 @@ export default function RuleSectionList({
         snapshotJson: JSON.stringify(editingRule),
         targetRole: payload.approvalRole,
       } } });
-      setNoticeMessage(getRoleNoticeMessage(payload.approvalRole));
+      setNoticeMessage(getRuleRequestNoticeMessage(payload.approvalRole));
       await refetch();
       setEditingRule(null);
     } finally {
@@ -147,26 +143,29 @@ export default function RuleSectionList({
         targetRole: approvalRole ?? ApprovalRole.HrAdmin,
       } } });
       if (!result.data?.createApprovalRequest.id) throw new Error("Failed to submit delete request");
-      setNoticeMessage(getRoleNoticeMessage(approvalRole));
+      setNoticeMessage(getRuleRequestNoticeMessage(approvalRole));
       await refetch();
       setEditingRule(null);
     } finally {
       setSubmitting(false);
     }
   }
-
   return (
     <>
-      {noticeMessage ? (
-        <RuleRequestNotice
-          message={noticeMessage}
-          onClose={() => setNoticeMessage(null)}
-        />
-      ) : null}
+      {noticeMessage ? <RuleRequestNotice message={noticeMessage} onClose={() => setNoticeMessage(null)} /> : null}
       {error && <div className="mx-auto mt-4 w-full max-w-[1300px] px-4 text-sm text-red-600 sm:px-0">{error.message}</div>}
-      <RuleSectionsView loading={loading} onAddRule={setActiveSection} onEditRule={setEditingRule} searchTerm={searchTerm} sections={sections} />
+      <RuleSectionsView loading={loading} onAddRule={setActiveSection} onEditRule={setEditingRule} onOpenRequest={setSelectedRequestId} searchTerm={searchTerm} sections={sections} />
       {activeSection && <AddRuleDialog employeeRoles={employeeRoles} onClose={() => setActiveSection(null)} onSubmit={handleAddRule} sectionTitle={activeSection} submitting={submitting} />}
       {editingRule && <EditRuleDialog onDelete={handleDeleteRule} onClose={() => setEditingRule(null)} onSave={handleSaveRule} rule={editingRule} submitting={submitting} />}
+      <RulePendingRequestDialog
+        currentUserIdentifier={currentUserIdentifier}
+        onClose={() => setSelectedRequestId(null)}
+        onReviewed={async () => {
+          await refetchApprovalRequests();
+          await refetch();
+        }}
+        requestId={selectedRequestId}
+      />
     </>
   );
 }

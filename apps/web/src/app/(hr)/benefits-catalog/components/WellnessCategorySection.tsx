@@ -13,6 +13,7 @@ type WellnessCategorySectionProps = {
   onContinueDraft: () => void;
   onDeleteDraft: () => void;
   onEditBenefit: (benefit: BenefitCardData) => void;
+  onOpenRequest: (requestId: string) => void;
   section: BenefitSection;
   shouldShowDraftCard: boolean;
 };
@@ -24,6 +25,7 @@ export default function WellnessCategorySection({
   onContinueDraft,
   onDeleteDraft,
   onEditBenefit,
+  onOpenRequest,
   section,
   shouldShowDraftCard,
 }: WellnessCategorySectionProps) {
@@ -54,6 +56,7 @@ export default function WellnessCategorySection({
             key={`${title}-${card.title}`}
             {...card}
             onEdit={onEditBenefit}
+            onOpenRequest={onOpenRequest}
           />
         ))}
         {shouldShowDraftCard && draftBenefit && draftBenefit.categoryId === categoryId ? (

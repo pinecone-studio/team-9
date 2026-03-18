@@ -30,6 +30,7 @@ type EditBenefitDialogProps = {
   onDeleted?: (benefitId: string) => void | Promise<unknown>;
   onSaved?: () => void | Promise<unknown>;
   onClose: () => void;
+  onSubmitted?: (message: string) => void;
 };
 
 export default function EditBenefitDialog({
@@ -48,6 +49,7 @@ export default function EditBenefitDialog({
   onDeleted,
   onSaved,
   onClose,
+  onSubmitted,
 }: EditBenefitDialogProps) {
   const [name, setName] = useState(benefitName);
   const [benefitDescription, setBenefitDescription] = useState(description);
@@ -92,6 +94,7 @@ export default function EditBenefitDialog({
     onClose,
     onDeleted,
     onSaved,
+    onSubmitted,
     requiresContract,
     subsidyPercentValue,
     vendorNameValue,

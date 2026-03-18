@@ -112,6 +112,7 @@ export function useEmployeeDashboardViewData({
       ? recalculatedEligibility.records
       : rawEligibility;
   const dashboardData = buildEmployeeDashboardViewData({
+    approvalRequests: dashboardQuery.data?.approvalRequests ?? [],
     benefitStatusOverrides: new Map(),
     employeeEligibility,
     employeeEmail,

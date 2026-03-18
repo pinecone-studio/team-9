@@ -1,4 +1,5 @@
 import AddBenefitContractUpload from "./AddBenefitContractUpload";
+import AddBenefitValueFields from "./AddBenefitValueFields";
 import BenefitDialogFieldLabel from "./BenefitDialogFieldLabel";
 import BenefitDialogToggle from "./BenefitDialogToggle";
 import EditBenefitApprovalSection from "./EditBenefitApprovalSection";
@@ -30,7 +31,6 @@ type AddBenefitDialogFormProps = {
   subsidyPercent: string;
   vendorName: string;
 };
-
 export default function AddBenefitDialogForm({
   approvalRole,
   assignedRules,
@@ -90,36 +90,13 @@ export default function AddBenefitDialogForm({
 
         <div className="w-full border-t border-[#DBDEE1]" />
 
-        <section className="flex w-full flex-col gap-5">
-          <h3 className="text-[16px] leading-4 font-semibold text-black">Benefit Value</h3>
-          <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-[10px]">
-              <BenefitDialogFieldLabel>Subsidy Percent</BenefitDialogFieldLabel>
-              <div className="flex h-[33px] items-center justify-between rounded-[6px] border border-[#CBD5E1] bg-white px-[18px]">
-                <input
-                  className="w-full text-[12px] leading-4 font-normal text-black outline-none"
-                  max={100}
-                  min={0}
-                  onChange={(event) => onSubsidyPercentChange(event.target.value)}
-                  type="number"
-                  value={subsidyPercent}
-                />
-                <span className="text-[14px] leading-4 text-black">%</span>
-              </div>
-            </label>
-
-            <label className="flex flex-col gap-[10px]">
-              <BenefitDialogFieldLabel>Vendor name</BenefitDialogFieldLabel>
-              <input
-                className="h-[33px] rounded-[6px] border border-[#CBD5E1] bg-white px-[18px] text-[12px] leading-4 font-normal text-black outline-none"
-                onChange={(event) => onVendorNameChange(event.target.value)}
-                placeholder="PineFit Corp"
-                type="text"
-                value={vendorName}
-              />
-            </label>
-          </div>
-        </section>
+        <AddBenefitValueFields
+          onSubsidyPercentChange={onSubsidyPercentChange}
+          onVendorNameChange={onVendorNameChange}
+          requiresContract={requiresContract}
+          subsidyPercent={subsidyPercent}
+          vendorName={vendorName}
+        />
 
         <div className="w-full border-t border-[#DBDEE1]" />
 

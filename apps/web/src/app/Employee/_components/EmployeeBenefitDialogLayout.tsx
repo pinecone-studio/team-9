@@ -3,7 +3,11 @@
 import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
-import { getBadgeClass, StatusBadgeIcon } from "./benefit-card-ui";
+import {
+  getBadgeClass,
+  getOverrideBadgeClass,
+  StatusBadgeIcon,
+} from "./benefit-card-ui";
 import type { EmployeeBenefitCard } from "./employee-types";
 
 type EmployeeBenefitDialogLayoutProps = {
@@ -68,15 +72,27 @@ export default function EmployeeBenefitDialogLayout({
                     {card.categoryName}
                   </p>
                 </div>
-                <span
-                  className={[
-                    "inline-flex items-center gap-[6px] rounded-[8px] px-3 py-2 text-[12px] font-medium leading-4",
-                    getBadgeClass(card.status),
-                  ].join(" ")}
-                >
-                  <StatusBadgeIcon status={card.status} />
-                  {card.status}
-                </span>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {card.isOverridden ? (
+                    <span
+                      className={[
+                        "inline-flex items-center rounded-[8px] px-3 py-2 text-[12px] font-medium leading-4",
+                        getOverrideBadgeClass(),
+                      ].join(" ")}
+                    >
+                      Overridden
+                    </span>
+                  ) : null}
+                  <span
+                    className={[
+                      "inline-flex items-center gap-[6px] rounded-[8px] px-3 py-2 text-[12px] font-medium leading-4",
+                      getBadgeClass(card.status),
+                    ].join(" ")}
+                  >
+                    <StatusBadgeIcon status={card.status} />
+                    {card.status}
+                  </span>
+                </div>
               </div>
 
               <p className="text-[14px] leading-5 text-[#0A0A0A]">{card.description}</p>

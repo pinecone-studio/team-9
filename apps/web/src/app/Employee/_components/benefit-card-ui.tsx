@@ -26,6 +26,10 @@ export function getBadgeClass(status: EmployeeBenefitStatus) {
   return "bg-[#F5F5F5] text-[#737373]";
 }
 
+export function getOverrideBadgeClass() {
+  return "border border-[#D4D4D8] bg-[#F5F5F5] text-[#52525B]";
+}
+
 export function StatusBadgeIcon({ status }: { status: EmployeeBenefitStatus }) {
   if (status === "Eligible") {
     return (

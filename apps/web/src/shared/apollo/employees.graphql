@@ -35,6 +35,8 @@ query EmployeeDashboardData($employeeId: ID!) {
     status
     computedAt
     ruleEvaluationJson
+    overrideBy
+    overrideReason
     benefit {
       approvalRole
       categoryId
@@ -194,6 +196,8 @@ mutation RecalculateEmployeeEligibility($employeeId: ID!) {
     status
     computedAt
     ruleEvaluationJson
+    overrideBy
+    overrideReason
     benefit {
       approvalRole
       categoryId

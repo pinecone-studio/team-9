@@ -77,6 +77,9 @@ export function mapBenefitSections(
     const configuredRuleCount = benefitRuleCountByBenefitId.get(eligibility.benefit.id) ?? 0;
     const total = configuredRuleCount > 0 ? configuredRuleCount : stats.total;
     const passed = Math.min(stats.passed, total);
+    const overrideReason = eligibility.overrideReason?.trim() ?? null;
+    const hasOverride = Boolean(eligibility.overrideBy || overrideReason);
+    const isOverridden = hasOverride && status !== "Pending";
     const subsidy = eligibility.benefit.subsidyPercent;
     const vendorName = eligibility.benefit.vendorName?.trim() ?? "";
     const category = eligibility.benefit.category?.trim() || "Other";
@@ -95,8 +98,15 @@ export function mapBenefitSections(
       id: eligibility.benefit.id,
       isActive: eligibility.benefit.isActive,
       isCore: eligibility.benefit.isCore,
+      isOverridden,
       note: status === "Locked" ? "Does not meet all requirements" : undefined,
-      passed: total > 0 ? `${passed}/${total} passed` : "",
+      overrideReason: isOverridden ? overrideReason : null,
+      passed:
+        total > 0
+          ? `${passed}/${total} passed${isOverridden ? " before override" : ""}`
+          : isOverridden
+            ? "Manually overridden"
+            : "",
       requiresContract: eligibility.benefit.requiresContract,
       ruleEvaluationJson: eligibility.ruleEvaluationJson,
       status,

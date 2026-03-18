@@ -22,6 +22,7 @@ type EmployeePendingBenefitDialogContentProps = {
   loading: boolean;
   onCancel: () => void;
   onViewContract: () => void;
+  overrideMessage: string | null;
   request: PendingBenefitRequest | null;
   requestLoading: boolean;
   requiresContract: boolean;
@@ -36,6 +37,7 @@ export default function EmployeePendingBenefitDialogContent({
   loading,
   onCancel,
   onViewContract,
+  overrideMessage,
   request,
   requestLoading,
   requiresContract,
@@ -57,7 +59,11 @@ export default function EmployeePendingBenefitDialogContent({
         />
       ) : null}
 
-      <EmployeeBenefitDialogEligibilitySection items={ruleItems} loading={loading} />
+      <EmployeeBenefitDialogEligibilitySection
+        items={ruleItems}
+        loading={loading}
+        overrideMessage={overrideMessage}
+      />
 
       {requestLoading ? (
         <p className="text-[13px] leading-5 text-[#64748B]">Loading request details...</p>

@@ -47,7 +47,9 @@ export type EmployeeBenefitCard = {
   id: string;
   isActive: boolean;
   isCore: boolean;
+  isOverridden: boolean;
   note?: string;
+  overrideReason: string | null;
   passed: string;
   requiresContract: boolean;
   ruleEvaluationJson: string;

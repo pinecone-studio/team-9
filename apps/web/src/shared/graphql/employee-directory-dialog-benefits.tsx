@@ -78,7 +78,6 @@ function BenefitCard({
               {overriding ? "Overriding..." : "Override"}
             </button>
           ) : null}
-          <Info className="h-4 w-4 text-[#737373]" />
         </div>
       </div>
     </article>

@@ -12,6 +12,7 @@ type EmployeeLockedBenefitDialogContentProps = {
   errorMessage: string | null;
   loading: boolean;
   onViewContract: () => void;
+  overrideMessage: string | null;
   requiresContract: boolean;
   ruleItems: BenefitDialogRuleItem[];
 };
@@ -22,6 +23,7 @@ export default function EmployeeLockedBenefitDialogContent({
   errorMessage,
   loading,
   onViewContract,
+  overrideMessage,
   requiresContract,
   ruleItems,
 }: EmployeeLockedBenefitDialogContentProps) {
@@ -37,7 +39,11 @@ export default function EmployeeLockedBenefitDialogContent({
         />
       ) : null}
 
-      <EmployeeBenefitDialogEligibilitySection items={ruleItems} loading={loading} />
+      <EmployeeBenefitDialogEligibilitySection
+        items={ruleItems}
+        loading={loading}
+        overrideMessage={overrideMessage}
+      />
 
       {errorMessage ? (
         <p className="rounded-[8px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] leading-5 text-[#B91C1C]">

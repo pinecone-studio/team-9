@@ -8,13 +8,14 @@ type BenefitRequestRecord =
   | EmployeeBenefitRequestsQuery["benefitRequests"][number];
 
 export type ActiveBenefitRequest = BenefitRequestRecord;
+export type HistoricalBenefitRequest = BenefitRequestRecord;
 export type PendingBenefitRequest = BenefitRequestRecord;
 
 export type BenefitTimelineItem = {
   id: string;
   label: string;
   timestamp: string;
-  tone: "neutral" | "warning";
+  tone: "danger" | "neutral" | "success";
 };
 
 export function formatDialogDateTime(value: string | null | undefined) {
@@ -73,6 +74,13 @@ export function findPendingBenefitRequest(
   return findBenefitRequest(requests, benefitId, ["pending"]);
 }
 
+export function findBenefitRequestById(
+  requests: readonly BenefitRequestRecord[],
+  requestId: string,
+) {
+  return requests.find((request) => request.id === requestId) ?? null;
+}
+
 export function buildPendingTimelineItems(
   request: PendingBenefitRequest | null,
 ): BenefitTimelineItem[] {
@@ -91,7 +99,7 @@ export function buildPendingTimelineItems(
       id: `${request.id}-review`,
       label: `Sent for ${formatApprovalRoleLabel(request.approval_role)} review`,
       timestamp: formatDialogDateTime(request.created_at),
-      tone: "warning",
+      tone: "neutral",
     },
   ];
 }
@@ -114,13 +122,13 @@ export function buildActiveTimelineItems(
       id: `${request.id}-review`,
       label: `Sent for ${formatApprovalRoleLabel(request.approval_role)} review`,
       timestamp: formatDialogDateTime(request.created_at),
-      tone: "warning",
+      tone: "neutral",
     },
     {
       id: `${request.id}-approved`,
       label: `Approved by ${formatApprovalRoleLabel(request.approval_role)}`,
       timestamp: formatDialogDateTime(request.updated_at || request.created_at),
-      tone: "neutral",
+      tone: "success",
     },
   ];
 }

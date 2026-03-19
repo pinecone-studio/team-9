@@ -110,6 +110,7 @@ export const typeDefs = /* GraphQL */ `
     created_at: String!
     updated_at: String!
     reviewed_by: Employee
+    reviewComment: String
     approval_role: ApprovalRole!
     eligibilityStatus: String
     ruleEvaluationJson: String
@@ -411,6 +412,7 @@ export const typeDefs = /* GraphQL */ `
     id: ID!
     approved: Boolean!
     reviewedBy: String!
+    reviewComment: String
   }
 
   input SubmitEmployeeBenefitRequestInput {

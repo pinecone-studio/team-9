@@ -1,13 +1,15 @@
 "use client";
 
 import { Geist } from "next/font/google";
+import { useState } from "react";
 import { BenefitsGroup } from "./BenefitsGroup";
 import { EmployeeDashboardAutoRefresh } from "./EmployeeDashboardAutoRefresh";
+import EmployeeRequestDialog from "./EmployeeRequestDialog";
 import { EligibilitySignals } from "./EligibilitySignals";
 import { EmployeeNav } from "./EmployeeNav";
 import { RecentRequests } from "./RecentRequests";
 import { SummaryCards } from "./SummaryCards";
-import type { EmployeeDashboardViewData } from "./employee-types";
+import type { EmployeeDashboardViewData, EmployeeRequestItem } from "./employee-types";
 
 type EmployeeContentProps = {
   currentUserIdentifier: string;
@@ -30,6 +32,7 @@ export function EmployeeContent({
   errorMessage,
   isLoading = false,
 }: EmployeeContentProps) {
+  const [selectedRequest, setSelectedRequest] = useState<EmployeeRequestItem | null>(null);
   const shouldAutoRefresh = dashboardData.requests.some(
     (request) => request.status === "Pending",
   );
@@ -38,16 +41,20 @@ export function EmployeeContent({
     <main className={`${geist.className} min-h-screen bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8`}>
       <EmployeeDashboardAutoRefresh enabled={shouldAutoRefresh} />
       <div className="mx-auto flex w-full max-w-[1300px] flex-col">
-        <EmployeeNav employeeName={employeeName} />
+        <section className="mt-8 flex items-start justify-between gap-6 sm:mt-10">
+          <header className="min-w-0 flex-1 pt-1 text-center sm:pl-[76px]">
+            <h1 className="text-[24px] font-semibold leading-[31px] text-black">
+              Welcome back, {employeeName}
+            </h1>
+            <p className="mt-[5px] text-[14px] leading-[18px] text-[#555555]">
+              View your benefits, request new ones, and track your eligibility.
+            </p>
+          </header>
 
-        <header className="mt-8 flex flex-col items-center gap-[5px] text-center sm:mt-10">
-          <h1 className="text-[24px] font-semibold leading-[31px] text-black">
-            Welcome back, {employeeName}
-          </h1>
-          <p className="text-[14px] leading-[18px] text-[#555555]">
-            View your benefits, request new ones, and track your eligibility.
-          </p>
-        </header>
+          <div className="shrink-0">
+            <EmployeeNav employeeName={employeeName} />
+          </div>
+        </section>
 
         <SummaryCards cards={dashboardData.summaryCards} className="mt-8" />
         {isLoading ? (
@@ -65,7 +72,10 @@ export function EmployeeContent({
           id="my-requests"
           className="mt-6 grid scroll-mt-32 gap-5 xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]"
         >
-          <RecentRequests requests={dashboardData.requests} />
+          <RecentRequests
+            onSelect={setSelectedRequest}
+            requests={dashboardData.requests}
+          />
           <EligibilitySignals signals={dashboardData.signals} />
         </section>
 
@@ -85,6 +95,17 @@ export function EmployeeContent({
             ))
           )}
         </section>
+        {selectedRequest ? (
+          <EmployeeRequestDialog
+            currentUserIdentifier={currentUserIdentifier}
+            employeeId={employeeId}
+            onClose={() => setSelectedRequest(null)}
+            onSubmitted={async () => {
+              setSelectedRequest(null);
+            }}
+            request={selectedRequest}
+          />
+        ) : null}
       </div>
     </main>
   );

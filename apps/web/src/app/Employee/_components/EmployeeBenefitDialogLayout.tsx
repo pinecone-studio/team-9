@@ -8,18 +8,22 @@ import {
   getOverrideBadgeClass,
   StatusBadgeIcon,
 } from "./benefit-card-ui";
+import EmployeeBenefitDialogStatusBadge from "./EmployeeBenefitDialogStatusBadge";
 import type { EmployeeBenefitCard } from "./employee-types";
+import type { RequestDialogBadge } from "./employee-request-dialog.helpers";
 
 type EmployeeBenefitDialogLayoutProps = {
   card: EmployeeBenefitCard;
   children: ReactNode;
   onClose: () => void;
+  statusBadge?: RequestDialogBadge;
 };
 
 export default function EmployeeBenefitDialogLayout({
   card,
   children,
   onClose,
+  statusBadge,
 }: EmployeeBenefitDialogLayoutProps) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -83,15 +87,22 @@ export default function EmployeeBenefitDialogLayout({
                       Overridden
                     </span>
                   ) : null}
-                  <span
-                    className={[
-                      "inline-flex items-center gap-[6px] rounded-[8px] px-3 py-2 text-[12px] font-medium leading-4",
-                      getBadgeClass(card.status),
-                    ].join(" ")}
-                  >
-                    <StatusBadgeIcon status={card.status} />
-                    {card.status}
-                  </span>
+                  {statusBadge ? (
+                    <EmployeeBenefitDialogStatusBadge
+                      label={statusBadge.label}
+                      tone={statusBadge.tone}
+                    />
+                  ) : (
+                    <span
+                      className={[
+                        "inline-flex items-center gap-[6px] rounded-[8px] px-3 py-2 text-[12px] font-medium leading-4",
+                        getBadgeClass(card.status),
+                      ].join(" ")}
+                    >
+                      <StatusBadgeIcon status={card.status} />
+                      {card.status}
+                    </span>
+                  )}
                 </div>
               </div>
 

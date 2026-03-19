@@ -8,31 +8,33 @@ import {
   getRequestStatusLabel,
   isCurrentUserRequest,
 } from "./employee-dashboard-formatters";
-import type { EmployeeRequestItem } from "./employee-types";
+import type { EmployeeBenefitCard, EmployeeRequestItem } from "./employee-types";
 
-type BenefitRequest = NonNullable<
-  BenefitRequestsQueryResult["benefitRequests"]
->[number];
+type BenefitRequest = BenefitRequestsQueryResult["benefitRequests"][number];
 
-type RequestMapResult = {
+type RequestSummary = {
   pendingCount: number;
-  requests: EmployeeRequestItem[];
+  requests: BenefitRequest[];
   statusByBenefitId: Map<string, EmployeeBenefitStatusOverride>;
 };
 
-export function mapRequests(
-  requests: NonNullable<BenefitRequestsQueryResult["benefitRequests"]>,
+export function buildRequestSummary(
+  requests: BenefitRequestsQueryResult["benefitRequests"],
   employeeEmail: string | null,
   employeeName: string,
-  benefitNameById: Map<string, string>,
-): RequestMapResult {
+): RequestSummary {
   const scoped = requests
     .filter((request) =>
-      isCurrentUserRequest(request.employee.email, request.employee.name, employeeEmail, employeeName),
+      isCurrentUserRequest(
+        request.employee.email,
+        request.employee.name,
+        employeeEmail,
+        employeeName,
+      ),
     )
     .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      (left, right) =>
+        new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
     );
   const statusByBenefitId = new Map<string, EmployeeBenefitStatusOverride>();
 
@@ -40,25 +42,80 @@ export function mapRequests(
     mapStatusByBenefit(request, statusByBenefitId);
   }
 
-  const mapped: EmployeeRequestItem[] = scoped.slice(0, 6).map((request) => ({
-    benefit: request.benefit.title || benefitNameById.get(request.benefit.id) || "Benefit request",
+  return {
+    pendingCount: scoped.filter((request) => request.status === "pending").length,
+    requests: scoped,
+    statusByBenefitId,
+  };
+}
+
+export function mapRequests(
+  requests: BenefitRequest[],
+  benefitCardsById: Map<string, EmployeeBenefitCard>,
+): EmployeeRequestItem[] {
+  return requests.slice(0, 6).map((request) => ({
+    benefit: request.benefit.title || "Benefit request",
+    dialogCard:
+      benefitCardsById.get(request.benefit.id) ?? buildFallbackDialogCard(request),
     id: request.id,
+    request,
     reviewedBy: request.reviewed_by
       ? formatPerson(request.reviewed_by.name || request.reviewed_by.email)
       : "-",
     status: getRequestStatusLabel(request.status),
     submittedAt: formatShortDate(request.created_at),
   }));
+}
 
-  const pendingCount = scoped.filter(
-    (request) => request.status.trim().toLowerCase() === "pending",
-  ).length;
-
+function buildFallbackDialogCard(request: BenefitRequest): EmployeeBenefitCard {
   return {
-    pendingCount,
-    requests: mapped,
-    statusByBenefitId,
+    accent: "",
+    approvalRole: request.benefit.approvalRole,
+    badge: "",
+    categoryId: request.benefit.categoryId,
+    categoryName: request.benefit.category,
+    description: request.benefit.description,
+    dots: [],
+    id: request.benefit.id,
+    isActive: request.benefit.isActive,
+    isCore: request.benefit.isCore,
+    isOverridden: false,
+    overrideReason: null,
+    passed: "",
+    requiresContract: request.benefit.requiresContract,
+    ruleEvaluationJson: request.ruleEvaluationJson ?? "[]",
+    status: mapRequestStatusToCardStatus(request.status),
+    subsidyPercent: request.benefit.subsidyPercent ?? null,
+    subsidyLabel: buildSubsidyLabel(
+      request.benefit.subsidyPercent ?? null,
+      request.benefit.vendorName ?? null,
+    ),
+    title: request.benefit.title,
+    vendorName: request.benefit.vendorName ?? null,
   };
+}
+
+function buildSubsidyLabel(
+  subsidyPercent: number | null,
+  vendorName: string | null,
+) {
+  if (typeof subsidyPercent === "number") {
+    return `${subsidyPercent}% subsidy${vendorName ? ` by ${vendorName}` : ""}`;
+  }
+
+  return vendorName || "No subsidy details";
+}
+
+function mapRequestStatusToCardStatus(status: BenefitRequest["status"]) {
+  if (status === "approved") {
+    return "Active" as const;
+  }
+
+  if (status === "pending") {
+    return "Pending" as const;
+  }
+
+  return "Eligible" as const;
 }
 
 function mapStatusByBenefit(
@@ -70,16 +127,17 @@ function mapStatusByBenefit(
     return;
   }
 
-  const normalizedStatus = request.status.trim().toLowerCase();
-  if (normalizedStatus === "approved") {
+  if (request.status === "approved") {
     statusByBenefitId.set(benefitId, "Active");
     return;
   }
-  if (normalizedStatus === "pending") {
+
+  if (request.status === "pending") {
     statusByBenefitId.set(benefitId, "Pending");
     return;
   }
-  if (normalizedStatus === "rejected") {
+
+  if (request.status === "rejected" || request.status === "cancelled") {
     statusByBenefitId.set(benefitId, "Eligible");
   }
 }

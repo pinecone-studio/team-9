@@ -1,6 +1,7 @@
 import type { EmployeeRequestItem } from "./employee-types";
 
 type RecentRequestsProps = {
+  onSelect: (request: EmployeeRequestItem) => void;
   requests: EmployeeRequestItem[];
 };
 
@@ -32,7 +33,7 @@ function getStatusStyles(status: EmployeeRequestItem["status"]) {
   };
 }
 
-export function RecentRequests({ requests }: RecentRequestsProps) {
+export function RecentRequests({ onSelect, requests }: RecentRequestsProps) {
   return (
     <article
       className={[
@@ -47,11 +48,11 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
         Your benefit requests and their status
       </p>
 
-      <div className="mt-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mt-5 max-h-[323px] overflow-auto rounded-[12px] border border-[#F3F4F6] [scrollbar-width:thin]">
         <div
           className={[
-            "grid min-w-[640px] grid-cols-[1.4fr_0.6fr_0.6fr_0.8fr] gap-3",
-            "border-b border-[#E5E5E5] pb-3 text-[12px] font-semibold text-[#6B7280]",
+            "sticky top-0 z-10 grid min-w-[640px] grid-cols-[1.4fr_0.6fr_0.6fr_0.8fr] gap-3",
+            "border-b border-[#E5E5E5] bg-white px-4 py-3 text-[12px] font-semibold text-[#6B7280]",
           ].join(" ")}
         >
           <span>Benefit</span>
@@ -61,7 +62,7 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
         </div>
         <div className="min-w-[640px] text-[14px] text-[#111827]">
           {requests.length === 0 ? (
-            <div className="py-6 text-center text-[14px] text-[#6B7280]">
+            <div className="px-4 py-6 text-center text-[14px] text-[#6B7280]">
               No benefit requests found.
             </div>
           ) : (
@@ -69,74 +70,76 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
               const status = getStatusStyles(row.status);
 
               return (
-            <div
-              className={[
-                "grid grid-cols-[1.4fr_0.6fr_0.6fr_0.8fr] items-center gap-3",
-                "border-b border-[#F3F4F6] py-3.5",
-              ].join(" ")}
-              key={row.id}
-            >
-              <span>{row.benefit}</span>
-              <span className="text-[#6B7280]">{row.submittedAt}</span>
-              <span
-                className={[
-                  "inline-flex w-fit items-center gap-1 rounded-full",
-                  "px-2 py-0.5 text-[11px]",
-                  status.color,
-                ].join(" ")}
-              >
-                {status.icon === "check" && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                <button
+                  className={[
+                    "grid w-full grid-cols-[1.4fr_0.6fr_0.6fr_0.8fr] items-center gap-3",
+                    "border-b border-[#F3F4F6] px-4 py-3.5 text-left transition-colors hover:bg-[#FAFAFA]",
+                  ].join(" ")}
+                  key={row.id}
+                  onClick={() => onSelect(row)}
+                  type="button"
+                >
+                  <span>{row.benefit}</span>
+                  <span className="text-[#6B7280]">{row.submittedAt}</span>
+                  <span
+                    className={[
+                      "inline-flex w-fit items-center gap-1 rounded-[6px]",
+                      "px-2.5 py-1 text-[11px] font-medium",
+                      status.color,
+                    ].join(" ")}
                   >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M7.5 12.5l3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-                {status.icon === "clock" && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-                {status.icon === "alert" && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M12 6l8 14H4l8-14Z" />
-                    <path d="M12 10v4m0 4h.01" />
-                  </svg>
-                )}
-                {status.icon === "slash" && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="m15 9-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-                {row.status}
-              </span>
-              <span className="text-[#6B7280]">{row.reviewedBy}</span>
-            </div>
+                    {status.icon === "check" && (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M7.5 12.5l3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {status.icon === "clock" && (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {status.icon === "alert" && (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M12 6l8 14H4l8-14Z" />
+                        <path d="M12 10v4m0 4h.01" />
+                      </svg>
+                    )}
+                    {status.icon === "slash" && (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="m15 9-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {row.status}
+                  </span>
+                  <span className="text-[#6B7280]">{row.reviewedBy}</span>
+                </button>
               );
             })
           )}

@@ -20,6 +20,7 @@ export async function reviewBenefitRequest(
 ): Promise<BenefitRequest> {
   const db = getDb({ DB });
   const input = args.input;
+  const reviewComment = input.reviewComment?.trim() || null;
 
   try {
     const [existing] = await db
@@ -48,6 +49,9 @@ export async function reviewBenefitRequest(
     }
     if (reviewer.id === existing.employeeId) {
       throw new Error("The requester cannot review their own request");
+    }
+    if (!input.approved && !reviewComment) {
+      throw new Error("A rejection comment is required when rejecting a benefit request");
     }
 
     const [eligibility] = await db
@@ -93,11 +97,30 @@ export async function reviewBenefitRequest(
     await db
       .update(benefitRequests)
       .set({
+        reviewComment,
         reviewedBy: reviewer.id,
         status: nextRequestStatus,
         updatedAt,
       })
-      .where(eq(benefitRequests.id, input.id));
+      .where(eq(benefitRequests.id, input.id))
+      .catch(async (error) => {
+        if (!isMissingReviewCommentColumnError(error)) {
+          throw error;
+        }
+
+        console.warn(
+          "[reviewBenefitRequest] review_comment column is unavailable. Saving review without comment persistence.",
+        );
+
+        await db
+          .update(benefitRequests)
+          .set({
+            reviewedBy: reviewer.id,
+            status: nextRequestStatus,
+            updatedAt,
+          })
+          .where(eq(benefitRequests.id, input.id));
+      });
 
     const result = (await listBenefitRequests(DB, {})).find(
       (request) => request.id === input.id,
@@ -113,4 +136,13 @@ export async function reviewBenefitRequest(
     }
     throw new Error("Failed to review benefit request.");
   }
+}
+
+function isMissingReviewCommentColumnError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes("review_comment") &&
+    (message.includes("no such column") || message.includes("has no column named"))
+  );
 }

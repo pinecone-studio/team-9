@@ -87,16 +87,21 @@ export async function getEmployeeDashboardData({
 
   return buildEmployeeDashboardViewData({
     approvalRequests: dashboardData?.approvalRequests ?? [],
-    benefitStatusOverrides: new Map(),
     employeeEligibility,
     employeeEmail: employee.email,
     employeeLateArrivals30Days:
-      typeof employee.lateArrivalCount30Days === "number"
+      typeof dashboardData?.employee?.lateArrivalCount30Days === "number"
+        ? dashboardData.employee.lateArrivalCount30Days
+        : typeof employee.lateArrivalCount30Days === "number"
         ? employee.lateArrivalCount30Days
         : null,
     employeeName,
     employeeOkrSubmitted:
-      typeof employee.okrSubmitted === "boolean" ? employee.okrSubmitted : null,
+      typeof dashboardData?.employee?.okrSubmitted === "boolean"
+        ? dashboardData.employee.okrSubmitted
+        : typeof employee.okrSubmitted === "boolean"
+          ? employee.okrSubmitted
+          : null,
     employeeResponsibilityLevel:
       dashboardData?.employee?.responsibilityLevel ??
       employee.responsibilityLevel ??
@@ -105,7 +110,6 @@ export async function getEmployeeDashboardData({
       dashboardData?.employee?.employmentStatus ??
       employee.employmentStatus ??
       "Unknown",
-    rawEligibility: employeeEligibility,
     requestRows: benefitRequests,
     summaryRows: benefitSummary,
   });

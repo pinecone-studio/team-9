@@ -2,16 +2,16 @@ import {
   getPendingBenefitIds,
   mapBenefitSections,
 } from "./employee-dashboard-benefits";
-import { mapRequests } from "./employee-dashboard-requests";
+import {
+  buildRequestSummary,
+  mapRequests,
+} from "./employee-dashboard-requests";
 import {
   findFirstBooleanMetric,
   findFirstNumericMetric,
 } from "./employee-dashboard-signals";
 import { buildSummaryCards } from "./employee-dashboard-summary";
-import type {
-  DashboardQueryResult,
-  EmployeeBenefitStatusOverride,
-} from "./employee-dashboard.graphql";
+import type { DashboardQueryResult } from "./employee-dashboard.graphql";
 import type {
   EmployeeDashboardViewData,
   EmployeeEligibilitySignals,
@@ -19,7 +19,6 @@ import type {
 
 type BuildDashboardViewDataInput = {
   approvalRequests: NonNullable<DashboardQueryResult["approvalRequests"]>;
-  benefitStatusOverrides: Map<string, EmployeeBenefitStatusOverride>;
   employeeEligibility: NonNullable<DashboardQueryResult["employeeEligibility"]>;
   employeeEmail: string | null;
   employeeLateArrivals30Days: number | null;
@@ -27,7 +26,6 @@ type BuildDashboardViewDataInput = {
   employeeOkrSubmitted: boolean | null;
   employeeResponsibilityLevel: number | null;
   employmentStatus: string;
-  rawEligibility: NonNullable<DashboardQueryResult["employeeEligibility"]>;
   requestRows: Parameters<typeof mapRequests>[0];
   summaryRows: NonNullable<DashboardQueryResult["listBenefitEligibilitySummary"]>;
 };
@@ -53,7 +51,6 @@ export function buildEmptyDashboardData(
 
 export function buildEmployeeDashboardViewData({
   approvalRequests,
-  benefitStatusOverrides,
   employeeEligibility,
   employeeEmail,
   employeeLateArrivals30Days,
@@ -61,7 +58,6 @@ export function buildEmployeeDashboardViewData({
   employeeOkrSubmitted,
   employeeResponsibilityLevel,
   employmentStatus,
-  rawEligibility,
   requestRows,
   summaryRows,
 }: BuildDashboardViewDataInput): EmployeeDashboardViewData {
@@ -77,37 +73,34 @@ export function buildEmployeeDashboardViewData({
         )
       : null;
   const pendingBenefitIds = getPendingBenefitIds(approvalRequests);
-  const baseSections = mapBenefitSections(
-    rawEligibility,
-    benefitStatusOverrides,
-    benefitRuleCountByBenefitId,
-    activeBenefitIds,
-    pendingBenefitIds,
-  );
-  const baseBenefits = baseSections.flatMap((section) => section.items);
-  const benefitNameById = new Map(baseBenefits.map((benefit) => [benefit.id, benefit.title]));
-  const requestsPayload = mapRequests(requestRows, employeeEmail, employeeName, benefitNameById);
+  const requestSummary = buildRequestSummary(requestRows, employeeEmail, employeeName);
   const sections = mapBenefitSections(
     employeeEligibility,
-    requestsPayload.statusByBenefitId,
+    requestSummary.statusByBenefitId,
     benefitRuleCountByBenefitId,
     activeBenefitIds,
     pendingBenefitIds,
   );
   const allBenefits = sections.flatMap((section) => section.items);
+  const requests = mapRequests(
+    requestSummary.requests,
+    new Map(allBenefits.map((benefit) => [benefit.id, benefit])),
+  );
   const okrSubmitted =
+    employeeOkrSubmitted ??
     findFirstBooleanMetric(
       employeeEligibility,
       (key) => key.toLowerCase().includes("okr"),
-    ) ?? employeeOkrSubmitted;
+    );
   const lateArrivals30Days =
+    employeeLateArrivals30Days ??
     findFirstNumericMetric(
       employeeEligibility,
       (key) => key.toLowerCase().includes("late") || key.toLowerCase().includes("attendance"),
-    ) ?? employeeLateArrivals30Days;
+    );
 
   return {
-    requests: requestsPayload.requests,
+    requests,
     sections,
     signals: {
       employmentStatus,
@@ -115,6 +108,6 @@ export function buildEmployeeDashboardViewData({
       okrSubmitted,
       responsibilityLevel: employeeResponsibilityLevel,
     },
-    summaryCards: buildSummaryCards(allBenefits, requestsPayload.pendingCount),
+    summaryCards: buildSummaryCards(allBenefits, requestSummary.pendingCount),
   };
 }

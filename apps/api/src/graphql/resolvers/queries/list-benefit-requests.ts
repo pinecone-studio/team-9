@@ -15,6 +15,19 @@ type ListBenefitRequestsArgs = {
   targetRole?: ApprovalRole | null;
 };
 
+type BenefitRequestRow = {
+  benefitId: string;
+  contractAcceptedAt: string | null;
+  contractVersionAccepted: string | null;
+  createdAt: string;
+  employeeId: string;
+  id: string;
+  reviewComment: string | null;
+  reviewedBy: string | null;
+  status: string;
+  updatedAt: string;
+};
+
 export async function listBenefitRequests(
   DB: D1Database,
   args: ListBenefitRequestsArgs,
@@ -23,22 +36,18 @@ export async function listBenefitRequests(
     const db = getDb({ DB });
     const normalizedBenefitId = args.benefitId?.trim() || null;
     const normalizedEmployeeId = args.employeeId?.trim() || null;
-    const requestRows = await db
-      .select()
-      .from(benefitRequests)
-      .where(
-        normalizedEmployeeId && normalizedBenefitId
-          ? and(
-              eq(benefitRequests.employeeId, normalizedEmployeeId),
-              eq(benefitRequests.benefitId, normalizedBenefitId),
-            )
-          : normalizedEmployeeId
-            ? eq(benefitRequests.employeeId, normalizedEmployeeId)
-            : normalizedBenefitId
-              ? eq(benefitRequests.benefitId, normalizedBenefitId)
-              : undefined,
-      )
-      .orderBy(desc(benefitRequests.createdAt));
+    const requestFilter =
+      normalizedEmployeeId && normalizedBenefitId
+        ? and(
+            eq(benefitRequests.employeeId, normalizedEmployeeId),
+            eq(benefitRequests.benefitId, normalizedBenefitId),
+          )
+        : normalizedEmployeeId
+          ? eq(benefitRequests.employeeId, normalizedEmployeeId)
+          : normalizedBenefitId
+            ? eq(benefitRequests.benefitId, normalizedBenefitId)
+            : undefined;
+    const requestRows = await selectBenefitRequestRows(db, requestFilter);
 
     if (requestRows.length === 0) {
       return [];
@@ -125,6 +134,7 @@ export async function listBenefitRequests(
           created_at: request.createdAt,
           updated_at: request.updatedAt,
           reviewed_by: request.reviewedBy ? employeeMap.get(request.reviewedBy) ?? null : null,
+          reviewComment: request.reviewComment,
           approval_role: benefit.approvalRole,
           eligibilityStatus: eligibility?.status ?? null,
           ruleEvaluationJson: eligibility?.ruleEvaluationJson ?? null,
@@ -154,4 +164,69 @@ export async function listBenefitRequests(
     });
     return [];
   }
+}
+
+async function selectBenefitRequestRows(
+  db: ReturnType<typeof getDb>,
+  requestFilter:
+    | ReturnType<typeof and>
+    | ReturnType<typeof eq>
+    | undefined,
+): Promise<BenefitRequestRow[]> {
+  try {
+    return await db
+      .select({
+        benefitId: benefitRequests.benefitId,
+        contractAcceptedAt: benefitRequests.contractAcceptedAt,
+        contractVersionAccepted: benefitRequests.contractVersionAccepted,
+        createdAt: benefitRequests.createdAt,
+        employeeId: benefitRequests.employeeId,
+        id: benefitRequests.id,
+        reviewComment: benefitRequests.reviewComment,
+        reviewedBy: benefitRequests.reviewedBy,
+        status: benefitRequests.status,
+        updatedAt: benefitRequests.updatedAt,
+      })
+      .from(benefitRequests)
+      .where(requestFilter)
+      .orderBy(desc(benefitRequests.createdAt));
+  } catch (error) {
+    if (!isMissingReviewCommentColumnError(error)) {
+      throw error;
+    }
+
+    const rows = await db
+      .select({
+        benefitId: benefitRequests.benefitId,
+        contractAcceptedAt: benefitRequests.contractAcceptedAt,
+        contractVersionAccepted: benefitRequests.contractVersionAccepted,
+        createdAt: benefitRequests.createdAt,
+        employeeId: benefitRequests.employeeId,
+        id: benefitRequests.id,
+        reviewedBy: benefitRequests.reviewedBy,
+        status: benefitRequests.status,
+        updatedAt: benefitRequests.updatedAt,
+      })
+      .from(benefitRequests)
+      .where(requestFilter)
+      .orderBy(desc(benefitRequests.createdAt));
+
+    console.warn(
+      "[benefitRequests] review_comment column is unavailable. Falling back to legacy select.",
+    );
+
+    return rows.map((row) => ({
+      ...row,
+      reviewComment: null,
+    }));
+  }
+}
+
+function isMissingReviewCommentColumnError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes("review_comment") &&
+    (message.includes("no such column") || message.includes("has no column named"))
+  );
 }

@@ -1,4 +1,5 @@
 import AddBenefitDialog from "./AddBenefitDialog";
+import BenefitCancelRequestDialog from "./BenefitCancelRequestDialog";
 import BenefitPendingRequestDialog from "./BenefitPendingRequestDialog";
 import CreateCategoryDialog from "./CreateCategoryDialog";
 import type { BenefitCategoryRecord } from "./wellness-section.graphql";
@@ -21,8 +22,11 @@ type WellnessSectionDialogsProps = {
   onEditDeleted: (benefitId: string) => void;
   onEditClose: () => void;
   onEditSaved: () => Promise<void>;
+  onRequestCancelled: () => Promise<void>;
   onRequestClose: () => void;
+  onRequestCancelClose: () => void;
   onRequestReviewed: () => Promise<void>;
+  pendingCancelRequestId: string | null;
   onSubmitted: (message: string | null) => void;
   pendingRequestId: string | null;
   selectedBenefit: BenefitCard | null;
@@ -43,8 +47,11 @@ export default function WellnessSectionDialogs({
   onEditDeleted,
   onEditClose,
   onEditSaved,
+  onRequestCancelled,
   onRequestClose,
+  onRequestCancelClose,
   onRequestReviewed,
+  pendingCancelRequestId,
   onSubmitted,
   pendingRequestId,
   selectedBenefit,
@@ -98,6 +105,13 @@ export default function WellnessSectionDialogs({
         onClose={onRequestClose}
         onReviewed={onRequestReviewed}
         requestId={pendingRequestId}
+      />
+
+      <BenefitCancelRequestDialog
+        currentUserIdentifier={currentUserIdentifier}
+        onCancelled={onRequestCancelled}
+        onClose={onRequestCancelClose}
+        requestId={pendingCancelRequestId}
       />
     </>
   );

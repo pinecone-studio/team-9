@@ -49,6 +49,8 @@ export default function ApprovalRequestBenefitUpdateDetails({
     parsedPayload.entityType === "benefit"
       ? (parsedPayload.ruleAssignments as BenefitUpdateRuleAssignment[])
       : [];
+  const archiveComment =
+    parsedPayload.entityType === "benefit" ? parsedPayload.archiveComment : null;
   const previousRules = snapshot?.ruleAssignments ?? [];
   const changeRows = getBenefitUpdateChangeRows(
     benefit,
@@ -60,6 +62,7 @@ export default function ApprovalRequestBenefitUpdateDetails({
   const reviewerLabel = useResolvedPersonName(request.reviewed_by);
   const assignedApprover =
     reviewerLabel !== "-" ? reviewerLabel : formatApprovalRole(request.target_role);
+  const isDelete = request.action_type === "delete";
 
   return (
     <div className="flex flex-col gap-6">
@@ -67,8 +70,10 @@ export default function ApprovalRequestBenefitUpdateDetails({
         <span className="inline-flex h-[26px] items-center justify-center rounded-[4px] border border-[#E5E5E5] bg-white px-2 text-[14px] leading-5 font-medium text-[#0A0A0A]">
           Benefit
         </span>
-        <span className="inline-flex h-[26px] items-center justify-center rounded-[4px] bg-[#F5F5F5] px-3 text-[12px] leading-4 font-medium text-[#171717]">
-          Change
+        <span className={`inline-flex h-[26px] items-center justify-center rounded-[4px] px-3 text-[12px] leading-4 font-medium ${
+          isDelete ? "bg-[#FEF2F2] text-[#C10007]" : "bg-[#F5F5F5] text-[#171717]"
+        }`}>
+          {isDelete ? "Archive" : "Change"}
         </span>
       </div>
 
@@ -103,18 +108,28 @@ export default function ApprovalRequestBenefitUpdateDetails({
         </DetailCard>
       </DetailSection>
 
-      <DetailSection title="Change Summary">
-        <div className="flex flex-col gap-2">
-          {changeRows.map((row) => (
-            <ChangeSummaryRow
-              key={row.label}
-              label={row.label}
-              nextValue={row.nextValue}
-              previousValue={row.previousValue}
-            />
-          ))}
-        </div>
-      </DetailSection>
+      {archiveComment ? (
+        <DetailSection title="Archive Comment">
+          <DetailCard>
+            <p className="text-[14px] leading-5 text-[#0A0A0A]">{archiveComment}</p>
+          </DetailCard>
+        </DetailSection>
+      ) : null}
+
+      {!isDelete ? (
+        <DetailSection title="Change Summary">
+          <div className="flex flex-col gap-2">
+            {changeRows.map((row) => (
+              <ChangeSummaryRow
+                key={row.label}
+                label={row.label}
+                nextValue={row.nextValue}
+                previousValue={row.previousValue}
+              />
+            ))}
+          </div>
+        </DetailSection>
+      ) : null}
 
       <DetailSection title="Impact Preview">
         <DetailCard>
@@ -123,9 +138,11 @@ export default function ApprovalRequestBenefitUpdateDetails({
               <Users className="h-5 w-5 text-[#737373]" />
               <div>
                 <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
-                  {changeRows.length}
+                  {isDelete ? "Archive benefit" : changeRows.length}
                 </div>
-                <div className="text-[12px] leading-4 text-[#737373]">Changed fields</div>
+                <div className="text-[12px] leading-4 text-[#737373]">
+                  {isDelete ? "Requested action" : "Changed fields"}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">

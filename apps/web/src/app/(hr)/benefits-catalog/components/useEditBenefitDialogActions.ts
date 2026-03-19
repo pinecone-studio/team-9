@@ -1,92 +1,105 @@
 import { useMutation } from "@apollo/client/react";
-
+import { ApprovalActionType, ApprovalEntityType } from "@/shared/apollo/generated";
 import { buildContractUploadInput } from "./contract-upload-client";
+import { buildArchiveApprovalSnapshot, finalizeBenefitSubmission } from "./useEditBenefitDialogActions.archive";
+import { buildBenefitInput, buildRuleAssignments, isMissingIsActiveFieldError, validateBenefitSaveInput } from "./useEditBenefitDialogActions.helpers";
 import {
-  buildBenefitInput,
-  buildRuleAssignments,
-  isMissingIsActiveFieldError,
-  validateBenefitSaveInput,
-} from "./useEditBenefitDialogActions.helpers";
-import { getBenefitRequestNoticeMessage } from "./benefit-request-notice";
-import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
-import {
-  DELETE_BENEFIT_MUTATION,
+  CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION,
   SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION,
-  type ApprovalRoleValue,
-  type DeleteBenefitMutation,
-  type DeleteBenefitVariables,
+  type CreateBenefitDeleteApprovalRequestMutation,
+  type CreateBenefitDeleteApprovalRequestVariables,
   type SubmitBenefitUpdateRequestMutation,
   type SubmitBenefitUpdateRequestVariables,
 } from "./edit-benefit-dialog.graphql";
-
-type UseEditBenefitDialogActionsProps = {
-  approvalRole: ApprovalRoleValue;
-  assignedRules: AssignedBenefitRule[];
-  benefitDescription: string;
-  benefitId: string;
-  categoryId: string;
-  contractFile: File | null;
-  initialIsActive: boolean;
-  currentUserIdentifier: string;
-  initialRequiresContract: boolean;
-  isActive: boolean;
-  isCore: boolean;
-  name: string;
-  onClose: () => void;
-  onDeleted?: (benefitId: string) => void | Promise<unknown>;
-  onSaved?: () => void | Promise<unknown>;
-  onSubmitted?: (message: string) => void;
-  requiresContract: boolean;
-  subsidyPercentValue: string;
-  vendorNameValue: string;
-};
+import type { UseEditBenefitDialogActionsProps } from "./edit-benefit-dialog.types";
 
 export function useEditBenefitDialogActions({
   approvalRole,
   assignedRules,
   benefitDescription,
   benefitId,
+  benefitName,
+  category,
   categoryId,
   contractFile,
   initialIsActive,
+  initialApprovalRole,
+  initialAssignedRules,
+  initialBenefitDescription,
+  initialIsCore,
   currentUserIdentifier,
   initialRequiresContract,
+  initialSubsidyPercent,
+  initialVendorName,
   isActive,
   isCore,
   name,
   onClose,
-  onDeleted,
   onSaved,
   onSubmitted,
   requiresContract,
   subsidyPercentValue,
   vendorNameValue,
 }: UseEditBenefitDialogActionsProps) {
-  const [deleteBenefit, { loading: deleting }] = useMutation<
-    DeleteBenefitMutation,
-    DeleteBenefitVariables
-  >(DELETE_BENEFIT_MUTATION);
+  const [createBenefitDeleteApprovalRequest, { loading: deleting }] = useMutation<
+    CreateBenefitDeleteApprovalRequestMutation,
+    CreateBenefitDeleteApprovalRequestVariables
+  >(CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION);
   const [submitBenefitUpdateRequest, { loading: updating }] = useMutation<
     SubmitBenefitUpdateRequestMutation,
     SubmitBenefitUpdateRequestVariables
   >(SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION);
 
-  async function handleDelete(setErrorMessage: (value: string | null) => void) {
+  async function handleDelete(
+    archiveComment: string,
+    setErrorMessage: (value: string | null) => void,
+  ) {
     setErrorMessage(null);
+    const trimmedArchiveComment = archiveComment.trim();
+    if (!trimmedArchiveComment) {
+      setErrorMessage("Please add an archive comment before submitting.");
+      return;
+    }
 
     try {
-      const result = await deleteBenefit({ variables: { id: benefitId } });
-
-      if (!result.data?.deleteBenefit) {
-        setErrorMessage("Benefit not found or already deleted.");
+      const archiveSnapshot = buildArchiveApprovalSnapshot({
+        archiveComment: trimmedArchiveComment,
+        benefitId,
+        benefitName,
+        category,
+        categoryId,
+        initialApprovalRole,
+        initialAssignedRules,
+        initialBenefitDescription,
+        initialIsActive,
+        initialIsCore,
+        initialRequiresContract,
+        initialSubsidyPercent,
+        initialVendorName,
+      });
+      const result = await createBenefitDeleteApprovalRequest({
+        variables: {
+          input: {
+            actionType: ApprovalActionType.Delete,
+            entityId: benefitId,
+            entityType: ApprovalEntityType.Benefit,
+            payloadJson: JSON.stringify(archiveSnapshot),
+            requestedBy: currentUserIdentifier,
+            snapshotJson: JSON.stringify(archiveSnapshot),
+            targetRole: approvalRole,
+          },
+        },
+      });
+      if (!result.data?.createApprovalRequest.id) {
+        setErrorMessage("Benefit archive request could not be submitted.");
         return;
       }
-
-      await onDeleted?.(benefitId);
-      onClose();
+      await finalizeBenefitSubmission({ approvalRole, onClose, onSaved, onSubmitted });
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Benefit could not be archived.",
+        error instanceof Error
+          ? error.message
+          : "Benefit archive request could not be submitted.",
       );
     }
   }
@@ -108,9 +121,7 @@ export function useEditBenefitDialogActions({
       setErrorMessage(validation.errorMessage);
       return;
     }
-
     setErrorMessage(null);
-
     try {
       const contractUpload = contractFile ? await buildContractUploadInput(contractFile) : null;
       const benefitInput = buildBenefitInput({
@@ -126,7 +137,6 @@ export function useEditBenefitDialogActions({
         trimmedName: validation.trimmedName,
         trimmedVendorName: validation.trimmedVendorName,
       });
-
       await submitBenefitUpdateRequest({
         variables: {
           input: {
@@ -137,14 +147,7 @@ export function useEditBenefitDialogActions({
           },
         },
       });
-
-      onSubmitted?.(getBenefitRequestNoticeMessage(approvalRole));
-      try {
-        await onSaved?.();
-      } catch {
-        // Save already succeeded; ignore refresh callback failures.
-      }
-      onClose();
+      await finalizeBenefitSubmission({ approvalRole, onClose, onSaved, onSubmitted });
     } catch (error) {
       if (isMissingIsActiveFieldError(error)) {
         setErrorMessage(
@@ -161,10 +164,5 @@ export function useEditBenefitDialogActions({
     }
   }
 
-  return {
-    deleting,
-    handleDelete,
-    handleSave,
-    updating,
-  };
+  return { deleting, handleDelete, handleSave, updating };
 }

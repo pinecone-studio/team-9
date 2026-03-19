@@ -1,11 +1,14 @@
 import type { ApprovalRequestRecord } from "./approval-requests.graphql";
 
 type BenefitPayload = {
+  archiveComment?: string;
   benefit?: {
     approvalRole?: string;
     categoryId?: string;
+    category?: string;
     description?: string;
     id?: string;
+    isActive?: boolean;
     isCore?: boolean;
     name?: string;
     requiresContract?: boolean;
@@ -48,6 +51,7 @@ type RulePayload = {
 
 export type ParsedApprovalRequest =
   | {
+      archiveComment: string | null;
       entityType: "benefit";
       benefit: NonNullable<BenefitPayload["benefit"]> | null;
       employeeRequest: NonNullable<BenefitPayload["employeeRequest"]> | null;
@@ -76,6 +80,7 @@ export function parseApprovalPayload(
   if (request.entity_type === "benefit") {
     const payload = parseJson<BenefitPayload>(request.payload_json);
     return {
+      archiveComment: payload?.archiveComment ?? null,
       entityType: "benefit",
       benefit: payload?.benefit ?? null,
       employeeRequest: payload?.employeeRequest ?? null,

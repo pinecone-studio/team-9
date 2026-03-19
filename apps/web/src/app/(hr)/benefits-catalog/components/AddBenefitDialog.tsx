@@ -122,7 +122,7 @@ export default function AddBenefitDialog({
         }
       }}
     >
-      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white">
+      <div className="mx-auto flex h-[760px] w-full max-w-[540px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white p-6">
         <AddBenefitDialogForm
           approvalRole={approvalRole}
           assignedRules={assignedRules}
@@ -149,7 +149,7 @@ export default function AddBenefitDialog({
         />
 
         {errorMessage ? (
-          <div className="px-6 pb-3">
+          <div className="pb-3">
             <p
               className="w-full rounded-[6px] border border-[#F3C7C7] bg-[#FFF7F7] px-3 py-2 text-[13px] leading-5 text-[#B42318]"
               ref={errorMessageRef}

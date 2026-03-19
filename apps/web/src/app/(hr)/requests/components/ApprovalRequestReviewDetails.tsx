@@ -33,7 +33,7 @@ export default function ApprovalRequestReviewDetails({
 
   if (
     request.entity_type === "benefit" &&
-    request.action_type === "update" &&
+    (request.action_type === "update" || request.action_type === "delete") &&
     !(parsedPayload.entityType === "benefit" && parsedPayload.employeeRequest)
   ) {
     return <ApprovalRequestBenefitUpdateDetails request={request} />;

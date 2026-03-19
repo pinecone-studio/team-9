@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
+import type { ApprovalActionType, ApprovalEntityType, ApprovalRequestStatus } from "@/shared/apollo/generated";
 
 export type ApprovalRoleValue = "finance_manager" | "hr_admin";
-
 export type UpdatedBenefitPayload = {
   approvalRole: ApprovalRoleValue;
   category: string;
@@ -15,12 +15,23 @@ export type UpdatedBenefitPayload = {
   vendorName?: string | null;
 };
 
-export type DeleteBenefitMutation = {
-  deleteBenefit: boolean;
+export type CreateBenefitDeleteApprovalRequestMutation = {
+  createApprovalRequest: {
+    id: string;
+    status: ApprovalRequestStatus;
+  };
 };
 
-export type DeleteBenefitVariables = {
-  id: string;
+export type CreateBenefitDeleteApprovalRequestVariables = {
+  input: {
+    actionType: ApprovalActionType;
+    entityId?: string | null;
+    entityType: ApprovalEntityType;
+    payloadJson: string;
+    requestedBy: string;
+    snapshotJson?: string | null;
+    targetRole: ApprovalRoleValue;
+  };
 };
 
 export type AvailableRuleDefinition = {
@@ -44,6 +55,12 @@ export type ExistingEligibilityRule = {
 };
 
 export type BenefitEditRulesQuery = {
+  employees?: Array<{
+    email: string;
+    id: string;
+    name: string;
+    position: string;
+  } | null> | null;
   eligibilityRules: ExistingEligibilityRule[];
   ruleDefinitions: AvailableRuleDefinition[];
 };
@@ -104,15 +121,23 @@ export type ContractSignedUrlByBenefitQuery = {
 export type ContractSignedUrlByBenefitVariables = {
   benefitId: string;
 };
-
-export const DELETE_BENEFIT_MUTATION = gql`
-  mutation DeleteBenefit($id: ID!) {
-    deleteBenefit(id: $id)
+export const CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION = gql`
+  mutation CreateBenefitDeleteApprovalRequest($input: CreateApprovalRequestInput!) {
+    createApprovalRequest(input: $input) {
+      id
+      status
+    }
   }
 `;
 
 export const BENEFIT_EDIT_RULES_QUERY = gql`
   query BenefitEditRules($benefitId: ID!) {
+    employees {
+      id
+      name
+      email
+      position
+    }
     ruleDefinitions {
       id
       name
@@ -133,7 +158,6 @@ export const BENEFIT_EDIT_RULES_QUERY = gql`
     }
   }
 `;
-
 export const SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION = gql`
   mutation SubmitBenefitUpdateRequest($input: SubmitBenefitUpdateRequestInput!) {
     submitBenefitUpdateRequest(input: $input) {
@@ -143,7 +167,6 @@ export const SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION = gql`
     }
   }
 `;
-
 export const CONTRACT_SIGNED_URL_BY_BENEFIT_QUERY = gql`
   query ContractSignedUrlByBenefit($benefitId: ID!) {
     contractSignedUrlByBenefit(benefitId: $benefitId) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@apollo/client/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ApprovalRequestReviewDetails from "./ApprovalRequestReviewDetails";
 import ApprovalRequestReviewFooter from "./ApprovalRequestReviewFooter";
@@ -9,14 +9,18 @@ import ApprovalRequestReviewHeader from "./ApprovalRequestReviewHeader";
 import ApprovalRequestReviewSkeleton from "./ApprovalRequestReviewSkeleton";
 import { useResolvedPersonName } from "./RequestPeopleContext";
 import {
+  APPROVAL_REQUESTS_QUERY,
   APPROVAL_REQUEST_QUERY,
   REVIEW_APPROVAL_REQUEST_MUTATION,
+  type ApprovalRequestsQuery,
   type ApprovalRequestQuery,
   type ApprovalRequestQueryVariables,
   type ReviewApprovalRequestMutation,
   type ReviewApprovalRequestVariables,
 } from "./approval-requests.graphql";
 import { getApprovalRequestDialogCopy } from "./approval-request-review-dialog.copy";
+
+const SLOW_REVIEW_HINT_DELAY_MS = 4000;
 
 type ApprovalRequestReviewDialogProps = {
   currentUserIdentifier: string;
@@ -34,6 +38,7 @@ export default function ApprovalRequestReviewDialog({
   const [rejectMode, setRejectMode] = useState(false);
   const [reviewComment, setReviewComment] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showSlowReviewHint, setShowSlowReviewHint] = useState(false);
   const { data, loading, refetch } = useQuery<
     ApprovalRequestQuery,
     ApprovalRequestQueryVariables
@@ -52,6 +57,20 @@ export default function ApprovalRequestReviewDialog({
     request?.requested_by.trim().toLowerCase() ===
     currentUserIdentifier.trim().toLowerCase();
   const dialogCopy = useMemo(() => getApprovalRequestDialogCopy(request), [request]);
+  useEffect(() => {
+    if (!reviewing) {
+      setShowSlowReviewHint(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowSlowReviewHint(true);
+    }, SLOW_REVIEW_HINT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [reviewing]);
   const fallbackMeta = request ? (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] leading-5 text-[#64748B]">
       {dialogCopy.fallbackMeta?.map((item) => (
@@ -82,9 +101,40 @@ export default function ApprovalRequestReviewDialog({
             reviewedBy: currentUserIdentifier,
           },
         },
+        update(cache, { data: mutationData }) {
+          const reviewedRequest = mutationData?.reviewApprovalRequest;
+          if (!reviewedRequest) {
+            return;
+          }
+
+          cache.writeQuery<ApprovalRequestQuery, ApprovalRequestQueryVariables>({
+            query: APPROVAL_REQUEST_QUERY,
+            variables: { id: reviewedRequest.id },
+            data: {
+              approvalRequest: reviewedRequest,
+            },
+          });
+          cache.updateQuery<ApprovalRequestsQuery>(
+            {
+              query: APPROVAL_REQUESTS_QUERY,
+            },
+            (existingData) => {
+              if (!existingData) {
+                return existingData;
+              }
+
+              return {
+                approvalRequests: existingData.approvalRequests.map((item) =>
+                  item.id === reviewedRequest.id ? reviewedRequest : item,
+                ),
+              };
+            },
+          );
+        },
       });
-      await refetch();
-      await onReviewed();
+
+      void refetch();
+      void onReviewed();
       onClose();
     } catch (error) {
       setErrorMessage(
@@ -141,6 +191,11 @@ export default function ApprovalRequestReviewDialog({
           rejectMode={rejectMode}
           reviewComment={reviewComment}
           reviewing={reviewing}
+          statusMessage={
+            reviewing && showSlowReviewHint
+              ? "Approval is still processing. Eligibility recalculation may still be finishing on the server."
+              : null
+          }
         />
       </div>
     </div>

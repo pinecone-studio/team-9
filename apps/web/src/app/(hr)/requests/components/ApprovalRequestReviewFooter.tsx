@@ -11,6 +11,7 @@ type ApprovalRequestReviewFooterProps = {
   rejectMode: boolean;
   reviewComment: string;
   reviewing: boolean;
+  statusMessage: string | null;
 };
 
 export default function ApprovalRequestReviewFooter({
@@ -24,12 +25,18 @@ export default function ApprovalRequestReviewFooter({
   rejectMode,
   reviewComment,
   reviewing,
+  statusMessage,
 }: ApprovalRequestReviewFooterProps) {
   return (
     <div className="border-t border-[#E2E8F0] bg-white px-6 py-5">
       {errorMessage ? (
         <p className="mb-4 rounded-[8px] border border-[#F3C7C7] bg-[#FFF7F7] px-3 py-2 text-[13px] leading-5 text-[#B42318]">
           {errorMessage}
+        </p>
+      ) : null}
+      {statusMessage ? (
+        <p className="mb-4 rounded-[8px] border border-[#CFE3FB] bg-[#F5F9FF] px-3 py-2 text-[13px] leading-5 text-[#175CD3]">
+          {statusMessage}
         </p>
       ) : null}
       {isPending && rejectMode ? (
@@ -48,7 +55,8 @@ export default function ApprovalRequestReviewFooter({
       ) : null}
       <div className="flex items-center justify-end gap-3">
         <button
-          className="rounded-[8px] border border-[#D8DFE6] bg-[#F3F5F8] px-4 py-2 text-[14px] leading-5 text-black"
+          className="rounded-[8px] border border-[#D8DFE6] bg-[#F3F5F8] px-4 py-2 text-[14px] leading-5 text-black disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={reviewing}
           onClick={onClose}
           type="button"
         >
@@ -68,7 +76,8 @@ export default function ApprovalRequestReviewFooter({
               </button>
             ) : (
               <button
-                className="flex items-center gap-2 rounded-[8px] border border-[#E0E1E4] bg-white px-4 py-2 text-[14px] leading-5 font-medium text-[#E90012]"
+                className="flex items-center gap-2 rounded-[8px] border border-[#E0E1E4] bg-white px-4 py-2 text-[14px] leading-5 font-medium text-[#E90012] disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={reviewing}
                 onClick={onRejectClick}
                 type="button"
               >

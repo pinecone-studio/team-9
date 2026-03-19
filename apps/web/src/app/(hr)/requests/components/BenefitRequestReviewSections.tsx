@@ -1,12 +1,14 @@
 import {
   BriefcaseBusiness,
   Building2,
-  CalendarDays,
   CheckCircle2,
   Clock3,
-  Timer,
+  ShieldCheck,
+  Sparkles,
   UserRound,
 } from "lucide-react";
+
+import type { BenefitRequestEligibilityItem } from "./benefit-request-review-utils";
 
 type StatusBadge = {
   bgClassName: string;
@@ -36,28 +38,35 @@ export function BenefitRequestOverviewSection({
   secondaryValue: string;
   statusBadge: StatusBadge;
 }) {
+  const reviewerLabel =
+    statusBadge.label === "Rejected"
+      ? "Rejected By"
+      : statusBadge.label === "Cancelled"
+        ? "Reviewed By"
+        : "Approved By";
+
   return (
-    <section className="grid gap-4 rounded-[10px] border border-[#E5E5E5] bg-[rgba(245,245,245,0.3)] p-4 md:grid-cols-2">
-      <div className="flex flex-col gap-[10px]">
+    <section className="grid gap-6 rounded-[18px] border border-[#E5E7EB] bg-white p-6 md:grid-cols-2">
+      <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[12px] leading-4 text-[#737373]">Employee</span>
+          <span className="text-[14px] leading-5 text-[#737373]">Employee</span>
           <div className="flex flex-col">
-            <span className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
+            <span className="text-[16px] leading-7 font-semibold text-[#0A0A0A]">
               {employeeName}
             </span>
-            <span className="text-[14px] leading-5 text-[#737373]">{employeePosition}</span>
+            <span className="text-[15px] leading-6 text-[#737373]">{employeePosition}</span>
           </div>
         </div>
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[12px] leading-4 text-[#737373]">
-            {isPending ? "Category" : "Submitted"}
+          <span className="text-[14px] leading-5 text-[#737373]">
+            {isPending ? "Category" : "Review Route"}
           </span>
-          <span className="text-[14px] leading-5 text-[#0A0A0A]">{primaryValue}</span>
+          <span className="text-[16px] leading-7 text-[#0A0A0A]">{primaryValue}</span>
         </div>
         {isPending ? (
           <div className="flex flex-col gap-[6px]">
-            <span className="text-[12px] leading-4 text-[#737373]">Status</span>
-            <span className={`inline-flex w-fit items-center gap-[6px] rounded-[4px] px-2 py-[2px] text-[12px] leading-4 font-medium ${statusBadge.bgClassName} ${statusBadge.textClassName}`}>
+            <span className="text-[14px] leading-5 text-[#737373]">Status</span>
+            <span className={`inline-flex w-fit items-center gap-[6px] rounded-[999px] px-3 py-1 text-[13px] leading-5 font-medium ${statusBadge.bgClassName} ${statusBadge.textClassName}`}>
               <Clock3 className={`h-3 w-3 ${statusBadge.iconClassName}`} />
               {statusBadge.label}
             </span>
@@ -65,25 +74,25 @@ export function BenefitRequestOverviewSection({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-[10px]">
+      <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[12px] leading-4 text-[#737373]">Benefit</span>
-          <span className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
+          <span className="text-[14px] leading-5 text-[#737373]">Benefit</span>
+          <span className="text-[16px] leading-7 font-semibold text-[#0A0A0A]">
             {benefitTitle}
           </span>
         </div>
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[12px] leading-4 text-[#737373]">
-            {isPending ? "Submitted" : "Approved By"}
+          <span className="text-[14px] leading-5 text-[#737373]">
+            {isPending ? "Submitted" : reviewerLabel}
           </span>
-          <span className="text-[14px] leading-5 text-[#0A0A0A]">
+          <span className="text-[16px] leading-7 text-[#0A0A0A]">
             {isPending ? secondaryValue : reviewedByLabel}
           </span>
         </div>
         {isPending ? (
           <div className="flex flex-col gap-[6px]">
-            <span className="text-[12px] leading-4 text-[#737373]">Approval Route</span>
-            <span className="text-[14px] leading-5 text-[#0A0A0A]">{approvalRoute}</span>
+            <span className="text-[14px] leading-5 text-[#737373]">Approval Route</span>
+            <span className="text-[16px] leading-7 text-[#0A0A0A]">{approvalRoute}</span>
           </div>
         ) : null}
       </div>
@@ -107,22 +116,22 @@ export function BenefitRequestEmployeeSnapshotSection({
   position: string;
 }) {
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Employee Snapshot</h3>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <SnapshotItem icon={<BriefcaseBusiness className="h-4 w-4 text-[#737373]" />} label="Role" value={position} />
-        <SnapshotItem icon={<Building2 className="h-4 w-4 text-[#737373]" />} label="Department" value={department} />
-        <SnapshotItem icon={<UserRound className="h-4 w-4 text-[#737373]" />} label="Status" value={employmentStatus} />
-        <SnapshotItem icon={<CalendarDays className="h-4 w-4 text-[#737373]" />} label="Level" value={`Level ${level ?? "-"}`} />
+    <section className="flex flex-col gap-4">
+      <h3 className="text-[16px] leading-6 font-semibold text-[#0A0A0A]">Employee Snapshot</h3>
+      <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        <SnapshotItem icon={<BriefcaseBusiness className="h-5 w-5 text-[#737373]" />} label="Role" value={position} />
+        <SnapshotItem icon={<Building2 className="h-5 w-5 text-[#737373]" />} label="Department" value={department} />
+        <SnapshotItem icon={<UserRound className="h-5 w-5 text-[#737373]" />} label="Status" value={employmentStatus} />
+        <SnapshotItem icon={<ShieldCheck className="h-5 w-5 text-[#737373]" />} label="Level" value={`Level ${level ?? "-"}`} />
         <SnapshotItem
-          icon={<CheckCircle2 className="h-4 w-4 text-[#00C950]" />}
+          icon={<CheckCircle2 className="h-5 w-5 text-[#00C950]" />}
           label="OKR"
           value={okrSubmitted ? "Submitted" : "Not submitted"}
         />
         <SnapshotItem
-          icon={<Timer className="h-4 w-4 text-[#737373]" />}
+          icon={<Clock3 className="h-5 w-5 text-[#737373]" />}
           label="Late Arrivals"
-          value={String(lateArrivalCount)}
+          value={`${lateArrivalCount} (30 days)`}
         />
       </div>
     </section>
@@ -139,25 +148,50 @@ function SnapshotItem({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       {icon}
-      <div>
-        <div className="text-[12px] leading-4 text-[#737373]">{label}</div>
-        <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[14px] leading-5 text-[#737373]">{label}</div>
+        <div className="text-[16px] leading-7 font-semibold text-[#0A0A0A]">{value}</div>
       </div>
     </div>
   );
 }
 
-export function BenefitRequestEligibilitySection() {
+export function BenefitRequestEligibilitySection({
+  items,
+  loading,
+}: {
+  items: BenefitRequestEligibilityItem[];
+  loading: boolean;
+}) {
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Eligibility Checks</h3>
-      <div className="flex flex-wrap gap-x-[30px] gap-y-2">
-        <span className="text-[14px] leading-5 text-[#737373]">
-          Eligibility details will appear after the API schema is updated.
-        </span>
-      </div>
+    <section className="flex flex-col gap-4">
+      <h3 className="text-[16px] leading-6 font-semibold text-[#0A0A0A]">Eligibility Checks</h3>
+      {loading ? (
+        <span className="text-[14px] leading-5 text-[#737373]">Loading eligibility details...</span>
+      ) : items.length > 0 ? (
+        <div className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
+          {items.map((item) => (
+            <div className="flex items-start gap-3" key={item.id}>
+              <CheckCircle2
+                className={`mt-0.5 h-5 w-5 shrink-0 ${item.passed ? "text-[#00C950]" : "text-[#DC2626]"}`}
+              />
+              <div className="min-w-0">
+                <p className="text-[14px] leading-6 text-[#0A0A0A]">{item.label}</p>
+                {!item.passed ? (
+                  <p className="text-[12px] leading-5 text-[#737373]">{item.description}</p>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-[12px] border border-dashed border-[#D1D5DB] bg-[#F9FAFB] px-4 py-3 text-[14px] leading-5 text-[#737373]">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>No configured eligibility rules were found for this benefit.</p>
+        </div>
+      )}
     </section>
   );
 }
@@ -168,9 +202,9 @@ export function BenefitRequestNotesSection({
   reviewComment: string;
 }) {
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Decision Notes</h3>
-      <div className="rounded-[10px] border border-[#E2E8F0] bg-white px-4 py-3 text-[14px] leading-6 text-[#0A0A0A]">
+    <section className="flex flex-col gap-4">
+      <h3 className="text-[16px] leading-6 font-semibold text-[#0A0A0A]">Decision Notes</h3>
+      <div className="rounded-[14px] border border-[#E2E8F0] bg-white px-4 py-3 text-[14px] leading-6 text-[#0A0A0A]">
         {reviewComment}
       </div>
     </section>

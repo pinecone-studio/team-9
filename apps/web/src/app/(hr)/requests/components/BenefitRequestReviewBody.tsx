@@ -10,6 +10,7 @@ import {
   BenefitRequestContractSection,
 } from "./BenefitRequestReviewStatusSections";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
+import type { BenefitRequestEligibilityItem } from "./benefit-request-review-utils";
 import { formatDetailDateTime, formatDetailDateTimeWithAt } from "./request-detail-formatters";
 
 type BenefitRequestReviewBodyProps = {
@@ -19,11 +20,14 @@ type BenefitRequestReviewBodyProps = {
     id: string;
     label: string;
     timestamp: string;
+    tone?: "danger" | "neutral" | "success";
   }>;
   contractError: string | null;
   contractLoading: boolean;
   contractStatusLabel: string;
   department: string;
+  eligibilityItems: BenefitRequestEligibilityItem[];
+  eligibilityLoading: boolean;
   employmentStatus: string;
   isPending: boolean;
   level: number | null;
@@ -48,6 +52,8 @@ export default function BenefitRequestReviewBody({
   contractLoading,
   contractStatusLabel,
   department,
+  eligibilityItems,
+  eligibilityLoading,
   employmentStatus,
   isPending,
   level,
@@ -60,66 +66,71 @@ export default function BenefitRequestReviewBody({
   statusBadge,
 }: BenefitRequestReviewBodyProps) {
   return (
-    <div className="flex max-h-[calc(100vh-220px)] flex-col gap-5 overflow-y-auto px-6 py-5">
-      <BenefitRequestOverviewSection
-        approvalRoute={approvalRoute}
-        benefitTitle={request.benefit.title}
-        employeeName={request.employee.name}
-        employeePosition={request.employee.position}
-        isPending={isPending}
-        primaryValue={reviewedPrimaryValue}
-        reviewedByLabel={reviewedByLabel}
-        secondaryValue={reviewSecondaryValue}
-        statusBadge={statusBadge}
-      />
+    <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex flex-col gap-6">
+        <BenefitRequestOverviewSection
+          approvalRoute={approvalRoute}
+          benefitTitle={request.benefit.title}
+          employeeName={request.employee.name}
+          employeePosition={request.employee.position}
+          isPending={isPending}
+          primaryValue={reviewedPrimaryValue}
+          reviewedByLabel={reviewedByLabel}
+          secondaryValue={reviewSecondaryValue}
+          statusBadge={statusBadge}
+        />
 
-      <BenefitRequestEmployeeSnapshotSection
-        department={department}
-        employmentStatus={employmentStatus}
-        lateArrivalCount={request.employeeLateArrivalCount}
-        level={level}
-        okrSubmitted={request.employeeOkrSubmitted}
-        position={position}
-      />
+        <BenefitRequestEmployeeSnapshotSection
+          department={department}
+          employmentStatus={employmentStatus}
+          lateArrivalCount={request.employeeLateArrivalCount}
+          level={level}
+          okrSubmitted={request.employeeOkrSubmitted}
+          position={position}
+        />
 
-      <div className="h-px w-full bg-[#E5E5E5]" />
+        <div className="h-px w-full bg-[#E5E5E5]" />
 
-      <BenefitRequestEligibilitySection />
+        <BenefitRequestEligibilitySection
+          items={eligibilityItems}
+          loading={eligibilityLoading}
+        />
 
-      <div className="h-px w-full bg-[#E5E5E5]" />
+        <div className="h-px w-full bg-[#E5E5E5]" />
 
-      {isPending && request.benefit.requiresContract ? (
-        <>
-          <BenefitRequestContractSection
-            acceptedAt={formatDetailDateTime(request.contractAcceptedAt)}
-            contractError={contractError}
-            contractLoading={contractLoading}
-            contractVersion={request.contractVersionAccepted ?? "-"}
-            onViewContract={onViewContract}
-            statusLabel={contractStatusLabel}
-          />
-          <div className="h-px w-full bg-[#E5E5E5]" />
-        </>
-      ) : null}
+        {isPending && request.benefit.requiresContract ? (
+          <>
+            <BenefitRequestContractSection
+              acceptedAt={formatDetailDateTime(request.contractAcceptedAt)}
+              contractError={contractError}
+              contractLoading={contractLoading}
+              contractVersion={request.contractVersionAccepted ?? "-"}
+              onViewContract={onViewContract}
+              statusLabel={contractStatusLabel}
+            />
+            <div className="h-px w-full bg-[#E5E5E5]" />
+          </>
+        ) : null}
 
-      {isPending ? (
-        <>
-          <BenefitRequestApprovalProgressSection approvalRoute={approvalRoute} />
-          <div className="h-px w-full bg-[#E5E5E5]" />
-        </>
-      ) : null}
+        {isPending ? (
+          <>
+            <BenefitRequestApprovalProgressSection approvalRoute={approvalRoute} />
+            <div className="h-px w-full bg-[#E5E5E5]" />
+          </>
+        ) : null}
 
-      {request.reviewComment?.trim() ? (
-        <>
-          <BenefitRequestNotesSection reviewComment={request.reviewComment.trim()} />
-          <div className="h-px w-full bg-[#E5E5E5]" />
-        </>
-      ) : null}
+        {request.reviewComment?.trim() ? (
+          <>
+            <BenefitRequestNotesSection reviewComment={request.reviewComment.trim()} />
+            <div className="h-px w-full bg-[#E5E5E5]" />
+          </>
+        ) : null}
 
-      <AuditLogSection
-        entries={auditEntries}
-        formatTimestamp={formatDetailDateTimeWithAt}
-      />
+        <AuditLogSection
+          entries={auditEntries}
+          formatTimestamp={formatDetailDateTimeWithAt}
+        />
+      </div>
     </div>
   );
 }

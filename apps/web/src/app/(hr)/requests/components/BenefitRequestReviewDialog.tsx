@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+import { useEmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
 
 import BenefitRequestReviewBody from "./BenefitRequestReviewBody";
 import BenefitRequestReviewFooter from "./BenefitRequestReviewFooter";
@@ -13,6 +15,7 @@ import {
 } from "./benefit-requests.graphql";
 import {
   buildBenefitRequestAuditEntries,
+  buildBenefitRequestEligibilityItems,
   formatBenefitApprovalRoute,
   formatBenefitEmploymentStatus,
   formatBenefitReviewerRole,
@@ -77,7 +80,7 @@ export default function BenefitRequestReviewDialog({
 
   const statusBadge = getBenefitRequestStatusBadge(request.status);
   const approvalRoute = formatBenefitApprovalRoute(request.approval_role);
-  const auditEntries = buildBenefitRequestAuditEntries(request, isPending);
+  const auditEntries = buildBenefitRequestAuditEntries(request);
   const department = getBenefitRequestDepartment(request);
   const employmentStatus = formatBenefitEmploymentStatus(
     getBenefitRequestEmploymentStatus(request),
@@ -85,10 +88,26 @@ export default function BenefitRequestReviewDialog({
   const level = getBenefitRequestResponsibilityLevel(request);
   const primaryOverviewValue = isPending
     ? request.benefit.category
-    : formatDetailDateTime(request.created_at);
+    : approvalRoute;
   const secondaryOverviewValue = formatDetailDateTime(request.created_at);
   const reviewedBannerName = request.reviewed_by?.name ?? "the assigned reviewer";
   const contractStatusLabel = request.contractAcceptedAt ? "Accepted" : "Pending";
+  const { data: eligibilityData, loading: eligibilityLoading } = useEmployeeBenefitDialogQuery({
+    fetchPolicy: "cache-first",
+    nextFetchPolicy: "cache-first",
+    variables: {
+      benefitId: request.benefit.id,
+      employeeId: request.employee.id,
+    },
+  });
+  const eligibilityItems = useMemo(
+    () =>
+      buildBenefitRequestEligibilityItems(
+        request,
+        eligibilityData?.eligibilityRules ?? [],
+      ),
+    [eligibilityData?.eligibilityRules, request],
+  );
 
   function handleApprove() {
     setRejectMode(false);
@@ -107,7 +126,7 @@ export default function BenefitRequestReviewDialog({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="mx-auto flex w-full max-w-[626px] flex-col overflow-hidden rounded-[12px] border border-[#CBD5E1] bg-white shadow-[0_24px_48px_rgba(15,23,42,0.18)]">
+      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[980px] flex-col overflow-hidden rounded-[12px] border border-[#CBD5E1] bg-white shadow-[0_24px_48px_rgba(15,23,42,0.18)]">
         <BenefitRequestReviewHeader isPending={isPending} onClose={onClose} />
 
         <BenefitRequestReviewBody
@@ -117,6 +136,8 @@ export default function BenefitRequestReviewDialog({
           contractLoading={contractLoading}
           contractStatusLabel={contractStatusLabel}
           department={department}
+          eligibilityItems={eligibilityItems}
+          eligibilityLoading={eligibilityLoading}
           employmentStatus={employmentStatus}
           isPending={isPending}
           level={level}

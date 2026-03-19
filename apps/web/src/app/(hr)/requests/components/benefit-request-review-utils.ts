@@ -1,4 +1,28 @@
+import type { EmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
+
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
+
+type BenefitRequestRule = EmployeeBenefitDialogQuery["eligibilityRules"][number];
+
+type RuleEvaluationResult = {
+  passed?: unknown;
+  ruleType?: unknown;
+};
+
+export type BenefitRequestEligibilityItem = {
+  description: string;
+  id: string;
+  label: string;
+  passed: boolean;
+};
+
+type BenefitRequestAuditEntry = {
+  actor: string;
+  id: string;
+  label: string;
+  timestamp: string;
+  tone: "danger" | "neutral" | "success";
+};
 
 export function getBenefitRequestDepartment(request: BenefitRequestRecord) {
   return request.employee.department || "-";
@@ -71,16 +95,247 @@ export function normalizeSignedBenefitUrl(endpoint: string | undefined, signedUr
   return signedUrl;
 }
 
+function parseJsonValue(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function formatRuleOperator(operator: BenefitRequestRule["operator"]) {
+  if (operator === "eq") return "=";
+  if (operator === "neq") return "!=";
+  if (operator === "gte") return ">=";
+  if (operator === "lte") return "<=";
+  if (operator === "gt") return ">";
+  if (operator === "lt") return "<";
+  if (operator === "in") return "in";
+  return "not in";
+}
+
+function formatTenureValue(value: number) {
+  if (value >= 60) {
+    const monthValue = Math.round(value / 30);
+    return `${monthValue} Months`;
+  }
+
+  return `${value} Days`;
+}
+
+function formatRuleValue(rawValue: string, defaultUnit?: string | null) {
+  const parsedValue = parseJsonValue(rawValue);
+
+  if (Array.isArray(parsedValue)) {
+    return parsedValue.join(", ");
+  }
+  if (typeof parsedValue === "boolean") {
+    return parsedValue ? "Yes" : "No";
+  }
+  if (typeof parsedValue === "number") {
+    if (defaultUnit === "days") {
+      return formatTenureValue(parsedValue);
+    }
+
+    if (defaultUnit === "level" || defaultUnit === "times") {
+      return String(parsedValue);
+    }
+
+    if (defaultUnit) {
+      return `${parsedValue} ${defaultUnit}`;
+    }
+
+    return String(parsedValue);
+  }
+  if (typeof parsedValue === "string") {
+    return parsedValue
+      .split(/[_\s]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  return rawValue.replace(/^"|"$/g, "");
+}
+
+function buildRuleLabel(ruleType: BenefitRequestRule["rule_type"], rule: BenefitRequestRule | null) {
+  const rawValue = rule ? formatRuleValue(rule.value, rule.default_unit) : null;
+
+  if (ruleType === "employment_status") {
+    return "Employment Status";
+  }
+  if (ruleType === "okr_submitted") {
+    return "OKR Submitted";
+  }
+  if (ruleType === "attendance") {
+    if (!rule || !rawValue) {
+      return "Late Arrivals";
+    }
+
+    if (rule.operator === "lte") {
+      return `Late Arrivals ${rawValue} or fewer`;
+    }
+    if (rule.operator === "lt") {
+      return `Late Arrivals under ${rawValue}`;
+    }
+    if (rule.operator === "gte") {
+      return `Late Arrivals ${rawValue}+`;
+    }
+    if (rule.operator === "gt") {
+      return `Late Arrivals over ${rawValue}`;
+    }
+
+    return `Late Arrivals ${formatRuleOperator(rule.operator)} ${rawValue}`;
+  }
+  if (ruleType === "responsibility_level") {
+    if (!rule || !rawValue) {
+      return "Responsibility Level";
+    }
+
+    if (rule.operator === "gte") {
+      return `Level ${rawValue}+`;
+    }
+    if (rule.operator === "gt") {
+      return `Above Level ${rawValue}`;
+    }
+    if (rule.operator === "lte") {
+      return `Level ${rawValue} or below`;
+    }
+    if (rule.operator === "lt") {
+      return `Below Level ${rawValue}`;
+    }
+
+    return `Level ${formatRuleOperator(rule.operator)} ${rawValue}`;
+  }
+  if (ruleType === "role") {
+    return rule?.name?.trim() || "Role";
+  }
+  if (ruleType === "tenure_days") {
+    if (!rule || !rawValue) {
+      return "Tenure Requirement";
+    }
+
+    if (rule.operator === "gte") {
+      return `Tenure ${rawValue}+`;
+    }
+    if (rule.operator === "gt") {
+      return `Tenure over ${rawValue}`;
+    }
+    if (rule.operator === "lte") {
+      return `Tenure up to ${rawValue}`;
+    }
+    if (rule.operator === "lt") {
+      return `Tenure under ${rawValue}`;
+    }
+
+    return `Tenure ${formatRuleOperator(rule.operator)} ${rawValue}`;
+  }
+
+  return rule?.name?.trim() || "Eligibility Requirement";
+}
+
+function buildRuleDescription(rule: BenefitRequestRule | null, passed: boolean) {
+  if (!rule) {
+    return passed ? "Requirement satisfied." : "Requirement not met.";
+  }
+
+  if (!passed) {
+    return rule.error_message?.trim() || rule.description?.trim() || "Requirement not met.";
+  }
+
+  return rule.description?.trim() || "Requirement satisfied.";
+}
+
+function buildRulePassQueue(ruleEvaluationJson: string | null | undefined) {
+  const parsedValue = parseJsonValue(ruleEvaluationJson);
+  const queueByRuleType = new Map<string, boolean[]>();
+
+  if (!Array.isArray(parsedValue)) {
+    return queueByRuleType;
+  }
+
+  for (const entry of parsedValue) {
+    if (!entry || typeof entry !== "object") {
+      continue;
+    }
+
+    const result = entry as RuleEvaluationResult;
+    if (typeof result.ruleType !== "string" || typeof result.passed !== "boolean") {
+      continue;
+    }
+
+    const current = queueByRuleType.get(result.ruleType) ?? [];
+    current.push(result.passed);
+    queueByRuleType.set(result.ruleType, current);
+  }
+
+  return queueByRuleType;
+}
+
+function readRulePassState(
+  queueByRuleType: Map<string, boolean[]>,
+  ruleType: string,
+  fallbackValue: boolean,
+) {
+  const queue = queueByRuleType.get(ruleType);
+
+  if (!queue?.length) {
+    return fallbackValue;
+  }
+
+  const nextValue = queue.shift();
+  return typeof nextValue === "boolean" ? nextValue : fallbackValue;
+}
+
+export function buildBenefitRequestEligibilityItems(
+  request: BenefitRequestRecord,
+  rules: EmployeeBenefitDialogQuery["eligibilityRules"],
+) {
+  const queueByRuleType = buildRulePassQueue(request.ruleEvaluationJson);
+  const fallbackPassed = request.status === "approved" || request.status === "pending";
+  const orderedRules = [...rules].sort((left, right) => left.priority - right.priority);
+  const items = orderedRules.map((rule) => {
+    const passed = readRulePassState(queueByRuleType, rule.rule_type, fallbackPassed);
+
+    return {
+      description: buildRuleDescription(rule, passed),
+      id: rule.id,
+      label: buildRuleLabel(rule.rule_type, rule),
+      passed,
+    } satisfies BenefitRequestEligibilityItem;
+  });
+
+  if (items.length > 0) {
+    return items;
+  }
+
+  return Array.from(queueByRuleType.entries()).flatMap(([ruleType, queue], index) =>
+    queue.map((passed, resultIndex) => ({
+      description: passed ? "Requirement satisfied." : "Requirement not met.",
+      id: `${ruleType}-${index}-${resultIndex}`,
+      label: buildRuleLabel(ruleType as BenefitRequestRule["rule_type"], null),
+      passed,
+    })),
+  );
+}
+
 export function buildBenefitRequestAuditEntries(
   request: BenefitRequestRecord,
-  isPending: boolean,
-) {
+): BenefitRequestAuditEntry[] {
+  const reviewerName = request.reviewed_by?.name?.trim() || "Reviewer";
+  const reviewerRole = formatBenefitReviewerRole(request.approval_role);
+
   return [
     {
       actor: "Employee",
       id: "submitted",
       label: "Request submitted",
       timestamp: request.created_at,
+      tone: "neutral",
     },
     request.contractAcceptedAt
       ? {
@@ -88,6 +343,7 @@ export function buildBenefitRequestAuditEntries(
           id: "contract",
           label: "Contract accepted",
           timestamp: request.contractAcceptedAt,
+          tone: "neutral",
         }
       : null,
     {
@@ -95,27 +351,33 @@ export function buildBenefitRequestAuditEntries(
       id: "eligibility",
       label: "Eligibility validated",
       timestamp: request.created_at,
+      tone: "neutral",
     },
-    isPending
+    {
+      actor: "System",
+      id: "route",
+      label: `Routed to ${formatBenefitApprovalRoute(request.approval_role)}`,
+      timestamp: request.created_at,
+      tone: "neutral",
+    },
+    request.status !== "pending"
       ? {
-          actor: "System",
-          id: "route",
-          label: `Routed to ${formatBenefitApprovalRoute(request.approval_role)}`,
-          timestamp: request.created_at,
-        }
-      : null,
-    !isPending
-      ? {
-          actor: request.reviewed_by?.name ?? "Reviewer",
+          actor: `by ${reviewerName} (${reviewerRole})`,
           id: "reviewed",
           label:
             request.status === "approved"
-              ? "Request approved"
+              ? `Approved by ${reviewerName}.`
               : request.status === "cancelled"
-                ? "Request cancelled"
-                : "Request rejected",
+                ? "Cancelled by employee."
+                : `Rejected by ${reviewerName}.`,
           timestamp: request.updated_at,
+          tone:
+            request.status === "approved"
+              ? "success"
+              : request.status === "rejected"
+                ? "danger"
+                : "neutral",
         }
       : null,
-  ].filter((entry): entry is { actor: string; id: string; label: string; timestamp: string } => Boolean(entry));
+  ].filter((entry): entry is BenefitRequestAuditEntry => Boolean(entry));
 }

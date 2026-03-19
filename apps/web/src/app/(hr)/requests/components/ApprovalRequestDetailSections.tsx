@@ -5,6 +5,7 @@ type AuditEntry = {
   id: string;
   label: string;
   timestamp: string;
+  tone?: "danger" | "neutral" | "success";
 };
 
 export function DetailSection({
@@ -144,24 +145,39 @@ export function AuditLogSection({
   formatTimestamp: (value: string) => string;
 }) {
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <History className="h-4 w-4 text-[#0A0A0A]" />
-        <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Audit Log</h3>
+        <h3 className="text-[16px] leading-6 font-semibold text-[#0A0A0A]">Audit Log</h3>
       </div>
       <div className="flex flex-col">
         {entries.map((entry, index) => (
           <div className="flex gap-3" key={entry.id}>
             <div className="flex w-[6px] flex-col items-center">
-              <span className="mt-2 h-[6px] w-[6px] rounded-full bg-[rgba(115,115,115,0.4)]" />
+              <span
+                className={[
+                  "mt-2 h-[8px] w-[8px] rounded-full",
+                  entry.tone === "success"
+                    ? "bg-[#22C55E]"
+                    : entry.tone === "danger"
+                      ? "bg-[#EF4444]"
+                      : "bg-[rgba(115,115,115,0.4)]",
+                ].join(" ")}
+              />
               {index < entries.length - 1 ? (
                 <span className="h-full w-px bg-[#E5E5E5]" />
               ) : null}
             </div>
             <div className="pb-3">
-              <p className="text-[14px] leading-5 text-[#0A0A0A]">{entry.label}</p>
+              <p className="text-[14px] leading-6 text-[#0A0A0A]">{entry.label}</p>
               <p className="text-[12px] leading-4 text-[#737373]">
-                {`${formatTimestamp(entry.timestamp)} · ${entry.actor}`}
+                {`${formatTimestamp(entry.timestamp)}${
+                  entry.actor
+                    ? entry.actor.startsWith("by ")
+                      ? ` ${entry.actor}`
+                      : ` · ${entry.actor}`
+                    : ""
+                }`}
               </p>
             </div>
           </div>

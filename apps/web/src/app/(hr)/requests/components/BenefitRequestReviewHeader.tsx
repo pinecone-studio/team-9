@@ -8,19 +8,19 @@ export default function BenefitRequestReviewHeader({
   onClose: () => void;
 }) {
   return (
-    <div className="flex items-start justify-between px-6 pt-6">
-      <div className="flex w-full flex-col items-start gap-2">
-        <h2 className="w-full text-[18px] leading-7 font-semibold text-[#0F172A]">
+    <div className="flex items-start justify-between px-8 pt-8">
+      <div className="flex w-full flex-col items-start gap-3">
+        <h2 className="w-full text-[20px] leading-8 font-semibold text-[#0F172A]">
           Review Request
         </h2>
-        <p className="w-full text-[14px] leading-5 text-[#64748B]">
+        <p className="w-full text-[15px] leading-6 text-[#64748B]">
           {isPending
             ? "Review and approve or reject this benefit request."
             : "This request has already been reviewed. See the details and audit history below."}
         </p>
       </div>
-      <button className="rounded-[8px] p-2 text-[#475569]" onClick={onClose} type="button">
-        <X className="h-5 w-5" />
+      <button className="rounded-[8px] p-2 text-[#0A0A0A]" onClick={onClose} type="button">
+        <X className="h-6 w-6" />
       </button>
     </div>
   );

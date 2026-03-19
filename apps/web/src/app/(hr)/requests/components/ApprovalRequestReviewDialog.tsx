@@ -117,7 +117,7 @@ export default function ApprovalRequestReviewDialog({
         }
       }}
     >
-      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[860px] flex-col overflow-hidden rounded-[12px] border border-[#CBD5E1] bg-white">
+      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[12px] border border-[#CBD5E1] bg-white">
         <ApprovalRequestReviewHeader
           fallbackMeta={fallbackMeta}
           loading={loading}

@@ -2,6 +2,9 @@ export type RuleShape = {
   defaultOperator?: string | null;
   defaultUnit?: string | null;
   defaultValue?: string | null;
+  default_operator?: string | null;
+  default_unit?: string | null;
+  default_value?: string | null;
   description?: string | null;
   linked_benefits_json?: string | null;
   name?: string | null;
@@ -63,10 +66,19 @@ export function parseRuleJsonScalar(value: string | null | undefined) {
     const parsed = JSON.parse(value) as unknown;
     if (typeof parsed === "string" || typeof parsed === "number") return String(parsed);
     if (typeof parsed === "boolean") return parsed ? "true" : "false";
+    if (Array.isArray(parsed)) return parsed.join(", ");
     return value;
   } catch {
     return value;
   }
+}
+
+export function getRuleOperator(rule: RuleShape | null | undefined) {
+  return rule?.defaultOperator ?? rule?.default_operator ?? "=";
+}
+
+export function getRuleValue(rule: RuleShape | null | undefined) {
+  return rule?.defaultValue ?? rule?.default_value ?? null;
 }
 
 export function parseLinkedBenefits(value: string | null | undefined) {
@@ -104,13 +116,13 @@ export function getRuleChangeRows(currentRule: RuleShape, previousRule: RuleShap
       label: "Condition",
       nextValue: getRuleTechnicalExpression(
         currentRule.ruleType,
-        currentRule.defaultOperator,
-        parseRuleJsonScalar(currentRule.defaultValue),
+        getRuleOperator(currentRule),
+        parseRuleJsonScalar(getRuleValue(currentRule)),
       ),
       previousValue: getRuleTechnicalExpression(
         previousRule.rule_type,
-        previousRule.defaultOperator,
-        parseRuleJsonScalar(previousRule.defaultValue),
+        getRuleOperator(previousRule),
+        parseRuleJsonScalar(getRuleValue(previousRule)),
       ),
     },
     {

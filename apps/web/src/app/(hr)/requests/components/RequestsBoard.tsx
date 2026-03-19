@@ -128,13 +128,23 @@ export default function RequestsBoard({
       />
 
       {selectedApprovalRequest?.entity_type === "rule" ? (
-        <RuleApprovalRequestReviewDialog
-          currentUserIdentifier={currentUserIdentifier}
-          onClose={() => setSelectedRequestId(null)}
-          onReviewed={refetchApprovalRequests}
-          onReviewSuccess={setReviewToastMessage}
-          requestId={selectedApprovalRequest.id}
-        />
+        selectedApprovalRequest.action_type === "update" ? (
+          <RuleApprovalRequestReviewDialog
+            currentUserIdentifier={currentUserIdentifier}
+            currentUserRole={currentUserRole}
+            onClose={() => setSelectedRequestId(null)}
+            onReviewed={refetchApprovalRequests}
+            onReviewSuccess={setReviewToastMessage}
+            requestId={selectedApprovalRequest.id}
+          />
+        ) : (
+          <ApprovalRequestReviewDialog
+            currentUserIdentifier={currentUserIdentifier}
+            onClose={() => setSelectedRequestId(null)}
+            onReviewed={refetchApprovalRequests}
+            requestId={selectedApprovalRequest.id}
+          />
+        )
       ) : selectedRequestId ? (
         <ApprovalRequestReviewDialog
           currentUserIdentifier={currentUserIdentifier}

@@ -23,6 +23,11 @@ query RequestsEmployeesDirectory {
     name
     email
     position
+    employmentStatus
+    hireDate
+    responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
   }
 }
 

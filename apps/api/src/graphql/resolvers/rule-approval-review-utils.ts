@@ -192,7 +192,7 @@ export function getRuleActionCopy(actionType: ApprovalActionTypeValue) {
     return {
       actionBadgeLabel: "New Rule",
       actionBadgeTone: "success",
-      subtitle: "Review the rule details and approve or reject it.",
+      subtitle: "Review the rule details and approve or reject the new configuration.",
       title: "Review New Rule",
     };
   }
@@ -201,16 +201,16 @@ export function getRuleActionCopy(actionType: ApprovalActionTypeValue) {
     return {
       actionBadgeLabel: "Delete Rule",
       actionBadgeTone: "danger",
-      subtitle: "Review the rule details and approve or reject it.",
+      subtitle: "Review the rule details and approve or reject this configuration removal.",
       title: "Review Rule Removal",
     };
   }
 
   return {
-    actionBadgeLabel: "Rule Change",
+    actionBadgeLabel: "Change",
     actionBadgeTone: "neutral",
-    subtitle: "Review the rule details and approve or reject it.",
-    title: "Review Rule Change",
+    subtitle: "Approve or reject this eligibility rule change.",
+    title: "Review Configuration Change",
   };
 }
 

@@ -329,9 +329,17 @@ export const typeDefs = /* GraphQL */ `
 
   type RuleApprovalImpact {
     affectedEmployees: Int!
+    newlyRestrictedEmployees: Int!
     benefitsUsingRule: Int!
     eligibilityEffect: String!
     summary: String!
+  }
+
+  type RuleApprovalChangeSummaryItem {
+    id: String!
+    label: String!
+    previousValue: String!
+    nextValue: String!
   }
 
   type RuleApprovalSubmissionDetails {
@@ -350,6 +358,7 @@ export const typeDefs = /* GraphQL */ `
     actionBadgeLabel: String!
     actionBadgeTone: String!
     overview: RuleApprovalOverview!
+    changeSummary: [RuleApprovalChangeSummaryItem!]!
     impact: RuleApprovalImpact!
     appliedBenefits: [RuleReviewBenefit!]!
     submissionDetails: RuleApprovalSubmissionDetails!

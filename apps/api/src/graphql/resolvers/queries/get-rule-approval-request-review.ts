@@ -1,12 +1,10 @@
-import { and, eq, or } from "drizzle-orm";
+import { asc, and, eq, or } from "drizzle-orm";
 
 import { getDb } from "../../../db";
 import { approvalRequests } from "../../../db/schema/approval-requests";
 import { benefitRules } from "../../../db/schema/benefit-rules";
 import { benefits } from "../../../db/schema/benefits";
 import { employees } from "../../../db/schema/employees";
-import { buildEmployeeMetrics } from "../../../utils/build-employee-metrics";
-import { evaluateRule } from "../../../utils/eveluate-rule";
 import type {
   ApprovalRequestPersonSummary,
   QueryRuleApprovalRequestReviewArgs,
@@ -16,36 +14,54 @@ import {
   mapApprovalRequest,
   mapApprovalRequestStatus,
 } from "../approval-request-mappers";
+import { buildRuleApprovalImpact } from "../rule-approval-review-impact";
 import {
   buildFallbackApprovalRequestEvents,
   listApprovalRequestEvents,
 } from "../approval-request-review-events";
 import {
+  buildRuleChangeSummary,
+  buildRuleTechnicalExpression,
+  resolveRuleReviewStates,
+} from "../rule-approval-review-state";
+import {
   formatMeasurement,
   formatPersonLabel,
   formatRuleTypeLabel,
-  getOperatorSymbol,
   getRuleActionCopy,
   getRuleFieldKey,
   getRuleFieldLabel,
   parseRuleScalar,
-  resolveRuleReviewSource,
 } from "../rule-approval-review-utils";
 
 function formatApprovalRole(role: "finance_manager" | "hr_admin") {
   return role === "finance_manager" ? "Finance Manager" : "HR Admin";
 }
 
+function formatPositionLabel(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  if (value === "finance_manager" || value === "hr_admin") {
+    return formatApprovalRole(value);
+  }
+
+  return value
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function buildConditionText(params: {
-  description: string;
   fieldKey: string;
   fieldLabel: string;
   measurement: string;
   operator: string;
   requirementValue: string;
 }) {
-  const { description, fieldKey, fieldLabel, measurement, operator, requirementValue } =
-    params;
+  const { fieldKey, fieldLabel, measurement, operator, requirementValue } = params;
   const valueWithUnit =
     measurement !== "-" ? `${requirementValue} ${measurement.toLowerCase()}` : requirementValue;
 
@@ -63,7 +79,7 @@ function buildConditionText(params: {
   if (operator === "gte") return `${fieldLabel} must be at least ${valueWithUnit}.`;
   if (operator === "lt") return `${fieldLabel} must be less than ${valueWithUnit}.`;
   if (operator === "lte") return `${fieldLabel} must be at most ${valueWithUnit}.`;
-  return description;
+  return `${fieldLabel} will use the configured comparison.`;
 }
 
 async function resolvePersonSummary(
@@ -83,8 +99,42 @@ async function resolvePersonSummary(
     .limit(1);
 
   return person
-    ? { identifier: person.email ?? person.id, name: person.name, position: person.position }
+    ? {
+        identifier: person.email ?? person.id,
+        name: person.name,
+        position: formatPositionLabel(person.position),
+      }
     : { identifier, name: fallbackName, position: null };
+}
+
+async function resolveAssignedApproverSummary(
+  DB: D1Database,
+  targetRole: "finance_manager" | "hr_admin",
+  reviewedBy: string | null,
+) {
+  if (reviewedBy) {
+    return resolvePersonSummary(DB, reviewedBy, formatPersonLabel(reviewedBy));
+  }
+
+  const db = getDb({ DB });
+  const [approver] = await db
+    .select({ email: employees.email, id: employees.id, name: employees.name, position: employees.role })
+    .from(employees)
+    .where(eq(employees.role, targetRole))
+    .orderBy(asc(employees.name))
+    .limit(1);
+
+  return approver
+    ? {
+        identifier: approver.email ?? approver.id,
+        name: approver.name,
+        position: formatPositionLabel(approver.position),
+      }
+    : {
+        identifier: null,
+        name: formatApprovalRole(targetRole),
+        position: formatApprovalRole(targetRole),
+      };
 }
 
 export async function getRuleApprovalRequestReview(
@@ -102,25 +152,23 @@ export async function getRuleApprovalRequestReview(
     return null;
   }
 
-  const source = resolveRuleReviewSource(requestRow.payloadJson, requestRow.snapshotJson);
-  const fieldKey = getRuleFieldKey(source.ruleType);
-  const fieldLabel = getRuleFieldLabel(source.ruleType);
-  const requirementValue = parseRuleScalar(source.value);
-  const measurement = formatMeasurement(source.unit);
-  const appliedBenefitsRows = requestRow.entityId
+  const { currentRule, previousRule } = resolveRuleReviewStates(
+    requestRow.payloadJson,
+    requestRow.snapshotJson,
+  );
+  const fieldKey = getRuleFieldKey(currentRule.ruleType);
+  const fieldLabel = getRuleFieldLabel(currentRule.ruleType);
+  const requirementValue = parseRuleScalar(currentRule.value);
+  const measurement = formatMeasurement(currentRule.unit);
+  const appliedBenefits = requestRow.entityId
     ? await db
         .select({ id: benefits.id, name: benefits.name })
         .from(benefitRules)
         .innerJoin(benefits, eq(benefits.id, benefitRules.benefitId))
         .where(
-          and(
-            eq(benefitRules.ruleId, requestRow.entityId),
-            eq(benefitRules.isActive, true),
-          ),
+          and(eq(benefitRules.ruleId, requestRow.entityId), eq(benefitRules.isActive, true)),
         )
     : [];
-  const appliedBenefits =
-    appliedBenefitsRows.length > 0 ? appliedBenefitsRows : source.linkedBenefits;
   const employeeRows = await db
     .select({
       employment_status: employees.employmentStatus,
@@ -131,20 +179,12 @@ export async function getRuleApprovalRequestReview(
       role: employees.role,
     })
     .from(employees);
-  const affectedEmployees =
-    source.ruleType && source.value
-      ? employeeRows.filter(
-          (employee) =>
-            !evaluateRule(
-              {
-                operator: source.operator as Parameters<typeof evaluateRule>[0]["operator"],
-                rule_type: source.ruleType as Parameters<typeof evaluateRule>[0]["rule_type"],
-                value: source.value ?? "",
-              },
-              buildEmployeeMetrics(employee),
-            ),
-        ).length
-      : 0;
+  const impact = buildRuleApprovalImpact({
+    actionType: requestRow.actionType,
+    currentRule,
+    employees: employeeRows,
+    previousRule,
+  });
   const timelineEntries = await listApprovalRequestEvents(DB, requestRow.id);
   const fallbackEntries = buildFallbackApprovalRequestEvents({
     createdAt: requestRow.createdAt,
@@ -161,10 +201,10 @@ export async function getRuleApprovalRequestReview(
     requestRow.requestedBy,
     formatPersonLabel(requestRow.requestedBy),
   );
-  const assignedApprover = await resolvePersonSummary(
+  const assignedApprover = await resolveAssignedApproverSummary(
     DB,
+    requestRow.targetRole,
     requestRow.reviewedBy,
-    formatApprovalRole(requestRow.targetRole),
   );
   const reviewedBy = requestRow.reviewedBy
     ? await resolvePersonSummary(DB, requestRow.reviewedBy, formatPersonLabel(requestRow.reviewedBy))
@@ -183,31 +223,29 @@ export async function getRuleApprovalRequestReview(
       label: entry.label,
       reviewComment: entry.reviewComment,
     })),
+    changeSummary: buildRuleChangeSummary(previousRule, currentRule),
     decisionNoteRequiredOnReject: true,
     impact: {
-      affectedEmployees,
+      affectedEmployees: impact.affectedEmployees,
       benefitsUsingRule: appliedBenefits.length,
-      eligibilityEffect: requestRow.actionType === "delete" ? "Removing" : "Restrictive",
-      summary:
-        requestRow.actionType === "delete"
-          ? "Removing this rule will stop this requirement from restricting eligibility."
-          : "This rule will restrict eligibility for employees who do not meet the required condition.",
+      eligibilityEffect: impact.eligibilityEffect,
+      newlyRestrictedEmployees: impact.newlyRestrictedEmployees,
+      summary: impact.summary,
     },
     overview: {
       condition: buildConditionText({
-        description: source.description,
         fieldKey,
         fieldLabel,
         measurement,
-        operator: source.operator,
+        operator: currentRule.operator,
         requirementValue,
       }),
-      description: source.description,
+      description: currentRule.description,
       measurement,
       requirementValue,
-      ruleName: source.name,
-      ruleTypeLabel: formatRuleTypeLabel(source.ruleType),
-      technicalExpression: `${fieldKey} ${getOperatorSymbol(source.operator)} ${requirementValue}`,
+      ruleName: currentRule.name,
+      ruleTypeLabel: formatRuleTypeLabel(currentRule.ruleType),
+      technicalExpression: buildRuleTechnicalExpression(currentRule),
       valueFieldLabel: fieldLabel,
     },
     request: mapApprovalRequest(requestRow),

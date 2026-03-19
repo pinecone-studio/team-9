@@ -3,9 +3,6 @@ import {
   StickyNote,
 } from "lucide-react";
 import {
-  ApprovalActionType,
-  ApprovalEntityType,
-  ApprovalRequestStatus,
   type ApprovalRequestsQuery,
 } from "@/shared/apollo/generated";
 
@@ -25,6 +22,7 @@ import {
   getCategoryIconByKey,
   sectionIconMatchers,
 } from "./benefit-data-icons";
+import { getPendingBenefitRequest, isArchivedBenefit } from "./benefit-data-approval";
 
 export type {
   BenefitBadge,
@@ -78,6 +76,10 @@ export function buildBenefitSections(
   >();
 
   benefits.forEach((benefit) => {
+    if (isArchivedBenefit(benefit.id, approvalRequests)) {
+      return;
+    }
+
     const categoryName = benefit.category.trim() || "General";
     const categoryId = benefit.categoryId || categoryName;
     const group = groupedBenefits.get(categoryId) ?? {
@@ -122,16 +124,7 @@ export function buildBenefitSections(
         count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
         icon: sectionIcon,
         cards: records.map((record) => {
-          const pendingRequest = approvalRequests
-            .filter(
-              (request) =>
-                request.entity_type === ApprovalEntityType.Benefit &&
-                request.entity_id === record.id &&
-                request.status === ApprovalRequestStatus.Pending &&
-                (request.action_type === ApprovalActionType.Update ||
-                  request.action_type === ApprovalActionType.Delete),
-            )
-            .sort((left, right) => right.created_at.localeCompare(left.created_at))[0];
+          const pendingRequest = getPendingBenefitRequest(record.id, approvalRequests);
 
           return {
             activeEmployees: Math.max(0, record.activeEmployees ?? 0),

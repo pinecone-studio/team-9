@@ -171,17 +171,56 @@ export async function submitEmployeeBenefitRequest(
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    await db.insert(benefitRequests).values({
-      id,
-      employeeId,
-      benefitId,
-      status: PENDING_STATUS,
-      contractAcceptedAt,
-      contractVersionAccepted,
-      reviewedBy: null,
-      createdAt: now,
-      updatedAt: now,
-    });
+    try {
+      await db.insert(benefitRequests).values({
+        id,
+        employeeId,
+        benefitId,
+        status: PENDING_STATUS,
+        contractAcceptedAt,
+        contractVersionAccepted,
+        reviewedBy: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } catch (error) {
+      if (!isMissingReviewCommentColumnError(error)) {
+        throw error;
+      }
+
+      console.warn(
+        "[submitEmployeeBenefitRequest] review_comment column is unavailable. Saving request without comment persistence.",
+      );
+
+      await env.DB
+        .prepare(
+          `
+            INSERT INTO benefit_requests (
+              id,
+              employee_id,
+              benefit_id,
+              status,
+              contract_version_accepted,
+              contract_accepted_at,
+              reviewed_by,
+              created_at,
+              updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+        )
+        .bind(
+          id,
+          employeeId,
+          benefitId,
+          PENDING_STATUS,
+          contractVersionAccepted,
+          contractAcceptedAt,
+          null,
+          now,
+          now,
+        )
+        .run();
+    }
 
     try {
       await db
@@ -235,4 +274,17 @@ export async function submitEmployeeBenefitRequest(
     }
     throw new Error("Failed to submit employee benefit request.");
   }
+}
+
+function isMissingReviewCommentColumnError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes("review_comment") &&
+    (
+      message.includes("no such column") ||
+      message.includes("has no column named") ||
+      message.includes('insert into "benefit_requests"')
+    )
+  );
 }

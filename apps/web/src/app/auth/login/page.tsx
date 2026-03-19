@@ -75,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           muted
           playsInline
         >
-          <source src="/contracts-hero.mp4" type="video/mp4" />
+          <source src="/backvideo.mp4" type="video/mp4" />
         </video>
 
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(30,64,175,0.08)_0%,rgba(37,99,235,0.18)_50%,rgba(15,23,42,0.2)_100%)]" />

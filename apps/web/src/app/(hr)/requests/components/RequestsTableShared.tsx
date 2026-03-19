@@ -2,6 +2,7 @@ import type { KeyboardEvent, ReactNode } from "react";
 
 export {
   AssigneeLabel,
+  DataUpdateTypeBadge,
   EntityTypeBadge,
   isAssignedToCurrentRole,
   OverrideTypeBadge,

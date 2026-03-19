@@ -1,9 +1,9 @@
-import { CircleX, Shield } from "lucide-react";
+import { CircleX, Pencil, Shield } from "lucide-react";
 import type { ReactNode, SVGProps } from "react";
 
 import type { ApprovalRequestRecord } from "./approval-requests.graphql";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
-import { formatApprovalRole, formatApprovalRoleShort } from "./approval-request-utils";
+import { formatApprovalRole } from "./approval-request-utils";
 
 type StatusValue = ApprovalRequestRecord["status"] | BenefitRequestRecord["status"];
 
@@ -76,6 +76,10 @@ export function OverrideTypeBadge() {
   return <TypeChip icon={<Shield className="h-[14px] w-[14px] stroke-[1.8]" />}>Override</TypeChip>;
 }
 
+export function DataUpdateTypeBadge() {
+  return <TypeChip icon={<Pencil className="h-[14px] w-[14px] stroke-[1.8]" />}>Data Update</TypeChip>;
+}
+
 export function isAssignedToCurrentRole({
   currentUserRole,
   reviewTarget,
@@ -96,7 +100,11 @@ export function AssigneeLabel(props: {
 }) {
   const { currentUserRole, reviewTarget, reviewerName } = props;
   const matchesCurrentRole = String(reviewTarget).trim().toLowerCase() === currentUserRole.trim().toLowerCase();
-  const label = reviewerName ? reviewerName : matchesCurrentRole ? formatApprovalRoleShort(reviewTarget) : formatApprovalRole(reviewTarget);
+  const label = reviewerName
+    ? reviewerName
+    : matchesCurrentRole
+      ? "You"
+      : formatApprovalRole(reviewTarget);
 
   return (
     <span className={`inline-flex max-w-full truncate font-sans text-[14px] leading-5 ${matchesCurrentRole && !reviewerName ? "font-medium text-[#155DFC]" : "font-normal text-[#0A0A0A]"}`}>

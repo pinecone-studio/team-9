@@ -7,7 +7,11 @@ import EmployeeBenefitDialogLayout from "./EmployeeBenefitDialogLayout";
 import EmployeeEligibleBenefitDialogContent from "./EmployeeEligibleBenefitDialogContent";
 import EmployeeLockedBenefitDialogContent from "./EmployeeLockedBenefitDialogContent";
 import EmployeePendingBenefitDialogContent from "./EmployeePendingBenefitDialogContent";
-import { buildBenefitDialogRuleItems } from "./employee-benefit-dialog.helpers";
+import {
+  buildBenefitDialogRuleItems,
+  buildExpiredContractMessage,
+  isContractExpired,
+} from "./employee-benefit-dialog.helpers";
 import {
   findApprovedBenefitRequest,
   findPendingBenefitRequest,
@@ -30,14 +34,21 @@ export default function EmployeeBenefitDialog({
   onClose,
   onSubmitted,
 }: EmployeeBenefitDialogProps) {
-  const isActive = card.status === "Active";
   const isPending = card.status === "Pending";
-  const isLocked = card.status === "Locked";
   const { data, error, loading } = useEmployeeBenefitDialogQuery({
     fetchPolicy: "network-only",
     variables: { benefitId: card.id, employeeId },
   });
   const contract = data?.benefitContract ?? null;
+  const hasExpiredContract =
+    !isPending &&
+    card.requiresContract &&
+    isContractExpired(contract?.expiryDate);
+  const isActive = card.status === "Active" && !hasExpiredContract;
+  const isLocked = card.status === "Locked" || hasExpiredContract;
+  const contractStatusMessage = hasExpiredContract
+    ? buildExpiredContractMessage(contract?.expiryDate)
+    : null;
   const eligibilityItems = buildBenefitDialogRuleItems(card, data?.eligibilityRules ?? []);
   const benefitRequests = data?.benefitRequests ?? [];
   const approvedRequest = findApprovedBenefitRequest(benefitRequests, card.id);
@@ -64,7 +75,11 @@ export default function EmployeeBenefitDialog({
     onSubmitted,
     pendingRequest,
   });
-  const isSubmitDisabled = loading || submitting || (card.requiresContract && !acceptedContract);
+  const isSubmitDisabled =
+    loading ||
+    submitting ||
+    hasExpiredContract ||
+    (card.requiresContract && !acceptedContract);
   const overrideMessage = card.isOverridden
     ? card.overrideReason?.trim() ||
       (card.passed
@@ -108,6 +123,7 @@ export default function EmployeeBenefitDialog({
         <EmployeeLockedBenefitDialogContent
           contract={contract}
           contractLoading={contractLoading}
+          contractStatusMessage={contractStatusMessage}
           errorMessage={resolvedErrorMessage}
           loading={loading}
           onViewContract={() => void handleViewContract()}

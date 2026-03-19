@@ -1,22 +1,6 @@
-import {
-  BadgeCheck,
-  BriefcaseBusiness,
-  Building2,
-  CheckCircle2,
-  Clock3,
-  IdCard,
-  Sparkles,
-  UserRound,
-} from "lucide-react";
-
+import { BadgeCheck, BriefcaseBusiness, Building2, CheckCircle2, Clock3, IdCard, Sparkles, UserRound } from "lucide-react";
 import type { BenefitRequestEligibilityItem } from "./benefit-request-review-utils";
-
-type StatusBadge = {
-  bgClassName: string;
-  iconClassName: string;
-  label: string;
-  textClassName: string;
-};
+import { BenefitRequestStatusPill, type BenefitRequestStatusBadge, SnapshotItem } from "./BenefitRequestReviewSectionParts";
 
 export function BenefitRequestOverviewSection({
   approvalRoute,
@@ -37,7 +21,7 @@ export function BenefitRequestOverviewSection({
   primaryValue: string;
   reviewedByLabel: string;
   secondaryValue: string;
-  statusBadge: StatusBadge;
+  statusBadge: BenefitRequestStatusBadge;
 }) {
   const reviewerLabel =
     statusBadge.label === "Rejected"
@@ -66,10 +50,7 @@ export function BenefitRequestOverviewSection({
         {isPending ? (
           <div className="flex flex-col gap-[6px]">
             <span className="text-[12px] leading-4 text-[#737373]">Status</span>
-            <span className={`inline-flex w-fit items-center gap-[6px] rounded-[999px] px-3 py-1 text-[13px] leading-5 font-medium ${statusBadge.bgClassName} ${statusBadge.textClassName}`}>
-              <Clock3 className={`h-3 w-3 ${statusBadge.iconClassName}`} />
-              {statusBadge.label}
-            </span>
+            <BenefitRequestStatusPill statusBadge={statusBadge} />
           </div>
         ) : null}
       </div>
@@ -128,33 +109,9 @@ export function BenefitRequestEmployeeSnapshotSection({
           label="OKR"
           value={okrSubmitted ? "Submitted" : "Not submitted"}
         />
-        <SnapshotItem
-          icon={<Clock3 className="h-4 w-4 text-[#737373]" />}
-          label="Late Arrivals"
-          value={`${lateArrivalCount} (30 days)`}
-        />
+        <SnapshotItem icon={<Clock3 className="h-4 w-4 text-[#737373]" />} label="Late Arrivals" value={`${lateArrivalCount} (30 days)`} />
       </div>
     </section>
-  );
-}
-
-function SnapshotItem({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {icon}
-      <div className="min-w-0">
-        <div className="text-[12px] leading-4 text-[#737373]">{label}</div>
-        <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">{value}</div>
-      </div>
-    </div>
   );
 }
 
@@ -179,9 +136,7 @@ export function BenefitRequestEligibilitySection({
               />
               <div className="min-w-0">
                 <p className="text-[14px] leading-5 text-[#0A0A0A]">{item.label}</p>
-                {!item.passed ? (
-                  <p className="text-[12px] leading-5 text-[#737373]">{item.description}</p>
-                ) : null}
+                {!item.passed ? <p className="text-[12px] leading-5 text-[#737373]">{item.description}</p> : null}
               </div>
             </div>
           ))}
@@ -204,9 +159,7 @@ export function BenefitRequestNotesSection({
   return (
     <section className="flex flex-col gap-4">
       <h3 className="text-[16px] leading-6 font-semibold text-[#0A0A0A]">Decision Notes</h3>
-      <div className="rounded-[14px] border border-[#E2E8F0] bg-white px-4 py-3 text-[14px] leading-6 text-[#0A0A0A]">
-        {reviewComment}
-      </div>
+      <div className="rounded-[14px] border border-[#E2E8F0] bg-white px-4 py-3 text-[14px] leading-6 text-[#0A0A0A]">{reviewComment}</div>
     </section>
   );
 }

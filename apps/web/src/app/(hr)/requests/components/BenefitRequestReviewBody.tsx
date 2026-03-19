@@ -1,4 +1,4 @@
-import { AuditLogSection } from "./ApprovalRequestDetailSections";
+import { AuditLogSection } from "./ApprovalRequestAuditLogSection";
 import {
   BenefitRequestEligibilitySection,
   BenefitRequestEmployeeSnapshotSection,

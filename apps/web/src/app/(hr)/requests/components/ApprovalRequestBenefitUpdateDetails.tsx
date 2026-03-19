@@ -20,10 +20,7 @@ import {
   type BenefitUpdateShape,
   getBenefitUpdateChangeRows,
 } from "./approval-request-benefit-update-utils";
-import {
-  formatDetailDateTime,
-  formatDetailSubsidy,
-} from "./request-detail-formatters";
+import { formatDetailDateTime, formatDetailSubsidy } from "./request-detail-formatters";
 
 type RequestRecord = NonNullable<ApprovalRequestQuery["approvalRequest"]>;
 

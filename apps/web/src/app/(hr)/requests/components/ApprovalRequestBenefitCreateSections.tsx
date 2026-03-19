@@ -1,16 +1,5 @@
-import {
-  CheckCircle2,
-  Eye,
-  FileText,
-  StickyNote,
-  Users,
-} from "lucide-react";
-
-import {
-  DetailCard,
-  DetailSection,
-  LabeledValue,
-} from "./ApprovalRequestDetailSections";
+import { CheckCircle2, Eye, FileText, StickyNote, Users } from "lucide-react";
+import { DetailCard, DetailSection, LabeledValue } from "./ApprovalRequestDetailSections";
 
 export function BenefitCreateOverviewSection({
   approverName,

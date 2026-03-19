@@ -1,10 +1,10 @@
 import type { ApprovalRequestQuery } from "./approval-requests.graphql";
 import {
-  AuditLogSection,
   ChangeSummaryRow,
   DetailSection,
   SubmissionDetailsCard,
 } from "./ApprovalRequestDetailSections";
+import { AuditLogSection } from "./ApprovalRequestAuditLogSection";
 import {
   RuleAppliedBenefitsSection,
   RuleImpactSection,

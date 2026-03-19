@@ -27,11 +27,11 @@ function ContractHistoryTable({ rows }: { rows: HistoryRow[] }) {
       </div>
       <div className="bg-white">
         {rows.map((row, index) => (
-          <div className={`grid grid-cols-[76px_1fr_1fr_96px_82px] ${index === rows.length - 1 ? "" : "border-b border-[#E5E5E5]"}`} key={`${row.version}-${row.effectiveDate}`}>
+          <div className={`grid grid-cols-[76px_1fr_1fr_96px_82px] ${index === rows.length - 1 ? "" : "border-b border-[#E5E5E5]"}`} key={row.id}>
             <div className="px-4 py-2"><span className="inline-flex h-[22px] items-center rounded-[8px] border border-[#E5E5E5] px-2 text-[12px] leading-4 font-medium text-[#0A0A0A]">{row.version}</span></div>
             <div className="px-4 py-[9.5px] text-[14px] leading-5 text-[#737373]">{row.effectiveDate}</div>
             <div className="px-4 py-[9.5px] text-[14px] leading-5 text-[#737373]">{row.expiryDate}</div>
-            <div className="px-4 py-2"><span className={`inline-flex h-[22px] items-center rounded-[8px] px-2 text-[12px] leading-4 font-medium ${getStatusBadge(row.status)}`}>{getStatusLabel(row.status)}</span></div>
+            <div className="px-4 py-2"><span className={`inline-flex h-fit items-center rounded-[8px] px-2 text-[12px] leading-4 font-medium ${getStatusBadge(row.status)}`}>{getStatusLabel(row.status)}</span></div>
             <div className={`px-4 py-[12px] text-[12px] leading-4 ${row.actionTone}`}>{row.actionLabel}</div>
           </div>
         ))}
@@ -118,16 +118,29 @@ export function ContractEditFields({ actionError, draftEffectiveDate, draftExpir
   );
 }
 
-export function ContractHistorySection({ acceptedCount, rows }: { acceptedCount: number; rows: HistoryRow[] }) {
+export function ContractHistorySection({
+  acceptedCount,
+  errorMessage = null,
+  rows,
+}: {
+  acceptedCount: number;
+  errorMessage?: string | null;
+  rows: HistoryRow[];
+}) {
   return (
     <>
       <section className="flex items-center justify-between gap-4">
         <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Employee Acceptance Records</h3>
-        <span className="inline-flex h-[30px] items-center rounded-[8px] bg-[#F5F5F5] px-3 text-[12px] leading-4 font-medium text-[#171717]">{acceptedCount} employees accepted this version</span>
+        <span className="inline-flex h-[30px] items-center rounded-[8px] bg-[#F5F5F5] px-3 text-[12px] leading-4 font-medium text-[#171717]">{acceptedCount} active employees currently accepted this benefit</span>
       </section>
       <div className="h-px w-full bg-[#E5E5E5]" />
       <section className="flex flex-col gap-3">
         <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Version History</h3>
+        {errorMessage ? (
+          <p className="rounded-[8px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[12px] leading-4 text-[#B91C1C]">
+            {errorMessage}
+          </p>
+        ) : null}
         <ContractHistoryTable rows={rows} />
       </section>
     </>

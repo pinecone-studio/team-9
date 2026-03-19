@@ -1,5 +1,4 @@
 import { useMutation } from "@apollo/client/react";
-import type { ApprovalRoleValue } from "./add-benefit-dialog.graphql";
 import {
   CREATE_BENEFIT_MUTATION,
   type CreateBenefitMutation,
@@ -9,35 +8,21 @@ import {
   areBenefitDraftsEqual,
   buildBenefitDraft,
   hasBenefitDraftContent,
-  type BenefitDraft,
 } from "./benefit-draft";
 import { getBenefitRequestNoticeMessage } from "./benefit-request-notice";
 import { buildContractUploadInput } from "./contract-upload-client";
-import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
-type UseAddBenefitDialogActionsProps = {
-  approvalRole: ApprovalRoleValue;
-  assignedRules: AssignedBenefitRule[];
-  categoryId: string;
-  contractFile: File | null;
-  coreBenefitEnabled: boolean;
-  currentUserIdentifier: string;
-  description: string;
-  initialDraft?: BenefitDraft | null;
-  name: string;
-  onClose: () => void;
-  onCreated?: () => void | Promise<unknown>;
-  onDraftChange?: (draft: BenefitDraft | null) => void;
-  onSubmitted?: (message: string) => void;
-  requiresContract: boolean;
-  subsidyPercent: string;
-  vendorName: string;
-};
+import {
+  type UseAddBenefitDialogActionsProps,
+  validateAddBenefitSaveInput,
+} from "./useAddBenefitDialogActions.helpers";
 
 export function useAddBenefitDialogActions({
   approvalRole,
   assignedRules,
   categoryId,
   contractFile,
+  contractEffectiveDate,
+  contractExpiryDate,
   coreBenefitEnabled,
   currentUserIdentifier,
   description,
@@ -92,38 +77,20 @@ export function useAddBenefitDialogActions({
   }
 
   async function handleSave(setErrorMessage: (value: string | null) => void) {
-    const trimmedName = name.trim();
-    const trimmedDescription = description.trim();
-    const trimmedVendorName = vendorName.trim();
-    const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
+    const validation = validateAddBenefitSaveInput({
+      categoryId,
+      contractEffectiveDate,
+      contractExpiryDate,
+      contractFile,
+      description,
+      name,
+      requiresContract,
+      subsidyPercent,
+      vendorName,
+    });
 
-    if (!trimmedName) {
-      setErrorMessage("Benefit name is required.");
-      return;
-    }
-
-    if (!categoryId) {
-      setErrorMessage("Category is missing. Please add from a category section.");
-      return;
-    }
-
-    if (!trimmedDescription) {
-      setErrorMessage("Description is required.");
-      return;
-    }
-
-    if (requiresContract && !trimmedVendorName) {
-      setErrorMessage("Vendor name is required when contract is enabled.");
-      return;
-    }
-
-    if (!Number.isInteger(parsedSubsidy) || parsedSubsidy < 0 || parsedSubsidy > 100) {
-      setErrorMessage("Subsidy percent must be a whole number between 0 and 100.");
-      return;
-    }
-
-    if (requiresContract && !contractFile) {
-      setErrorMessage("Please upload a contract file.");
+    if ("errorMessage" in validation) {
+      setErrorMessage(validation.errorMessage);
       return;
     }
 
@@ -131,7 +98,11 @@ export function useAddBenefitDialogActions({
 
     try {
       const contractUpload = requiresContract && contractFile
-        ? await buildContractUploadInput(contractFile)
+        ? await buildContractUploadInput({
+            effectiveDate: contractEffectiveDate,
+            expiryDate: contractExpiryDate,
+            file: contractFile,
+          })
         : null;
 
       await createBenefit({
@@ -139,11 +110,11 @@ export function useAddBenefitDialogActions({
           input: {
             requestedBy: currentUserIdentifier,
             benefit: {
-              name: trimmedName,
-              description: trimmedDescription,
+              name: validation.trimmedName,
+              description: validation.trimmedDescription,
               categoryId,
-              subsidyPercent: parsedSubsidy,
-              vendorName: trimmedVendorName || null,
+              subsidyPercent: validation.parsedSubsidy,
+              vendorName: validation.trimmedVendorName || null,
               requiresContract,
               isCore: coreBenefitEnabled,
               approvalRole,

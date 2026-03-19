@@ -15,12 +15,16 @@ type AddBenefitDialogFormProps = {
   assignedRules: AssignedBenefitRule[];
   availableRules: AvailableRuleDefinition[];
   contractFile: File | null;
+  contractEffectiveDate: string;
+  contractExpiryDate: string;
   coreBenefitEnabled: boolean;
   description: string;
   name: string;
   onAddRule: () => void;
   onApprovalRoleChange: (value: ApprovalRoleValue) => void;
   onContractFileChange: (file: File | null) => void;
+  onContractEffectiveDateChange: (value: string) => void;
+  onContractExpiryDateChange: (value: string) => void;
   onCoreBenefitEnabledChange: (value: boolean) => void;
   onDescriptionChange: (value: string) => void;
   onNameChange: (value: string) => void;
@@ -42,12 +46,16 @@ export default function AddBenefitDialogForm({
   assignedRules,
   availableRules,
   contractFile,
+  contractEffectiveDate,
+  contractExpiryDate,
   coreBenefitEnabled,
   description,
   name,
   onAddRule,
   onApprovalRoleChange,
   onContractFileChange,
+  onContractEffectiveDateChange,
+  onContractExpiryDateChange,
   onCoreBenefitEnabledChange,
   onDescriptionChange,
   onNameChange,
@@ -150,7 +158,11 @@ export default function AddBenefitDialogForm({
 
           <AddBenefitContractUpload
             contractFile={contractFile}
+            contractEffectiveDate={contractEffectiveDate}
+            contractExpiryDate={contractExpiryDate}
             onContractFileChange={onContractFileChange}
+            onContractEffectiveDateChange={onContractEffectiveDateChange}
+            onContractExpiryDateChange={onContractExpiryDateChange}
             requiresContract={requiresContract}
           />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useContractSignedUrlByBenefitLazyQuery } from "@/shared/apollo/generated";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import ContractDialogFooter from "./ContractDialogFooter";
 import ContractDialogShell from "./ContractDialogShell";
 import {
@@ -12,13 +12,14 @@ import {
 } from "./ContractViewSections";
 import {
   buildContractFileName,
-  buildHistoryRows,
   deriveNextVersion,
   resolveSignedContractUrl,
   toEditableDate,
   type ContractViewContract,
 } from "./contract-view-utils";
 import { normalizeDateInput } from "./contract-dialog-utils";
+import { useCloseOnEscape } from "./useCloseOnEscape";
+import { useContractVersionHistory } from "./useContractVersionHistory";
 
 type ContractViewDialogProps = {
   contract: ContractViewContract;
@@ -55,23 +56,13 @@ export default function ContractViewDialog({
   const [fetchSignedUrl, { loading: downloading }] = useContractSignedUrlByBenefitLazyQuery({
     fetchPolicy: "network-only",
   });
-
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
-  const historyRows = useMemo(() => buildHistoryRows(contract), [contract]);
+  const { historyError, historyRows } = useContractVersionHistory(contract);
+  useCloseOnEscape(onClose);
   const fileName = useMemo(
     () => selectedFile?.name ?? buildContractFileName(contract.vendor || contract.benefit, contract.version),
     [contract.benefit, contract.vendor, contract.version, selectedFile?.name],
   );
-  const uploadSummary = selectedFile
-    ? "New contract file selected for this version."
-    : `Uploaded for ${contract.version} and active since ${contract.effectiveDate}.`;
+  const uploadSummary = selectedFile ? "New contract file selected for this version." : `Uploaded for ${contract.version} and active since ${contract.effectiveDate}.`;
 
   function openFilePicker() {
     setEditMode(true);
@@ -86,8 +77,7 @@ export default function ContractViewDialog({
   function handleDatePickerValue(value: string, kind: "effective" | "expiry") {
     if (!value) return;
     const formatted = value.replace(/-/g, ".");
-    if (kind === "effective") return setDraftEffectiveDate(formatted);
-    setDraftExpiryDate(formatted);
+    return kind === "effective" ? setDraftEffectiveDate(formatted) : setDraftExpiryDate(formatted);
   }
 
   async function handleDownload() {
@@ -163,7 +153,11 @@ export default function ContractViewDialog({
             onPickerValueChange={handleDatePickerValue}
           />
         ) : null}
-        <ContractHistorySection acceptedCount={contract.acceptedCount} rows={historyRows} />
+        <ContractHistorySection
+          acceptedCount={contract.acceptedCount}
+          errorMessage={historyError ? "Failed to load full version history." : null}
+          rows={historyRows}
+        />
       </div>
       <div className={editMode ? "" : "[&_button:last-child]:bg-[#737373]"}>
         <ContractDialogFooter

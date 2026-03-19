@@ -6,6 +6,26 @@ export type ContractUploadInput = {
   version: string;
 };
 
+type BuildContractUploadInputArgs = {
+  effectiveDate: string;
+  expiryDate: string;
+  file: File;
+};
+
+function isFileInput(
+  value: File | BuildContractUploadInputArgs,
+): value is File {
+  return value instanceof File;
+}
+
+export function isEditableDateComplete(value: string) {
+  return /^\d{4}\.\d{2}\.\d{2}$/.test(value);
+}
+
+export function toIsoEditableDate(value: string) {
+  return value.replace(/\./g, "-");
+}
+
 function toIsoDate(value: Date) {
   return value.toISOString().slice(0, 10);
 }
@@ -28,16 +48,28 @@ function readFileAsDataUrl(file: File) {
   });
 }
 
-export async function buildContractUploadInput(file: File): Promise<ContractUploadInput> {
-  const today = new Date();
-  const expiryDate = new Date(today);
-  expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+export async function buildContractUploadInput(
+  input: File | BuildContractUploadInputArgs,
+): Promise<ContractUploadInput> {
+  if (isFileInput(input)) {
+    const today = new Date();
+    const fallbackExpiryDate = new Date(today);
+    fallbackExpiryDate.setFullYear(fallbackExpiryDate.getFullYear() + 1);
+
+    return {
+      version: `v${today.getTime()}`,
+      effectiveDate: toIsoDate(today),
+      expiryDate: toIsoDate(fallbackExpiryDate),
+      fileName: input.name,
+      fileBase64: await readFileAsDataUrl(input),
+    };
+  }
 
   return {
-    version: `v${today.getTime()}`,
-    effectiveDate: toIsoDate(today),
-    expiryDate: toIsoDate(expiryDate),
-    fileName: file.name,
-    fileBase64: await readFileAsDataUrl(file),
+    version: "v1.0",
+    effectiveDate: toIsoEditableDate(input.effectiveDate),
+    expiryDate: toIsoEditableDate(input.expiryDate),
+    fileName: input.file.name,
+    fileBase64: await readFileAsDataUrl(input.file),
   };
 }

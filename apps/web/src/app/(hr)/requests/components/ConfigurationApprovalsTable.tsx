@@ -8,7 +8,6 @@ import {
   EntityTypeBadge,
   isAssignedToCurrentRole,
   PrimaryCell,
-  RequestStatusBadge,
 } from "./RequestsTableShared";
 import {
   formatApprovalRequestName,
@@ -43,16 +42,15 @@ export default function ConfigurationApprovalsTable({
 
   return (
     <DataTableShell
-      tableClassName="w-[1298px] min-w-[1298px]"
+      tableClassName="w-[1250px] min-w-[1250px]"
       colgroup={
         <colgroup>
-          <col className="w-[138.55px]" />
-          <col className="w-[231.85px]" />
-          <col className="w-[174.3px]" />
-          <col className="w-[147.48px]" />
-          <col className="w-[238.98px]" />
-          <col className="w-[125.26px]" />
-          <col className="w-[173.99px]" />
+          <col className="w-[194px]" />
+          <col className="w-[324px]" />
+          <col className="w-[244px]" />
+          <col className="w-[196px]" />
+          <col className="w-[334px]" />
+          <col className="w-[168px]" />
         </colgroup>
       }
     >
@@ -64,7 +62,6 @@ export default function ConfigurationApprovalsTable({
           "Submitted By",
           "Submitted At",
           "Assigned To",
-          "Status",
         ]}
       />
       <tbody>
@@ -86,41 +83,36 @@ export default function ConfigurationApprovalsTable({
               key={request.id}
               onSelect={() => onReview(request.id)}
             >
-              <td className="px-2 py-[9px]">
+              <td className="px-3 py-[12px]">
                 <EntityTypeBadge request={request} />
               </td>
-              <td className="px-2 py-[9px]">
-                <div className="w-[215px]">
+              <td className="px-3 py-[12px]">
+                <div className="w-[280px]">
                   <PrimaryCell title={formatApprovalRequestName(request)} />
                 </div>
               </td>
               <td
-                className={`px-2 py-[9.39px] font-sans text-[14px] leading-5 font-normal ${getChangeSummaryTextClass(request)}`}
+                className={`px-3 py-[12px] font-sans text-[16px] leading-6 font-normal ${getChangeSummaryTextClass(request)}`}
               >
-                <span className="inline-flex w-[158px] truncate items-center">
+                <span className="inline-flex w-[220px] truncate items-center">
                   {changeSummary}
                 </span>
               </td>
-              <td className="px-2 py-[9.39px] font-sans text-[14px] leading-5 font-normal text-[#737373]">
+              <td className="px-3 py-[12px] font-sans text-[16px] leading-6 font-normal text-[#737373]">
                 {resolveRequestPersonName(people, request.requested_by)}
               </td>
-              <td className="py-[9.39px] pr-2 pl-0 font-sans text-[14px] leading-5 font-normal text-[#737373]">
-                <span className="inline-flex w-[170px] items-center">
+              <td className="px-3 py-[12px] font-sans text-[16px] leading-6 font-normal text-[#A3A3A3]">
+                <span className="inline-flex w-[300px] items-center">
                   {formatTableDateTime(request.created_at)}
                 </span>
               </td>
-              <td className="py-[9.39px] pr-2 pl-0">
+              <td className="px-3 py-[12px]">
                 <AssigneeLabel
                   currentUserRole={currentUserRole}
                   reviewerName={reviewerName}
                   reviewTarget={request.target_role}
                   status={request.status}
                 />
-              </td>
-              <td className="py-[8.8px] pr-2 pl-0">
-                <div className="w-[150px]">
-                  <RequestStatusBadge status={request.status} />
-                </div>
               </td>
             </DataTableRow>
           );

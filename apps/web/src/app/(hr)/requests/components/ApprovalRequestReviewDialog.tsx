@@ -6,6 +6,10 @@ import {
   useApprovalRequestQuery,
   useReviewApprovalRequestMutation,
 } from "@/shared/apollo/generated";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 import ApprovalRequestReviewDetails from "./ApprovalRequestReviewDetails";
 import ApprovalRequestReviewFooter from "./ApprovalRequestReviewFooter";
 import ApprovalRequestReviewHeader from "./ApprovalRequestReviewHeader";
@@ -86,7 +90,7 @@ export default function ApprovalRequestReviewDialog({
           input: {
             approved,
             id: request.id,
-            reviewComment: approved ? null : reviewComment.trim(),
+            reviewComment: reviewComment.trim() || null,
             reviewedBy: currentUserIdentifier,
           },
         },
@@ -110,14 +114,14 @@ export default function ApprovalRequestReviewDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[60] overflow-y-auto bg-black/50 px-4 py-6"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-[60]`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="mx-auto flex h-full max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[12px] border border-[#CBD5E1] bg-white">
+      <div className={`mx-auto flex h-full w-[626px] max-w-full flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white shadow-[0px_8px_24px_rgba(15,23,42,0.08)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <ApprovalRequestReviewHeader
           fallbackMeta={fallbackMeta}
           loading={loading}
@@ -126,7 +130,7 @@ export default function ApprovalRequestReviewDialog({
           title={dialogCopy.title}
         />
 
-        <div className="flex-1 overflow-y-auto bg-[#F8FAFC] px-6 py-6">
+        <div className="flex-1 overflow-y-auto bg-white px-6 py-7">
           {loading ? (
             <ApprovalRequestReviewSkeleton />
           ) : request ? (

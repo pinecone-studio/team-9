@@ -2,6 +2,10 @@
 
 import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 type EmployeeRecordDialogShellProps = {
   children: ReactNode;
@@ -39,7 +43,7 @@ export default function EmployeeRecordDialogShell({
 
   return (
     <div
-      className="fixed inset-0 z-[90] overflow-y-auto bg-black/50 px-4 py-6"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-[90]`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -56,7 +60,7 @@ export default function EmployeeRecordDialogShell({
       >
         <div
           aria-modal="true"
-          className="relative flex w-full max-w-[510px] flex-col overflow-hidden rounded-[12px] border border-[#D4D4D8] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)]"
+          className={`relative flex w-full max-w-[510px] flex-col overflow-hidden rounded-[12px] border border-[#D4D4D8] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}
           role="dialog"
         >
           <button
@@ -75,7 +79,7 @@ export default function EmployeeRecordDialogShell({
               <p className="mt-4 text-[14px] leading-5 text-[#737373]">{subtitle}</p>
             </div>
           </div>
-          <div className="max-h-[calc(100vh-220px)] overflow-y-auto px-6 py-5">
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
             {children}
           </div>
           <div className="border-t border-[#E5E5E5] px-6 py-4">{footer}</div>

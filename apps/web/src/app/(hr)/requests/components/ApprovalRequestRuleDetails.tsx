@@ -1,15 +1,12 @@
 import type { ApprovalRequestQuery } from "./approval-requests.graphql";
 import {
-  AuditLogSection,
   ChangeSummaryRow,
+  DetailCard,
+  LabeledValue,
   DetailSection,
   SubmissionDetailsCard,
 } from "./ApprovalRequestDetailSections";
-import {
-  RuleAppliedBenefitsSection,
-  RuleImpactSection,
-  RuleOverviewSection,
-} from "./ApprovalRequestRuleSections";
+import { RuleImpactSection } from "./ApprovalRequestRuleSections";
 import ApprovalRequestStatusBadge from "./ApprovalRequestStatusBadge";
 import { useResolvedPersonName } from "./RequestPeopleContext";
 import {
@@ -28,7 +25,6 @@ import {
 } from "./approval-request-rule-utils";
 import {
   formatDetailDateTime,
-  formatDetailDateTimeWithAt,
 } from "./request-detail-formatters";
 
 type RequestRecord = NonNullable<ApprovalRequestQuery["approvalRequest"]>;
@@ -76,29 +72,6 @@ export default function ApprovalRequestRuleDetails({
         ? snapshot.usage_count
         : 0;
 
-  const auditEntries = [
-    {
-      actor: "Employee",
-      id: "submitted",
-      label: "Request submitted",
-      timestamp: request.created_at,
-    },
-    {
-      actor: "System",
-      id: "eligibility",
-      label: "Eligibility validated",
-      timestamp: request.created_at,
-    },
-    request.status === "pending"
-      ? {
-          actor: "System",
-          id: "route",
-          label: `Routed to ${formatApprovalRole(request.target_role)}`,
-          timestamp: request.created_at,
-        }
-      : null,
-  ].filter((entry): entry is { actor: string; id: string; label: string; timestamp: string } => Boolean(entry));
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -114,16 +87,41 @@ export default function ApprovalRequestRuleDetails({
         </span>
       </div>
 
-      <RuleOverviewSection
-        condition={currentRule.description?.trim() || previousRule?.description || "-"}
-        description={currentRule.description?.trim() || previousRule?.description || "-"}
-        measurement={currentRule.defaultUnit?.trim() || previousRule?.defaultUnit || "-"}
-        requirementValue={requirementValue}
-        ruleName={currentRule.name?.trim() || previousRule?.name || "Untitled Rule"}
-        ruleType={formatRuleTypeLabel(currentRule.ruleType || previousRule?.rule_type)}
-        technicalExpression={technicalExpression}
-        valueFieldLabel={getRuleFieldLabel(currentRule.ruleType || previousRule?.rule_type)}
-      />
+      <DetailSection title="Configuration Overview">
+        <DetailCard>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h4 className="text-[18px] leading-7 font-semibold text-[#0A0A0A]">
+                {currentRule.name?.trim() || previousRule?.name || "Untitled Rule"}
+              </h4>
+              <p className="text-[14px] leading-5 text-[#737373]">
+                {currentRule.description?.trim() || previousRule?.description || "-"}
+              </p>
+            </div>
+            <div className="grid gap-x-6 gap-y-4 border-t border-[#E5E5E5] py-3 md:grid-cols-2">
+              <LabeledValue
+                label="Rule Type"
+                value={formatRuleTypeLabel(currentRule.ruleType || previousRule?.rule_type)}
+              />
+              <LabeledValue
+                label="Field HR Should Check"
+                value={getRuleFieldLabel(currentRule.ruleType || previousRule?.rule_type)}
+              />
+              <LabeledValue label="Requirement Value" value={requirementValue} />
+              <LabeledValue
+                label="Measurement"
+                value={currentRule.defaultUnit?.trim() || previousRule?.defaultUnit || "-"}
+              />
+            </div>
+            <div className="border-t border-[#E5E5E5] pt-3">
+              <div className="text-[12px] leading-4 text-[#737373]">Technical Expression</div>
+              <div className="mt-1 text-[14px] leading-5 font-medium text-[#0A0A0A]">
+                {technicalExpression}
+              </div>
+            </div>
+          </div>
+        </DetailCard>
+      </DetailSection>
 
       {!isCreate && changeRows.length > 0 ? (
         <DetailSection title="Change Summary">
@@ -145,11 +143,6 @@ export default function ApprovalRequestRuleDetails({
         ruleUsageCount={ruleUsageCount}
       />
 
-      <RuleAppliedBenefitsSection
-        linkedBenefits={linkedBenefits}
-        ruleUsageCount={ruleUsageCount}
-      />
-
       <DetailSection title="Submission Details">
         <SubmissionDetailsCard
           approverName={reviewerName}
@@ -160,13 +153,6 @@ export default function ApprovalRequestRuleDetails({
           submittedAt={formatDetailDateTime(request.created_at)}
         />
       </DetailSection>
-
-      <div className="h-px w-full bg-[#E5E5E5]" />
-
-      <AuditLogSection
-        entries={auditEntries}
-        formatTimestamp={formatDetailDateTimeWithAt}
-      />
     </div>
   );
 }

@@ -1,4 +1,28 @@
+import type { EmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
+import {
+  buildRuleDescription,
+  buildRuleLabel,
+  buildRulePassQueue,
+  readRulePassState,
+} from "./benefit-request-review-rule-formatters";
+
+type BenefitRequestRule = EmployeeBenefitDialogQuery["eligibilityRules"][number];
+
+export type BenefitRequestEligibilityItem = {
+  description: string;
+  id: string;
+  label: string;
+  passed: boolean;
+};
+
+type BenefitRequestAuditEntry = {
+  actor: string;
+  id: string;
+  label: string;
+  timestamp: string;
+  tone: "danger" | "neutral" | "success";
+};
 
 export function getBenefitRequestDepartment(request: BenefitRequestRecord) {
   return request.employee.department || "-";
@@ -56,31 +80,55 @@ export function formatBenefitEmploymentStatus(value: string) {
 }
 
 export function normalizeSignedBenefitUrl(endpoint: string | undefined, signedUrl: string) {
-  if (/^https?:\/\//i.test(signedUrl)) {
-    return signedUrl;
-  }
-
-  if (endpoint) {
-    return new URL(signedUrl, new URL(endpoint).origin).toString();
-  }
-
-  if (typeof window !== "undefined") {
-    return new URL(signedUrl, window.location.origin).toString();
-  }
-
+  if (/^https?:\/\//i.test(signedUrl)) return signedUrl;
+  if (endpoint) return new URL(signedUrl, new URL(endpoint).origin).toString();
+  if (typeof window !== "undefined") return new URL(signedUrl, window.location.origin).toString();
   return signedUrl;
+}
+
+export function buildBenefitRequestEligibilityItems(
+  request: BenefitRequestRecord,
+  rules: EmployeeBenefitDialogQuery["eligibilityRules"],
+) {
+  const queueByRuleType = buildRulePassQueue(request.ruleEvaluationJson);
+  const fallbackPassed = request.status === "approved" || request.status === "pending";
+  const orderedRules = [...rules].sort((left, right) => left.priority - right.priority);
+  const items = orderedRules.map((rule) => {
+    const passed = readRulePassState(queueByRuleType, rule.rule_type, fallbackPassed);
+
+    return {
+      description: buildRuleDescription(rule, passed),
+      id: rule.id,
+      label: buildRuleLabel(rule.rule_type, rule),
+      passed,
+    } satisfies BenefitRequestEligibilityItem;
+  });
+
+  if (items.length > 0) return items;
+
+  return Array.from(queueByRuleType.entries()).flatMap(([ruleType, queue], index) =>
+    queue.map((passed, resultIndex) => ({
+      description: passed ? "Requirement satisfied." : "Requirement not met.",
+      id: `${ruleType}-${index}-${resultIndex}`,
+      label: buildRuleLabel(ruleType as BenefitRequestRule["rule_type"], null),
+      passed,
+    })),
+  );
 }
 
 export function buildBenefitRequestAuditEntries(
   request: BenefitRequestRecord,
-  isPending: boolean,
-) {
+): BenefitRequestAuditEntry[] {
+  const reviewerName = request.reviewed_by?.name?.trim() || "Reviewer";
+  const reviewerRole = formatBenefitReviewerRole(request.approval_role);
+
   return [
     {
       actor: "Employee",
       id: "submitted",
       label: "Request submitted",
       timestamp: request.created_at,
+      tone: "neutral",
     },
     request.contractAcceptedAt
       ? {
@@ -88,6 +136,7 @@ export function buildBenefitRequestAuditEntries(
           id: "contract",
           label: "Contract accepted",
           timestamp: request.contractAcceptedAt,
+          tone: "neutral",
         }
       : null,
     {
@@ -95,27 +144,33 @@ export function buildBenefitRequestAuditEntries(
       id: "eligibility",
       label: "Eligibility validated",
       timestamp: request.created_at,
+      tone: "neutral",
     },
-    isPending
+    {
+      actor: "System",
+      id: "route",
+      label: `Routed to ${formatBenefitApprovalRoute(request.approval_role)}`,
+      timestamp: request.created_at,
+      tone: "neutral",
+    },
+    request.status !== "pending"
       ? {
-          actor: "System",
-          id: "route",
-          label: `Routed to ${formatBenefitApprovalRoute(request.approval_role)}`,
-          timestamp: request.created_at,
-        }
-      : null,
-    !isPending
-      ? {
-          actor: request.reviewed_by?.name ?? "Reviewer",
+          actor: `by ${reviewerName} (${reviewerRole})`,
           id: "reviewed",
           label:
             request.status === "approved"
-              ? "Request approved"
+              ? `Approved by ${reviewerName}.`
               : request.status === "cancelled"
-                ? "Request cancelled"
-                : "Request rejected",
+                ? "Cancelled by employee."
+                : `Rejected by ${reviewerName}.`,
           timestamp: request.updated_at,
+          tone:
+            request.status === "approved"
+              ? "success"
+              : request.status === "rejected"
+                ? "danger"
+                : "neutral",
         }
       : null,
-  ].filter((entry): entry is { actor: string; id: string; label: string; timestamp: string } => Boolean(entry));
+  ].filter((entry): entry is BenefitRequestAuditEntry => Boolean(entry));
 }

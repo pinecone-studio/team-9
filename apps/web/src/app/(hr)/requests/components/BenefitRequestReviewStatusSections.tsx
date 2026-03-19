@@ -20,7 +20,7 @@ export function BenefitRequestContractSection({
   return (
     <section className="flex flex-col gap-3">
       <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Contract</h3>
-      <div className="rounded-[10px] border border-[#E5E5E5] p-3">
+      <div className="rounded-[10px] border border-[#E5E5E5] p-[13px]">
         <div className="space-y-4">
           <ContractRow label="Status" value={statusLabel} valueClassName={statusLabel === "Accepted" ? "font-medium text-[#00A63E]" : "font-medium text-[#973C00]"} />
           <ContractRow label="Version" value={contractVersion} valueClassName="font-medium text-[#0A0A0A]" />
@@ -31,7 +31,7 @@ export function BenefitRequestContractSection({
             valueClassName="text-[#0A0A0A]"
           />
           <button
-            className="flex h-8 w-full items-center justify-center gap-2 rounded-[8px] border border-[#E5E5E5] bg-white px-3 text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+            className="flex h-8 w-full items-center justify-center gap-[14px] rounded-[8px] border border-[#E5E5E5] bg-white px-[11px] text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
             disabled={contractLoading}
             onClick={onViewContract}
             type="button"
@@ -89,12 +89,39 @@ export function BenefitRequestReviewedBanner({
   status: BenefitRequestRecord["status"];
 }) {
   return (
-    <div className="px-6 pb-6">
-      <div className="flex h-12 items-center justify-center rounded-[8px] bg-black px-4 text-center text-[14px] leading-5 font-semibold text-white">
-        {status === "approved"
-          ? `This Review Accepted by ${reviewedBy}.`
-          : `This Review Rejected by ${reviewedBy}.`}
+    <div className="flex w-full flex-col items-start rounded-[10px] px-4 py-4">
+      <div
+        className={`w-full text-center text-[14px] leading-5 ${
+          status === "approved" ? "text-[#00A63E]" : "text-[#EF4444]"
+        }`}
+      >
+        {status === "approved" ? (
+          <>
+            This request accepted by <span className="font-medium">{reviewedBy}</span>.
+          </>
+        ) : (
+          <>
+            This request rejected by <span className="font-medium">{reviewedBy}</span>.
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+export function BenefitRequestAssignedBanner({
+  approverLabel,
+}: {
+  approverLabel: string;
+}) {
+  return (
+    <div className="w-full rounded-[10px] border border-[#E5E5E5] bg-[rgba(245,245,245,0.5)] px-[17px] py-4">
+      <p className="text-center text-[14px] leading-5 text-[#737373]">
+        This request is assigned to <span className="font-medium text-[#0A0A0A]">{approverLabel}</span>.
+      </p>
+      <p className="mt-1 text-center text-[12px] leading-4 text-[#737373]">
+        You can view the details but cannot approve or reject this request.
+      </p>
     </div>
   );
 }

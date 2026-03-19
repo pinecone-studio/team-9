@@ -78,7 +78,7 @@ export function RuleImpactSection({
   return (
     <DetailSection title="Impact Preview">
       <DetailCard>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-[#737373]" />
             <LabeledValue

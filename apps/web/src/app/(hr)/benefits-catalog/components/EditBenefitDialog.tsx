@@ -3,7 +3,10 @@
 import { useQuery } from "@apollo/client/react";
 import { useMemo, useState } from "react";
 import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
-
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 import ArchiveBenefitConfirmDialog from "./ArchiveBenefitConfirmDialog";
 import EditBenefitDialogFooter from "./EditBenefitDialogFooter";
 import EditBenefitDialogForm from "./EditBenefitDialogForm";
@@ -108,14 +111,14 @@ export default function EditBenefitDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-50 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="mx-auto flex h-[760px] w-full max-w-[540px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white p-6">
+      <div className={`mx-auto flex w-full max-w-[540px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white p-6 ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <EditBenefitDialogForm
           approvalRole={resolvedApprovalRole}
           assignedRules={assignedRules}

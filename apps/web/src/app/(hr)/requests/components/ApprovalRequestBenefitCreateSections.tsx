@@ -1,22 +1,12 @@
-import {
-  CheckCircle2,
-  Eye,
-  FileText,
-  StickyNote,
-  Users,
-} from "lucide-react";
-
-import {
-  DetailCard,
-  DetailSection,
-  LabeledValue,
-} from "./ApprovalRequestDetailSections";
+import { CheckCircle2, Eye, StickyNote, Users } from "lucide-react";
+import { DetailCard, DetailSection, LabeledValue } from "./ApprovalRequestDetailSections";
 
 export function BenefitCreateOverviewSection({
   approverName,
   approverRole,
   benefitName,
   category,
+  coreBenefitLabel,
   contractStatusLabel,
   description,
   requiresContract,
@@ -27,6 +17,7 @@ export function BenefitCreateOverviewSection({
   approverRole: string;
   benefitName: string;
   category: string;
+  coreBenefitLabel: string;
   contractStatusLabel: string;
   description: string;
   requiresContract: string;
@@ -51,14 +42,14 @@ export function BenefitCreateOverviewSection({
             <LabeledValue label="Subsidy" value={subsidy} />
             <LabeledValue label="Vendor" value={vendorName} />
           </div>
-          <div className="grid gap-y-4 border-t border-[#E5E5E5] pt-3 md:grid-cols-2">
-            <LabeledValue label="Core Benefit" value="No" />
+          <div className="grid gap-y-4 border-t border-[#E5E5E5] pt-[13px] md:grid-cols-2">
+            <LabeledValue label="Core Benefit" value={coreBenefitLabel} />
             <LabeledValue label="Requires Contract" value={requiresContract} />
           </div>
-          <div className="border-t border-[#E5E5E5] pt-3">
+          <div className="border-t border-[#E5E5E5] pt-[13px]">
             <div className="text-[12px] leading-4 text-[#737373]">Contract Status</div>
             <div className="mt-2">
-              <span className="inline-flex items-center gap-[6px] rounded-[4px] bg-[#DCFCE7] px-2 py-[2px] text-[12px] leading-4 font-medium text-[#016630]">
+              <span className="inline-flex items-center gap-[6px] rounded-[4px] bg-[#DCFCE7] px-[9px] py-[3px] text-[12px] leading-4 font-medium text-[#016630]">
                 <StickyNote className="h-3 w-3" />
                 {contractStatusLabel}
               </span>
@@ -76,26 +67,28 @@ export function BenefitCreateOverviewSection({
 
 export function BenefitCreateContractSection({
   fileName,
+  fileMeta,
 }: {
   fileName: string;
+  fileMeta: string;
 }) {
   return (
     <DetailSection title="Contract File">
-      <DetailCard className="flex items-center justify-between gap-4">
+      <DetailCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <FileText className="h-8 w-8 shrink-0 text-[#737373]" />
+          <StickyNote className="h-8 w-8 shrink-0 text-[#737373]" />
           <div className="min-w-0">
             <div className="truncate text-[14px] leading-5 font-medium text-[#0A0A0A]">
               {fileName}
             </div>
             <div className="text-[12px] leading-4 text-[#737373]">
-              Uploaded with this request
+              {fileMeta}
             </div>
           </div>
         </div>
         <button
-          className="inline-flex h-8 shrink-0 items-center gap-2 rounded-[4px] border border-[#E5E5E5] bg-white px-3 text-[14px] leading-5 font-medium text-[#0A0A0A] opacity-60"
-          disabled
+          aria-disabled="true"
+          className="inline-flex h-8 w-fit shrink-0 items-center gap-[6px] rounded-[4px] border border-[#E5E5E5] bg-white px-[11px] text-[14px] leading-5 font-medium text-[#0A0A0A] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]"
           type="button"
         >
           <Eye className="h-4 w-4" />
@@ -119,11 +112,11 @@ export function BenefitCreateEligibilitySection({
       title="Eligibility Rules"
     >
       <DetailCard>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-h-[68px] flex-wrap content-start gap-x-[8px] gap-y-[10px]">
           {attachedRuleNames.length > 0 ? (
             attachedRuleNames.map((name, index) => (
               <span
-                className="inline-flex items-center rounded-[8px] bg-[#F5F5F5] px-3 py-1.5 text-[14px] leading-5 font-medium text-[#171717]"
+                className="inline-flex items-center rounded-[8px] bg-[#F5F5F5] px-[13px] py-[5px] text-[14px] leading-5 font-medium text-[#171717]"
                 key={`${name}-${index}`}
               >
                 {name}
@@ -168,7 +161,7 @@ export function BenefitCreateImpactSection({
             />
           </div>
         </div>
-        <div className="mt-4 border-t border-[#E5E5E5] pt-3 text-[14px] leading-5 text-[#737373]">
+        <div className="mt-4 border-t border-[#E5E5E5] pt-[13px] text-[14px] leading-5 text-[#737373]">
           This benefit will become available to employees who meet the attached eligibility rules.
         </div>
       </DetailCard>

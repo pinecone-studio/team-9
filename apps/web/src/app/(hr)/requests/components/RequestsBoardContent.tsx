@@ -63,7 +63,7 @@ export default function RequestsBoardContent({
   onConfigurationReview,
   overrideRequests,
 }: RequestsBoardContentProps) {
-  const [activeTab, setActiveTab] = useState<RequestsBoardTab>("benefit");
+  const [activeTab, setActiveTab] = useState<RequestsBoardTab>("configuration");
   const [activeMetric, setActiveMetric] = useState<RequestsMetricKey | null>(null);
   const normalizedUserIdentifier = currentUserIdentifier.trim().toLowerCase();
   const normalizedUserRole = currentUserRole.trim().toLowerCase();
@@ -125,14 +125,14 @@ export default function RequestsBoardContent({
   }
 
   return (
-    <section className="mt-[55px] flex w-full flex-col gap-8 pb-10">
+    <section className="mt-[32px] flex w-full flex-col gap-[48px] pb-10">
       <RequestsMetrics
         activeMetric={activeMetric}
         metrics={metrics}
         onMetricSelect={handleMetricSelect}
       />
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-[24px]">
         <RequestsBoardToolbar
           activeMetric={activeMetric}
           activeTab={activeTab}
@@ -143,7 +143,7 @@ export default function RequestsBoardContent({
           overrideCount={counts.override}
         />
 
-        <section className="relative isolate h-[513px] overflow-hidden rounded-[14px] border border-[#E5E5E5] bg-white py-[23.8px] shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
+        <section className="relative isolate min-h-[680px] overflow-hidden rounded-[22px] border border-[#E5E7EB] bg-white py-[18px] shadow-[0_1px_2px_rgba(16,24,40,0.05),0_1px_3px_rgba(16,24,40,0.1)]">
           <div className="pointer-events-none absolute inset-0 bg-[rgba(255,255,255,0.002)]" />
           {activeError ? (
             <div className="relative z-[1] flex h-full items-center px-6 font-sans text-[14px] leading-6 text-[#B42318]">

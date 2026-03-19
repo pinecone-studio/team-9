@@ -3,6 +3,7 @@ import type { SummaryCard as SummaryCardItem } from "./employee-types";
 type SummaryCardsProps = {
   cards: SummaryCardItem[];
   className?: string;
+  variant?: "default" | "hero";
 };
 
 function SummaryCardIcon({ icon }: { icon: SummaryCardItem["icon"] }) {
@@ -18,7 +19,7 @@ function SummaryCardIcon({ icon }: { icon: SummaryCardItem["icon"] }) {
       >
         <path
           d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM10 18C5.59 18 2 14.41 2 10C2 5.59 5.59 2 10 2C14.41 2 18 5.59 18 10C18 14.41 14.41 18 10 18ZM14.59 5.58L8 12.17L5.41 9.59L4 11L8 15L16 7L14.59 5.58Z"
-          fill="#22C55E"
+          fill="currentColor"
         />
       </svg>
     );
@@ -36,19 +37,19 @@ function SummaryCardIcon({ icon }: { icon: SummaryCardItem["icon"] }) {
       >
         <path
           d="M9.79985 10.6675C9.934 10.7113 10.0786 10.7113 10.2127 10.6675C11.3294 10.2984 12.2991 9.5821 12.9807 8.62286C13.6622 7.66362 14.02 6.51158 14.0019 5.3346C14.0129 4.16327 13.6518 3.01874 12.9708 2.06619C12.2897 1.11365 11.3239 0.402384 10.2127 0.0350557C10.0791 -0.0116852 9.93351 -0.0116852 9.79985 0.0350557C8.68869 0.402384 7.72287 1.11365 7.04181 2.06619C6.36075 3.01874 5.99967 4.16327 6.0107 5.3346C5.99255 6.51158 6.35033 7.66362 7.03189 8.62286C7.71346 9.5821 8.6832 10.2984 9.79985 10.6675Z"
-          fill="#3B82F6"
+          fill="currentColor"
         />
         <path
           d="M5.34477 9.11427C4.67659 8.55581 3.84895 8.22343 2.98046 8.16475C2.11197 8.10607 1.24721 8.32412 0.510122 8.78763C0.390847 8.86587 0.29981 8.98037 0.250409 9.11427C-0.0485323 9.93317 -0.0806715 10.8258 0.158603 11.6641C0.397877 12.5024 0.896267 13.2433 1.58227 13.7805C2.33586 14.3926 3.27556 14.7289 4.24599 14.7338C5.01654 14.7252 5.76815 14.4936 6.41026 14.0672C6.52843 13.9907 6.61935 13.8787 6.66997 13.7472C6.95985 12.9331 6.98792 12.0487 6.75027 11.2178C6.51261 10.387 6.02114 9.6514 5.34477 9.11427Z"
-          fill="#3B82F6"
+          fill="currentColor"
         />
         <path
           d="M12.8565 15.2204C12.4973 14.9885 12.2218 14.6474 12.0707 14.2472L10.6722 15.3337V11.8874H10.6189C10.4222 11.958 10.2153 11.9962 10.0063 12.0007C9.79862 11.9995 9.59223 11.9681 9.39363 11.9074H9.34035V15.3337L7.94856 14.2472C7.79563 14.6483 7.51778 14.9896 7.1561 15.2204L7.10949 15.2537L9.34035 16.9936V19.3334C9.34035 19.5102 9.41051 19.6797 9.5354 19.8048C9.66029 19.9298 9.82967 20 10.0063 20C10.1829 20 10.3523 19.9298 10.4772 19.8048C10.6021 19.6797 10.6722 19.5102 10.6722 19.3334V16.9936L12.9097 15.2537L12.8565 15.2204Z"
-          fill="#3B82F6"
+          fill="currentColor"
         />
         <path
           d="M19.7355 9.11427C19.6861 8.98037 19.5951 8.86587 19.4758 8.78763C18.7347 8.34319 17.875 8.13779 17.0133 8.19934C16.1516 8.26089 15.3296 8.5864 14.6591 9.13167C13.9886 9.67694 13.5019 10.4156 13.2652 11.2472C13.0285 12.0789 13.0532 12.9634 13.3359 13.7805C13.3866 13.912 13.4775 14.024 13.5956 14.1005C14.2378 14.527 14.9894 14.7585 15.7599 14.7671C16.7303 14.7622 17.67 14.4259 18.4236 13.8139C19.1131 13.2719 19.612 12.5241 19.8479 11.679C20.0838 10.8339 20.0445 9.93547 19.7355 9.11427Z"
-          fill="#3B82F6"
+          fill="currentColor"
         />
       </svg>
     );
@@ -66,7 +67,7 @@ function SummaryCardIcon({ icon }: { icon: SummaryCardItem["icon"] }) {
       >
         <path
           d="M14 7H13V5C13 2.24 10.76 0 8 0C5.24 0 3 2.24 3 5V7H2C0.9 7 0 7.9 0 9V19C0 20.1 0.9 21 2 21H14C15.1 21 16 20.1 16 19V9C16 7.9 15.1 7 14 7ZM5 5C5 3.34 6.34 2 8 2C9.66 2 11 3.34 11 5V7H5V5ZM14 19H2V9H14V19ZM8 16C9.1 16 10 15.1 10 14C10 12.9 9.1 12 8 12C6.9 12 6 12.9 6 14C6 15.1 6.9 16 8 16Z"
-          fill="#737373"
+          fill="currentColor"
         />
       </svg>
     );
@@ -83,31 +84,78 @@ function SummaryCardIcon({ icon }: { icon: SummaryCardItem["icon"] }) {
     >
       <path
         d="M9.99 0C4.47 0 0 4.48 0 10C0 15.52 4.47 20 9.99 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 9.99 0ZM10 18C5.58 18 2 14.42 2 10C2 5.58 5.58 2 10 2C14.42 2 18 5.58 18 10C18 14.42 14.42 18 10 18ZM10.5 5H9V11L14.25 14.15L15 12.92L10.5 10.25V5Z"
-        fill="#FD9A00"
+        fill="currentColor"
       />
     </svg>
   );
 }
 
-export function SummaryCards({ cards, className = "" }: SummaryCardsProps) {
+export function SummaryCards({
+  cards,
+  className = "",
+  variant = "default",
+}: SummaryCardsProps) {
+  const isHero = variant === "hero";
+
   return (
-    <section className={`grid gap-5 sm:grid-cols-2 xl:grid-cols-4 ${className}`.trim()}>
+    <section
+      className={[
+        "grid gap-5 sm:grid-cols-2 xl:grid-cols-4",
+        isHero ? "w-full xl:gap-7" : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {cards.map((card) => (
         <article
-          className={[
-            "box-border flex min-h-[96px] w-full flex-col items-start justify-between",
-            "rounded-[14px] border border-[#E5E5E5] bg-white p-4",
-          ].join(" ")}
+          className={
+            isHero
+              ? [
+                  "box-border flex min-h-[134px] w-full flex-col items-start justify-between rounded-[16px] p-5",
+                  "border border-white/24 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(72,113,255,0.08))]",
+                  "shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_20px_40px_rgba(17,24,39,0.08)] backdrop-blur-[6px]",
+                ].join(" ")
+              : [
+                  "box-border flex min-h-[96px] w-full flex-col items-start justify-between",
+                  "rounded-[14px] border border-[#E5E5E5] bg-white p-4",
+                ].join(" ")
+          }
           key={card.label}
         >
-          <p className="text-[14px] font-medium leading-[18px] text-[#6B7280]">
+          <p
+            className={
+              isHero
+                ? "text-[14px] font-medium leading-[18px] text-white/84"
+                : "text-[14px] font-medium leading-[18px] text-[#6B7280]"
+            }
+          >
             {card.label}
           </p>
-          <div className="mt-2 flex w-full items-center justify-between">
-            <p className="text-[28px] font-semibold leading-[32px] text-[#0A0A0A]">
+          <div
+            className={
+              isHero
+                ? "mt-4 flex w-full items-end justify-between gap-4"
+                : "mt-2 flex w-full items-center justify-between"
+            }
+          >
+            <p
+              className={
+                isHero
+                  ? "text-[34px] font-semibold leading-[38px] text-white sm:text-[40px] sm:leading-[44px]"
+                  : "text-[28px] font-semibold leading-[32px] text-[#0A0A0A]"
+              }
+            >
               {card.value}
             </p>
-            <span className="inline-flex h-6 w-6 items-center justify-center">
+            <span
+              className={
+                isHero
+                  ? "inline-flex h-9 w-9 items-center justify-center text-white/95"
+                  : "inline-flex h-6 w-6 items-center justify-center"
+              }
+              style={isHero ? undefined : { color: card.color }}
+            >
               <SummaryCardIcon icon={card.icon} />
             </span>
           </div>

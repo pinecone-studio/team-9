@@ -99,7 +99,6 @@ export function mapBenefitSections(
       isActive: eligibility.benefit.isActive,
       isCore: eligibility.benefit.isCore,
       isOverridden,
-      note: status === "Locked" ? "Does not meet all requirements" : undefined,
       overrideReason: isOverridden ? overrideReason : null,
       passed:
         total > 0

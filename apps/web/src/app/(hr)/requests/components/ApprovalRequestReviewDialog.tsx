@@ -9,15 +9,14 @@ import ApprovalRequestReviewHeader from "./ApprovalRequestReviewHeader";
 import ApprovalRequestReviewSkeleton from "./ApprovalRequestReviewSkeleton";
 import { useResolvedPersonName } from "./RequestPeopleContext";
 import {
-  APPROVAL_REQUESTS_QUERY,
   APPROVAL_REQUEST_QUERY,
   REVIEW_APPROVAL_REQUEST_MUTATION,
-  type ApprovalRequestsQuery,
   type ApprovalRequestQuery,
   type ApprovalRequestQueryVariables,
   type ReviewApprovalRequestMutation,
   type ReviewApprovalRequestVariables,
 } from "./approval-requests.graphql";
+import { updateApprovalRequestReviewCache } from "./approval-request-review-cache";
 import { getApprovalRequestDialogCopy } from "./approval-request-review-dialog.copy";
 
 const SLOW_REVIEW_HINT_DELAY_MS = 4000;
@@ -59,7 +58,6 @@ export default function ApprovalRequestReviewDialog({
   const dialogCopy = useMemo(() => getApprovalRequestDialogCopy(request), [request]);
   useEffect(() => {
     if (!reviewing) {
-      setShowSlowReviewHint(false);
       return;
     }
 
@@ -92,6 +90,7 @@ export default function ApprovalRequestReviewDialog({
 
     try {
       setErrorMessage(null);
+      setShowSlowReviewHint(false);
       await reviewApprovalRequest({
         variables: {
           input: {
@@ -102,33 +101,9 @@ export default function ApprovalRequestReviewDialog({
           },
         },
         update(cache, { data: mutationData }) {
-          const reviewedRequest = mutationData?.reviewApprovalRequest;
-          if (!reviewedRequest) {
-            return;
-          }
-
-          cache.writeQuery<ApprovalRequestQuery, ApprovalRequestQueryVariables>({
-            query: APPROVAL_REQUEST_QUERY,
-            variables: { id: reviewedRequest.id },
-            data: {
-              approvalRequest: reviewedRequest,
-            },
-          });
-          cache.updateQuery<ApprovalRequestsQuery>(
-            {
-              query: APPROVAL_REQUESTS_QUERY,
-            },
-            (existingData) => {
-              if (!existingData) {
-                return existingData;
-              }
-
-              return {
-                approvalRequests: existingData.approvalRequests.map((item) =>
-                  item.id === reviewedRequest.id ? reviewedRequest : item,
-                ),
-              };
-            },
+          updateApprovalRequestReviewCache(
+            cache,
+            mutationData?.reviewApprovalRequest,
           );
         },
       });

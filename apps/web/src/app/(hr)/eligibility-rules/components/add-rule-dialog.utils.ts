@@ -15,7 +15,7 @@ export function getOperatorForValueType(valueType: RuleValueType): Operator {
   if (valueType === RuleValueType.Boolean || valueType === RuleValueType.Enum) {
     return Operator.Eq;
   }
-  return Operator.Gte;
+  return Operator.Lte;
 }
 
 export function getDefaultValueForType(valueType: RuleValueType): string {

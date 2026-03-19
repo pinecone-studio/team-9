@@ -8,6 +8,7 @@ import { getBenefitContract } from './get-benefit-contract';
 import { getContractSignedUrl } from './get-contract-signed-url';
 import { getContractSignedUrlByBenefit } from './get-contract-signed-url-by-benefit';
 import { getEmployeeById } from './get-employee-by-id';
+import { getRuleApprovalRequestReview } from './get-rule-approval-request-review';
 import { listAuditLogEntries } from './list-audit-log-entries';
 import { listBenefitAcceptedEmployees } from './list-benefit-accepted-employees';
 import { listApprovalRequests } from './list-approval-requests';
@@ -25,6 +26,7 @@ import type {
 	QueryEligibilityRulesArgs,
 	QueryRuleDefinitionsArgs,
 	QueryApprovalRequestArgs,
+	QueryRuleApprovalRequestReviewArgs,
 	QueryEmployeeArgs,
 	QueryEmployeeByEmailArgs,
 	QueryEmployeeEligibilityArgs,
@@ -67,6 +69,12 @@ export const queryResolvers = {
 
 	approvalRequest: (_: unknown, { id }: QueryApprovalRequestArgs, { DB }: GraphQLContext) =>
 		getApprovalRequestById(DB, id),
+
+	ruleApprovalRequestReview: (
+		_: unknown,
+		args: QueryRuleApprovalRequestReviewArgs,
+		{ DB }: GraphQLContext,
+	) => getRuleApprovalRequestReview(DB, args),
 
 	benefitRequests: (_: unknown, args: QueryBenefitRequestsArgs, { DB }: GraphQLContext) =>
 		listBenefitRequests(DB, args),

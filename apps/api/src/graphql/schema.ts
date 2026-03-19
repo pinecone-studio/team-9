@@ -296,6 +296,68 @@ export const typeDefs = /* GraphQL */ `
     createdAt: String!
   }
 
+  type ApprovalRequestPersonSummary {
+    identifier: String
+    name: String!
+    position: String
+  }
+
+  type ApprovalRequestTimelineEntry {
+    id: ID!
+    label: String!
+    actorType: String!
+    actorIdentifier: String
+    reviewComment: String
+    createdAt: String!
+  }
+
+  type RuleReviewBenefit {
+    id: ID!
+    name: String!
+  }
+
+  type RuleApprovalOverview {
+    ruleName: String!
+    description: String!
+    ruleTypeLabel: String!
+    valueFieldLabel: String!
+    requirementValue: String!
+    measurement: String!
+    condition: String!
+    technicalExpression: String!
+  }
+
+  type RuleApprovalImpact {
+    affectedEmployees: Int!
+    benefitsUsingRule: Int!
+    eligibilityEffect: String!
+    summary: String!
+  }
+
+  type RuleApprovalSubmissionDetails {
+    submittedBy: ApprovalRequestPersonSummary!
+    assignedApprover: ApprovalRequestPersonSummary!
+    submittedAt: String!
+    status: ApprovalRequestStatus!
+    reviewedBy: ApprovalRequestPersonSummary
+    reviewedAt: String
+    reviewComment: String
+  }
+
+  type RuleApprovalRequestReview {
+    title: String!
+    subtitle: String!
+    actionBadgeLabel: String!
+    actionBadgeTone: String!
+    overview: RuleApprovalOverview!
+    impact: RuleApprovalImpact!
+    appliedBenefits: [RuleReviewBenefit!]!
+    submissionDetails: RuleApprovalSubmissionDetails!
+    auditLog: [ApprovalRequestTimelineEntry!]!
+    decisionNoteRequiredOnReject: Boolean!
+    request: ApprovalRequest!
+  }
+
   type BenefitEligibilitySummary {
     benefitId: ID!
     benefitName: String!
@@ -452,6 +514,7 @@ export const typeDefs = /* GraphQL */ `
     allBenefits: [Benefit]
     approvalRequests(status: ApprovalRequestStatus, targetRole: ApprovalRole): [ApprovalRequest!]!
     approvalRequest(id: ID!): ApprovalRequest
+    ruleApprovalRequestReview(id: ID!): RuleApprovalRequestReview
     benefitRequests(targetRole: ApprovalRole, employeeId: ID, benefitId: ID): [BenefitRequest!]!
     ruleCategories: [RuleCategory!]!
     ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!

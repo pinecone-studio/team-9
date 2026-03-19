@@ -1,11 +1,12 @@
 import { useMutation } from "@apollo/client/react";
+import { ApprovalActionType, ApprovalEntityType } from "@/shared/apollo/generated";
 import { buildContractUploadInput } from "./contract-upload-client";
-import { finalizeBenefitUpdateRequestSubmission } from "./useEditBenefitDialogActions.archive";
+import { buildArchiveApprovalSnapshot, finalizeBenefitUpdateRequestSubmission } from "./useEditBenefitDialogActions.archive";
 import { buildBenefitInput, buildRuleAssignments, isMissingIsActiveFieldError, validateBenefitSaveInput } from "./useEditBenefitDialogActions.helpers";
 import {
-  DELETE_BENEFIT_MUTATION,
-  type DeleteBenefitMutation,
-  type DeleteBenefitVariables,
+  CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION,
+  type CreateBenefitDeleteApprovalRequestMutation,
+  type CreateBenefitDeleteApprovalRequestVariables,
   SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION,
   type SubmitBenefitUpdateRequestMutation,
   type SubmitBenefitUpdateRequestVariables,
@@ -17,26 +18,33 @@ export function useEditBenefitDialogActions({
   assignedRules,
   benefitDescription,
   benefitId,
+  benefitName,
+  category,
   categoryId,
   contractFile,
   initialIsActive,
   currentUserIdentifier,
+  initialApprovalRole,
+  initialAssignedRules,
+  initialBenefitDescription,
+  initialIsCore,
   initialRequiresContract,
+  initialSubsidyPercent,
+  initialVendorName,
   isActive,
   isCore,
   name,
   onClose,
-  onDeleted,
   onSaved,
   onSubmitted,
   requiresContract,
   subsidyPercentValue,
   vendorNameValue,
 }: UseEditBenefitDialogActionsProps) {
-  const [deleteBenefit, { loading: deleting }] = useMutation<
-    DeleteBenefitMutation,
-    DeleteBenefitVariables
-  >(DELETE_BENEFIT_MUTATION);
+  const [createBenefitDeleteApprovalRequest, { loading: deleting }] = useMutation<
+    CreateBenefitDeleteApprovalRequestMutation,
+    CreateBenefitDeleteApprovalRequestVariables
+  >(CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION);
   const [submitBenefitUpdateRequest, { loading: updating }] = useMutation<
     SubmitBenefitUpdateRequestMutation,
     SubmitBenefitUpdateRequestVariables
@@ -54,26 +62,52 @@ export function useEditBenefitDialogActions({
     }
 
     try {
-      const result = await deleteBenefit({ variables: { id: benefitId } });
-      if (!result.data?.deleteBenefit) {
-        setErrorMessage("Benefit could not be archived.");
+      const archiveSnapshot = buildArchiveApprovalSnapshot({
+        archiveComment: trimmedArchiveComment,
+        benefitId,
+        benefitName,
+        category,
+        categoryId,
+        initialApprovalRole,
+        initialAssignedRules,
+        initialBenefitDescription,
+        initialIsActive,
+        initialIsCore,
+        initialRequiresContract,
+        initialSubsidyPercent,
+        initialVendorName,
+      });
+      const result = await createBenefitDeleteApprovalRequest({
+        variables: {
+          input: {
+            actionType: ApprovalActionType.Delete,
+            entityId: benefitId,
+            entityType: ApprovalEntityType.Benefit,
+            payloadJson: JSON.stringify(archiveSnapshot),
+            requestedBy: currentUserIdentifier,
+            snapshotJson: JSON.stringify(archiveSnapshot),
+            targetRole: approvalRole,
+          },
+        },
+      });
+      if (!result.data?.createApprovalRequest.id) {
+        setErrorMessage("Benefit archive request could not be submitted.");
         return false;
       }
 
-      try {
-        await onDeleted?.(benefitId);
-        await onSaved?.();
-      } catch {
-        // The archive already succeeded; ignore refresh callback failures.
-      }
-
-      onClose();
+      await finalizeBenefitUpdateRequestSubmission({
+        actionLabel: "archive huselt",
+        approvalRole,
+        onClose,
+        onSaved,
+        onSubmitted,
+      });
       return true;
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Benefit could not be archived.",
+          : "Benefit archive request could not be submitted.",
       );
       return false;
     }

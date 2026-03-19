@@ -26,10 +26,7 @@ function buildBenefitRequestEntries(
   peopleIndex: Map<string, AuditLogsEmployeeRecord>,
 ) {
   const employeeName = request.employee.name.trim();
-  const benefitRule = formatBenefitRuleLabel(
-    request.benefit.title,
-    request.benefit.vendorName,
-  );
+  const benefitRule = formatBenefitRuleLabel(request.benefit.title, request.benefit.vendorName);
   const requester = resolvePerson(request.employee.id, peopleIndex, request.employee.position);
   const entries = [
     createEntry({
@@ -98,20 +95,36 @@ function buildApprovalRequestEntries(
   request: AuditLogsApprovalRequestRecord,
   peopleIndex: Map<string, AuditLogsEmployeeRecord>,
 ) {
+  const isBenefitDeleteRequest = request.entity_type === "benefit" && request.action_type === "delete";
   const payload = parseAuditPayload(request.payload_json);
   const hasEmployeeRequest = Boolean(payload?.employeeRequest);
   const benefitRule =
     request.entity_type === "benefit"
       ? payload?.benefit?.name?.trim() || "Untitled Benefit"
       : payload?.rule?.name?.trim() || "Untitled Rule";
-  const employee =
-    payload?.employeeRequest?.employeeName?.trim() ||
-    formatPersonLabel(payload?.employeeRequest?.employeeEmail ?? payload?.employeeRequest?.employeeId);
-  const requester = resolvePerson(
-    request.requested_by,
-    peopleIndex,
-    formatApprovalRole(request.target_role),
-  );
+  const employee = payload?.employeeRequest?.employeeName?.trim() || formatPersonLabel(payload?.employeeRequest?.employeeEmail ?? payload?.employeeRequest?.employeeId);
+  const requester = resolvePerson(request.requested_by, peopleIndex, formatApprovalRole(request.target_role));
+  if (isBenefitDeleteRequest) {
+    if (request.status !== "rejected") {
+      return [];
+    }
+
+    const reviewer = resolvePerson(request.reviewed_by, peopleIndex, formatApprovalRole(request.target_role));
+
+    return [
+      createEntry({
+        actor: "admin",
+        benefitRule,
+        employee,
+        event: "Benefit Delete Rejected",
+        id: `${request.id}-${request.status}`,
+        occurredAt: request.reviewed_at ?? request.created_at,
+        performedBy: { name: reviewer.name, role: reviewer.role },
+        result: "Rejected",
+        reviewedBy: reviewer.name,
+      }),
+    ];
+  }
   const entries = [
     createEntry({
       actor: requester.actor,
@@ -127,11 +140,7 @@ function buildApprovalRequestEntries(
   ];
 
   if (request.status !== "pending") {
-    const reviewer = resolvePerson(
-      request.reviewed_by,
-      peopleIndex,
-      formatApprovalRole(request.target_role),
-    );
+    const reviewer = resolvePerson(request.reviewed_by, peopleIndex, formatApprovalRole(request.target_role));
     const result = request.status === "approved" ? "Approved" : "Rejected";
     entries.push(
       createEntry({

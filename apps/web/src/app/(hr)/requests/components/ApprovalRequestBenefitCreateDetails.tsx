@@ -11,7 +11,11 @@ import {
   BenefitCreateOverviewSection,
 } from "./ApprovalRequestBenefitCreateSections";
 import ApprovalRequestStatusBadge from "./ApprovalRequestStatusBadge";
-import { useResolvedPersonName } from "./RequestPeopleContext";
+import {
+  resolveRequestPerson,
+  useRequestPeople,
+  useResolvedPersonName,
+} from "./RequestPeopleContext";
 import {
   formatApprovalRole,
   parseApprovalPayload,
@@ -23,6 +27,7 @@ import {
   parseBenefitCreatePayloadRecord,
 } from "./approval-request-benefit-create-data";
 import {
+  formatDetailDate,
   formatDetailDateTime,
   formatDetailSubsidy,
   formatDetailYesNo,
@@ -52,6 +57,7 @@ export default function ApprovalRequestBenefitCreateDetails({
   const { data } = useBenefitCreateRuleDetailsQuery({
     fetchPolicy: "cache-first",
   });
+  const people = useRequestPeople();
 
   const ruleNameMap = new Map((data?.ruleDefinitions ?? []).map((rule) => [rule.id, rule.name]));
   const attachedRuleNames = ruleAssignments.map((rule, index) => {
@@ -61,6 +67,8 @@ export default function ApprovalRequestBenefitCreateDetails({
   const affectedEmployees = data?.employees?.length ?? null;
   const requesterName = useResolvedPersonName(request.requested_by);
   const reviewerName = useResolvedPersonName(request.reviewed_by);
+  const requester = resolveRequestPerson(people, request.requested_by);
+  const reviewer = resolveRequestPerson(people, request.reviewed_by);
   const specificApprover = reviewerName !== "-" ? reviewerName : formatApprovalRole(request.target_role);
   const contractStatusLabel = contractUpload ? "Contract Attached" : "No Contract";
   const contractFileLabel = contractUpload?.fileName || "contract.pdf";
@@ -69,17 +77,24 @@ export default function ApprovalRequestBenefitCreateDetails({
   const benefitName = benefit?.name?.trim() || "Untitled Benefit";
   const description = benefit?.description?.trim() || "-";
   const category = benefit?.category || benefit?.categoryId || "-";
+  const coreBenefitLabel = formatDetailYesNo(benefit?.isCore);
   const subsidy = formatDetailSubsidy(benefit?.subsidyPercent);
   const vendorName = benefit?.vendorName?.trim() || "-";
   const requiresContract = formatDetailYesNo(benefit?.requiresContract);
+  const contractFileMeta = contractUpload
+    ? `Uploaded by ${requesterName} on ${formatDetailDate(request.created_at)}`
+    : "";
+  const requesterSubtitle = requester?.position?.trim() || "Requester";
+  const approverSubtitle =
+    reviewer?.position?.trim() || formatApprovalRole(request.target_role);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-[26px] items-center justify-center rounded-[4px] border border-[#E5E5E5] bg-white px-2 text-[14px] leading-5 font-medium text-[#0A0A0A]">
+        <span className="inline-flex h-[26px] items-center justify-center rounded-[8px] border border-[#E5E5E5] bg-white px-[9px] text-[14px] leading-5 font-medium capitalize text-[#0A0A0A]">
           Benefit
         </span>
-        <span className="inline-flex h-[26px] items-center justify-center rounded-[4px] bg-[#DCFCE7] px-3 text-[12px] leading-4 font-medium text-[#008236]">
+        <span className="inline-flex h-[26px] items-center justify-center rounded-[8px] bg-[#DCFCE7] px-[13px] text-[12px] leading-4 font-medium text-[#008236]">
           New Benefit
         </span>
       </div>
@@ -89,6 +104,7 @@ export default function ApprovalRequestBenefitCreateDetails({
         approverRole={formatApprovalRole(request.target_role)}
         benefitName={benefitName}
         category={category}
+        coreBenefitLabel={coreBenefitLabel}
         contractStatusLabel={contractStatusLabel}
         description={description}
         requiresContract={requiresContract}
@@ -97,7 +113,10 @@ export default function ApprovalRequestBenefitCreateDetails({
       />
 
       {contractUpload ? (
-        <BenefitCreateContractSection fileName={contractFileLabel} />
+        <BenefitCreateContractSection
+          fileMeta={contractFileMeta}
+          fileName={contractFileLabel}
+        />
       ) : null}
 
       <BenefitCreateEligibilitySection
@@ -112,10 +131,10 @@ export default function ApprovalRequestBenefitCreateDetails({
 
       <DetailSection title="Submission Details">
         <SubmissionDetailsCard
-          approverName={formatApprovalRole(request.target_role)}
-          approverSubtitle={formatApprovalRole(request.target_role)}
+          approverName={specificApprover}
+          approverSubtitle={approverSubtitle}
           requesterName={requesterName}
-          requesterSubtitle="Requester"
+          requesterSubtitle={requesterSubtitle}
           statusBadge={<ApprovalRequestStatusBadge status={request.status} variant="soft" />}
           submittedAt={formatDetailDateTime(request.created_at)}
         />

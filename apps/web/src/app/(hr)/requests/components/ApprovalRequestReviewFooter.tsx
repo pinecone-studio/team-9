@@ -28,7 +28,7 @@ export default function ApprovalRequestReviewFooter({
   statusMessage,
 }: ApprovalRequestReviewFooterProps) {
   return (
-    <div className="border-t border-[#E2E8F0] bg-white px-6 py-5">
+    <div className="bg-white px-6 pb-6 pt-0 font-[family-name:var(--font-geist-sans)]">
       {errorMessage ? (
         <p className="mb-4 rounded-[8px] border border-[#F3C7C7] bg-[#FFF7F7] px-3 py-2 text-[13px] leading-5 text-[#B42318]">
           {errorMessage}
@@ -39,63 +39,57 @@ export default function ApprovalRequestReviewFooter({
           {statusMessage}
         </p>
       ) : null}
-      {isPending && rejectMode ? (
-        <div className="mb-4 flex flex-col gap-2">
-          <label className="text-[13px] leading-5 font-medium text-[#0F172A]" htmlFor="approval-reject-comment">
-            Rejection comment
+      {isPending ? (
+        <div className="mb-5 flex flex-col gap-2">
+          <label
+            className="text-[14px] leading-5 font-medium text-[#0A0A0A]"
+            htmlFor="approval-reject-comment"
+          >
+            Decision Notes
           </label>
           <textarea
-            className="min-h-[96px] rounded-[10px] border border-[#CBD5E1] px-3 py-2 text-[14px] leading-5 text-[#0F172A] outline-none"
+            className="min-h-[64px] rounded-[8px] border border-[#E5E5E5] bg-transparent px-3 py-2 text-[14px] leading-5 text-[#111827] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] outline-none transition placeholder:text-[#737373] focus:border-[#D4D4D8]"
             id="approval-reject-comment"
             onChange={(event) => onReviewCommentChange(event.target.value)}
-            placeholder="Tell the requester what needs to be fixed before resubmitting."
+            placeholder="Add notes for this decision..."
             value={reviewComment}
           />
         </div>
       ) : null}
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <button
-          className="rounded-[8px] border border-[#D8DFE6] bg-[#F3F5F8] px-4 py-2 text-[14px] leading-5 text-black disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={reviewing}
-          onClick={onClose}
+          className="flex h-[40px] w-full items-center justify-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] py-[10px] text-[14px] leading-4 font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={reviewing || !isPending}
+          onClick={rejectMode ? onRejectConfirm : onRejectClick}
           type="button"
         >
-          Close
+          <span className="inline-flex items-center gap-[10px]">
+            <CircleX className="h-[18px] w-[18px]" strokeWidth={1.9} />
+            {reviewing && rejectMode ? "Rejecting..." : "Reject"}
+          </span>
         </button>
         {isPending ? (
-          <>
-            {rejectMode ? (
-              <button
-                className="flex items-center gap-2 rounded-[8px] border border-[#FCA5A5] bg-[#EF4444] px-4 py-2 text-[14px] leading-5 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#FCA5A5]"
-                disabled={reviewing}
-                onClick={onRejectConfirm}
-                type="button"
-              >
-                <CircleX className="h-4 w-4" />
-                {reviewing ? "Rejecting..." : "Confirm Reject"}
-              </button>
-            ) : (
-              <button
-                className="flex items-center gap-2 rounded-[8px] border border-[#E0E1E4] bg-white px-4 py-2 text-[14px] leading-5 font-medium text-[#E90012] disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={reviewing}
-                onClick={onRejectClick}
-                type="button"
-              >
-                <CircleX className="h-4 w-4" />
-                Reject
-              </button>
-            )}
-            <button
-              className="flex items-center gap-2 rounded-[8px] bg-[#008E00] px-4 py-2 text-[14px] leading-5 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#86EFAC] disabled:text-white/80"
-              disabled={reviewing || rejectMode}
-              onClick={onApprove}
-              type="button"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              {reviewing ? "Approving..." : "Approve"}
-            </button>
-          </>
-        ) : null}
+          <button
+            className="flex h-[40px] w-full items-center justify-center gap-[10px] rounded-[6px] bg-black px-[10px] py-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={reviewing || rejectMode}
+            onClick={onApprove}
+            type="button"
+          >
+            <span className="inline-flex items-center gap-[10px]">
+              <CheckCircle2 className="h-[18px] w-[18px]" strokeWidth={1.9} />
+              {reviewing ? "Accepting..." : "Accept"}
+            </span>
+          </button>
+        ) : (
+          <button
+            className="flex h-[40px] w-full items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] py-[10px] text-[14px] leading-4 text-black disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={reviewing}
+            onClick={onClose}
+            type="button"
+          >
+            Close
+          </button>
+        )}
       </div>
     </div>
   );

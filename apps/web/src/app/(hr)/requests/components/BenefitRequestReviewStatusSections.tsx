@@ -89,11 +89,17 @@ export function BenefitRequestReviewedBanner({
   status: BenefitRequestRecord["status"];
 }) {
   return (
-    <div className="px-8 pb-8 pt-2">
-      <div className="text-center text-[14px] leading-6 font-medium text-[#00A63E]">
-        {status === "approved"
-          ? `This request accepted by ${reviewedBy}.`
-          : `This request rejected by ${reviewedBy}.`}
+    <div className="flex min-h-[88px] items-center justify-center px-6 pb-8 pt-6">
+      <div className="text-center text-[14px] leading-5 text-[#00A63E]">
+        {status === "approved" ? (
+          <>
+            This request accepted by <span className="font-medium">{reviewedBy}</span>.
+          </>
+        ) : (
+          <>
+            This request rejected by <span className="font-medium">{reviewedBy}</span>.
+          </>
+        )}
       </div>
     </div>
   );

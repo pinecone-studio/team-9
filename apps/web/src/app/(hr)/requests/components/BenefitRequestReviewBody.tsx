@@ -11,7 +11,10 @@ import {
 } from "./BenefitRequestReviewStatusSections";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import type { BenefitRequestEligibilityItem } from "./benefit-request-review-utils";
-import { formatDetailDateTime, formatDetailDateTimeWithAt } from "./request-detail-formatters";
+import {
+  formatDetailDateTime,
+  formatDetailDateTimeWithAt24Hour,
+} from "./request-detail-formatters";
 
 type BenefitRequestReviewBodyProps = {
   approvalRoute: string;
@@ -66,8 +69,8 @@ export default function BenefitRequestReviewBody({
   statusBadge,
 }: BenefitRequestReviewBodyProps) {
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div className="flex flex-col gap-6">
+    <div className="flex-1 overflow-y-auto px-6 pb-0 pt-7">
+      <div className="flex flex-col gap-5">
         <BenefitRequestOverviewSection
           approvalRoute={approvalRoute}
           benefitTitle={request.benefit.title}
@@ -128,7 +131,7 @@ export default function BenefitRequestReviewBody({
 
         <AuditLogSection
           entries={auditEntries}
-          formatTimestamp={formatDetailDateTimeWithAt}
+          formatTimestamp={formatDetailDateTimeWithAt24Hour}
         />
       </div>
     </div>

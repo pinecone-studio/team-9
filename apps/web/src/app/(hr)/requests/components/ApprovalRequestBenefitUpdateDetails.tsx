@@ -63,15 +63,21 @@ export default function ApprovalRequestBenefitUpdateDetails({
   const assignedApprover =
     reviewerLabel !== "-" ? reviewerLabel : formatApprovalRole(request.target_role);
   const isDelete = request.action_type === "delete";
+  const impactedEmployeeCount =
+    previousRules.length > 0 || nextRules.length > 0 ? nextRules.length : changeRows.length;
+  const estimatedChangeLabel =
+    changeRows.length > 0 ? `+${changeRows.length} update${changeRows.length === 1 ? "" : "s"}` : "No estimate";
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-[26px] items-center justify-center rounded-[4px] border border-[#E5E5E5] bg-white px-2 text-[14px] leading-5 font-medium text-[#0A0A0A]">
+        <span className="inline-flex items-center justify-center overflow-hidden rounded-[8px] border border-[#E5E5E5] bg-white px-[9px] py-[3px] text-[14px] leading-5 font-medium capitalize text-[#0A0A0A]">
           Benefit
         </span>
-        <span className={`inline-flex h-[26px] items-center justify-center rounded-[4px] px-3 text-[12px] leading-4 font-medium ${
-          isDelete ? "bg-[#FEF2F2] text-[#C10007]" : "bg-[#F5F5F5] text-[#171717]"
+        <span className={`inline-flex h-[26px] items-center justify-center overflow-hidden px-[13px] py-[3px] text-[12px] leading-4 font-medium ${
+          isDelete
+            ? "rounded-[8px] bg-[#FEF2F2] text-[#C10007]"
+            : "rounded-[41px] bg-[#F5F5F5] text-[#171717]"
         }`}>
           {isDelete ? "Archive" : "Change"}
         </span>
@@ -88,7 +94,7 @@ export default function ApprovalRequestBenefitUpdateDetails({
                 {benefit?.description?.trim() || "-"}
               </p>
             </div>
-            <div className="grid gap-4 border-t border-[#E5E5E5] pt-4 md:grid-cols-2">
+            <div className="grid gap-x-6 gap-y-4 border-t border-[#E5E5E5] py-3 md:grid-cols-2">
               <div className="flex flex-col gap-4">
                 <LabeledValue
                   label="Category"
@@ -118,7 +124,7 @@ export default function ApprovalRequestBenefitUpdateDetails({
 
       {!isDelete ? (
         <DetailSection title="Change Summary">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {changeRows.map((row) => (
               <ChangeSummaryRow
                 key={row.label}
@@ -138,10 +144,10 @@ export default function ApprovalRequestBenefitUpdateDetails({
               <Users className="h-5 w-5 text-[#737373]" />
               <div>
                 <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
-                  {isDelete ? "Archive benefit" : changeRows.length}
+                  {isDelete ? "Archive benefit" : impactedEmployeeCount}
                 </div>
                 <div className="text-[12px] leading-4 text-[#737373]">
-                  {isDelete ? "Requested action" : "Changed fields"}
+                  {isDelete ? "Requested action" : "Affected employees"}
                 </div>
               </div>
             </div>
@@ -149,9 +155,11 @@ export default function ApprovalRequestBenefitUpdateDetails({
               <CalendarDays className="h-5 w-5 text-[#737373]" />
               <div>
                 <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
-                  {nextRules.length}
+                  {isDelete ? formatDetailDateTime(request.created_at) : estimatedChangeLabel}
                 </div>
-                <div className="text-[12px] leading-4 text-[#737373]">Updated rule assignments</div>
+                <div className="text-[12px] leading-4 text-[#737373]">
+                  {isDelete ? "Requested on" : "Est. cost change"}
+                </div>
               </div>
             </div>
           </div>

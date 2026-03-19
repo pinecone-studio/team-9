@@ -38,21 +38,19 @@ export function useEmployeeDashboardViewData({
     [employeeResponsibilityLevel, employmentStatus],
   );
   const shouldSkip = employeeId.length === 0;
-  const [recalculatedEligibility, setRecalculatedEligibility] = useState<{
-    employeeId: string;
-    records: NonNullable<DashboardQueryResult["employeeEligibility"]>;
-  } | null>(null);
   const [manualError, setManualError] = useState<{ employeeId: string; message: string } | null>(
     null,
   );
   const attemptedRecalculationRef = useRef(false);
   const dashboardQuery = useEmployeeDashboardDataQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
     skip: shouldSkip,
     variables: { employeeId },
   });
   const benefitRequestsQuery = useEmployeeBenefitRequestsQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
     skip: shouldSkip,
     variables: { employeeId },
   });
@@ -81,11 +79,8 @@ export function useEmployeeDashboardViewData({
     attemptedRecalculationRef.current = true;
 
     void recalculateEmployeeEligibility({ variables: { employeeId } })
-      .then((result) => {
-        setRecalculatedEligibility({
-          employeeId,
-          records: result.data?.recalculateEmployeeEligibility ?? employeeEligibility,
-        });
+      .then(async () => {
+        await Promise.all([dashboardQuery.refetch(), benefitRequestsQuery.refetch()]);
       })
       .catch((error) => {
         setManualError({
@@ -108,13 +103,9 @@ export function useEmployeeDashboardViewData({
   }
 
   const rawEligibility = dashboardQuery.data?.employeeEligibility ?? [];
-  const employeeEligibility =
-    recalculatedEligibility?.employeeId === employeeId
-      ? recalculatedEligibility.records
-      : rawEligibility;
   const dashboardData = buildEmployeeDashboardViewData({
     approvalRequests: dashboardQuery.data?.approvalRequests ?? [],
-    employeeEligibility,
+    employeeEligibility: rawEligibility,
     employeeEmail,
     employeeLateArrivals30Days:
       typeof dashboardQuery.data?.employee?.lateArrivalCount30Days === "number"

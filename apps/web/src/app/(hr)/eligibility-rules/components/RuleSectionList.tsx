@@ -17,11 +17,7 @@ import { getRuleRequestNoticeMessage } from "./rule-request-notice-message";
 import RuleCancelRequestDialog from "./RuleCancelRequestDialog";
 import RulePendingRequestDialog from "./RulePendingRequestDialog";
 import RuleRequestNotice from "./RuleRequestNotice";
-import {
-  submitAddRuleRequest,
-  submitDeleteRuleRequest,
-  submitUpdateRuleRequest,
-} from "./rule-section-actions";
+import { submitAddRuleRequest, submitDeleteRuleRequest, submitUpdateRuleRequest } from "./rule-section-actions";
 import RuleSectionsView from "./RuleSectionsView";
 import { useRuleSectionListData } from "./useRuleSectionListData";
 import { useAutoOpenRuleDialog } from "./useAutoOpenRuleDialog";
@@ -35,13 +31,7 @@ type RuleSectionListProps = {
   searchTerm?: string;
   shouldAutoOpenCreateRule?: boolean;
 };
-export default function RuleSectionList({
-  currentUserIdentifier,
-  onSearchChange,
-  requestedCreateSection,
-  searchTerm = "",
-  shouldAutoOpenCreateRule = false,
-}: RuleSectionListProps) {
+export default function RuleSectionList({ currentUserIdentifier, onSearchChange, requestedCreateSection, searchTerm = "", shouldAutoOpenCreateRule = false }: RuleSectionListProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleCardModel | null>(null);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
@@ -49,11 +39,16 @@ export default function RuleSectionList({
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>(ALL_RULES_TAB);
   const [submitting, setSubmitting] = useState(false);
-  const { data, error, loading, refetch } = useEligibilityRulesPageDataQuery({ fetchPolicy: "network-only" });
+
+  const { data, error, loading, refetch } = useEligibilityRulesPageDataQuery({
+    fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
+  });
   const isInitialLoading = loading && !data;
   const { data: approvalRequestsData, refetch: refetchApprovalRequests } = useApprovalRequestsQuery({
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: true,
   });
   const [createRuleApprovalRequest] = useCreateRuleApprovalRequestMutation();
   const [updateRuleApprovalRequest] = useUpdateRuleApprovalRequestMutation();
@@ -63,14 +58,23 @@ export default function RuleSectionList({
     setActiveSection,
     shouldAutoOpenCreateRule,
   });
-  const { categoryNameToId, employeeRoles, sections, stats, tabs } =
-    useRuleSectionListData({
-      approvalRequests: approvalRequestsData?.approvalRequests ?? [],
-      data,
-      searchTerm,
-      selectedTab,
-    });
-  async function handleAddRule(input: { approvalRole: ApprovalRoleValue; defaultOperator: Operator; defaultUnit?: string; description: string; name: string; optionsJson?: string; ruleType: RuleType; value: string; valueType: RuleValueType }) {
+  const { categoryNameToId, employeeRoles, sections, stats, tabs } = useRuleSectionListData({
+    approvalRequests: approvalRequestsData?.approvalRequests ?? [],
+    data,
+    searchTerm,
+    selectedTab,
+  });
+  async function handleAddRule(input: {
+    approvalRole: ApprovalRoleValue;
+    defaultOperator: Operator;
+    defaultUnit?: string;
+    description: string;
+    name: string;
+    optionsJson?: string;
+    ruleType: RuleType;
+    value: string;
+    valueType: RuleValueType;
+  }) {
     if (!activeSection) return;
     setSubmitting(true);
     try {
@@ -106,11 +110,7 @@ export default function RuleSectionList({
     }
   }
 
-  async function handleDeleteRule(payload: {
-    approvalRole: ApprovalRoleValue;
-    deleteComment: string;
-    id: string;
-  }) {
+  async function handleDeleteRule(payload: { approvalRole: ApprovalRoleValue; deleteComment: string; id: string }) {
     setSubmitting(true);
     try {
       const didSubmit = await submitDeleteRuleRequest({
@@ -131,15 +131,7 @@ export default function RuleSectionList({
     <>
       {noticeMessage ? <RuleRequestNotice message={noticeMessage} onClose={() => setNoticeMessage(null)} /> : null}
       {error && <div className="mx-auto mt-4 w-full max-w-[1300px] px-4 text-sm text-red-600 sm:px-0">{error.message}</div>}
-      <EligibilityRulesHeader
-        activeTab={selectedTab}
-        loading={isInitialLoading}
-        onSearchChange={onSearchChange}
-        onTabChange={setSelectedTab}
-        searchValue={searchTerm}
-        stats={stats}
-        tabs={tabs}
-      />
+      <EligibilityRulesHeader activeTab={selectedTab} loading={isInitialLoading} onSearchChange={onSearchChange} onTabChange={setSelectedTab} searchValue={searchTerm} stats={stats} tabs={tabs} />
       <RuleSectionsView
         loading={isInitialLoading}
         onAddRule={setActiveSection}

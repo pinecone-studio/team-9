@@ -44,9 +44,9 @@ export default function RequestsBoard({
     notifyOnNetworkStatusChange: true,
   });
   const { data: employeesDirectoryData } = useRequestsEmployeesDirectoryQuery({
-    fetchPolicy: "cache-first",
+    fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
-    notifyOnNetworkStatusChange: false,
+    notifyOnNetworkStatusChange: true,
   });
   const {
     data: benefitRequestData,

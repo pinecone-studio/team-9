@@ -33,6 +33,7 @@ export default function EmployeeDirectoryDialog({
   const isEditDialogOpenRef = useRef(false);
   const { data, error, loading, refetch } = useEmployeeDirectoryDialogQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
     variables: { employeeId: employee.id },
   });
   const [overrideEligibility] = useOverrideEmployeeBenefitEligibilityMutation();

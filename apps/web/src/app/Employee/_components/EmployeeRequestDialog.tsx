@@ -40,6 +40,7 @@ export default function EmployeeRequestDialog({
   const card = request.dialogCard;
   const { data, error, loading } = useEmployeeBenefitDialogQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
     variables: { benefitId: card.id, employeeId },
   });
   const contract = data?.benefitContract ?? null;

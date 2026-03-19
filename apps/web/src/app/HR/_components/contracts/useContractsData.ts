@@ -1,27 +1,23 @@
 "use client";
 
-import { useApolloClient } from "@apollo/client/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useBenefitCatalogPageQuery } from "@/shared/apollo/generated";
 import {
-  BenefitContractForContractsDocument,
   formatDate,
   deriveStatus,
 } from "./contracts-helpers";
 import type {
   BackendContract,
-  BenefitContractForContractsQuery,
   ContractRow,
 } from "./contracts-types";
 
 export function useContractsData(searchText: string) {
-  const apolloClient = useApolloClient();
   const [contractsByBenefitId, setContractsByBenefitId] = useState<
     Record<string, BackendContract | null>
   >({});
-  const [contractsLoading, setContractsLoading] = useState(false);
   const { data, loading } = useBenefitCatalogPageQuery({
     fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
   });
 
   const allBenefits = useMemo(
@@ -39,51 +35,17 @@ export function useContractsData(searchText: string) {
         .map((benefit) => benefit.id),
     [allBenefits],
   );
-
-  useEffect(() => {
-    let isCancelled = false;
-    if (contractBenefitIds.length === 0) {
-      setContractsByBenefitId({});
-      setContractsLoading(false);
-      return () => {
-        isCancelled = true;
-      };
-    }
-
-    const fetchContracts = async () => {
-      setContractsLoading(true);
-      try {
-        const entries = await Promise.all(
-          contractBenefitIds.map(async (benefitId) => {
-            const result = await apolloClient.query<BenefitContractForContractsQuery>({
-              fetchPolicy: "network-only",
-              query: BenefitContractForContractsDocument,
-              variables: { benefitId },
-            });
-            return [benefitId, result.data?.benefitContract ?? null] as const;
-          }),
-        );
-
-        if (!isCancelled) {
-          setContractsByBenefitId(Object.fromEntries(entries));
-        }
-      } catch {
-        if (!isCancelled) {
-          setContractsByBenefitId({});
-        }
-      } finally {
-        if (!isCancelled) {
-          setContractsLoading(false);
-        }
-      }
-    };
-
-    void fetchContracts();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [apolloClient, contractBenefitIds]);
+  const queriedContractsByBenefitId = useMemo(
+    () =>
+      Object.fromEntries(
+        (data?.activeBenefitContracts ?? []).map((contract) => [contract.benefitId, contract]),
+      ) as Record<string, BackendContract | null>,
+    [data?.activeBenefitContracts],
+  );
+  const resolvedContractsByBenefitId = useMemo(
+    () => ({ ...queriedContractsByBenefitId, ...contractsByBenefitId }),
+    [contractsByBenefitId, queriedContractsByBenefitId],
+  );
 
   const contractRows = useMemo<ContractRow[]>(() => {
     const summaryByBenefitId = new Map(
@@ -92,7 +54,7 @@ export function useContractsData(searchText: string) {
     const benefitsById = new Map(allBenefits.map((benefit) => [benefit.id, benefit]));
 
     return contractBenefitIds.flatMap((benefitId) => {
-      const contract = contractsByBenefitId[benefitId];
+      const contract = resolvedContractsByBenefitId[benefitId];
       const benefit = benefitsById.get(benefitId);
 
       if (!contract || !benefit) {
@@ -114,7 +76,7 @@ export function useContractsData(searchText: string) {
         },
       ];
     });
-  }, [allBenefits, contractBenefitIds, contractsByBenefitId, data?.listBenefitEligibilitySummary]);
+  }, [allBenefits, contractBenefitIds, data?.listBenefitEligibilitySummary, resolvedContractsByBenefitId]);
 
   const filteredRows = useMemo(() => {
     const term = searchText.trim().toLowerCase();
@@ -161,14 +123,13 @@ export function useContractsData(searchText: string) {
       ),
     [data?.listBenefitEligibilitySummary],
   );
-  const isInitialContractsLoading =
-    (loading && !data) || (contractBenefitIds.length > 0 && contractsLoading && Object.keys(contractsByBenefitId).length === 0);
+  const isInitialContractsLoading = loading && !data;
   return {
     acceptedCountByBenefitId,
     allBenefits,
     benefitOptions,
     contractRows,
-    contractsLoading,
+    contractsLoading: loading,
     filteredRows,
     isInitialContractsLoading,
     loading,

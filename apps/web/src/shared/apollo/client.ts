@@ -27,3 +27,20 @@ export function createApolloClient() {
     link: httpLink,
   });
 }
+
+export function getGraphqlEndpoint() {
+  return graphqlEndpoint;
+}
+
+export function getRealtimeEventsEndpoint() {
+  const url = new URL(graphqlEndpoint);
+  const originalPath = url.pathname;
+  const replacedPath = originalPath.replace(/\/graphql\/?$/, "/realtime/events");
+
+  url.pathname =
+    replacedPath === originalPath
+      ? `${originalPath.replace(/\/$/, "")}/realtime/events`
+      : replacedPath;
+
+  return url.toString();
+}

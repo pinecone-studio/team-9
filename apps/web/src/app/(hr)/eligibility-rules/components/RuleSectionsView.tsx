@@ -24,7 +24,7 @@ export default function RuleSectionsView({
   if (loading) return <EligibilityRulesSkeleton />;
 
   return (
-    <section className="mx-auto mt-[43px] flex w-full max-w-[1300px] flex-col items-start gap-[34px] px-4 sm:px-0">
+    <section className="mx-auto mt-[34px] flex w-full max-w-[1300px] flex-col items-start gap-[34px] px-4 pb-20 sm:px-0">
       {sections.length === 0 && searchTerm.trim() && (
         <div className="w-full rounded-[8px] border border-[#DBDEE1] bg-white p-6 text-sm text-[#6B7280]">
           No rules found for &quot;{searchTerm.trim()}&quot;.
@@ -52,7 +52,7 @@ export default function RuleSectionsView({
                 </p>
               ) : null}
             </div>
-            <div className="flex w-full flex-wrap items-center gap-5">
+            <div className="flex w-full flex-wrap items-start gap-5">
               {cards.map((card) => (
                 <div key={card.id} className="w-full lg:w-[calc(50%-10px)] xl:w-[420px]">
                   <RuleCard {...card} onEdit={() => onEditRule(card)} onOpenRequest={onOpenRequest} />

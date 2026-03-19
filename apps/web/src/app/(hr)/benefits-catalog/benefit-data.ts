@@ -10,7 +10,6 @@ import type {
   BenefitBadge,
   BenefitCategory,
   BenefitCatalogRecord,
-  PendingBenefitRequest,
   BenefitSection,
 } from "./benefit-types";
 import {
@@ -22,7 +21,12 @@ import {
   getCategoryIconByKey,
   sectionIconMatchers,
 } from "./benefit-data-icons";
-import { getPendingBenefitRequest, isArchivedBenefit } from "./benefit-data-approval";
+import {
+  getPendingBenefitCreateRecords,
+  getPendingBenefitRequest,
+  isArchivedBenefit,
+} from "./benefit-data-approval";
+import { normalizePendingBenefitRequest } from "./benefit-data-pending";
 
 export type {
   BenefitBadge,
@@ -70,12 +74,13 @@ export function buildBenefitSections(
   approvalRequests: ApprovalRequestsQuery["approvalRequests"] = [],
   categoryIconKeys: Partial<Record<string, CategoryIconKey>> = {},
 ): BenefitSection[] {
+  const pendingCreateRecords = getPendingBenefitCreateRecords(categories, approvalRequests);
   const groupedBenefits = new Map<
     string,
     { categoryId: string; categoryName: string; records: BenefitCatalogRecord[] }
   >();
 
-  benefits.forEach((benefit) => {
+  [...benefits, ...pendingCreateRecords].forEach((benefit) => {
     if (isArchivedBenefit(benefit.id, approvalRequests)) {
       return;
     }
@@ -124,7 +129,9 @@ export function buildBenefitSections(
         count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
         icon: sectionIcon,
         cards: records.map((record) => {
-          const pendingRequest = getPendingBenefitRequest(record.id, approvalRequests);
+          const pendingRequest = normalizePendingBenefitRequest(
+            record.pendingRequest ?? getPendingBenefitRequest(record.id, approvalRequests),
+          );
 
           return {
             activeEmployees: Math.max(0, record.activeEmployees ?? 0),
@@ -141,16 +148,7 @@ export function buildBenefitSections(
             enabled: record.isActive,
             isCore: record.isCore,
             eligibleEmployees: Math.max(0, record.eligibleEmployees ?? 0),
-            pendingRequest: pendingRequest
-              ? ({
-                  actionType: pendingRequest.action_type,
-                  createdAt: pendingRequest.created_at,
-                  id: pendingRequest.id,
-                  requestedBy: pendingRequest.requested_by,
-                  status: pendingRequest.status,
-                  targetRole: pendingRequest.target_role,
-                } satisfies PendingBenefitRequest)
-              : null,
+            pendingRequest,
             requiresContract: record.requiresContract,
             subsidyPercent: record.subsidyPercent,
             vendorName: record.vendorName ?? null,

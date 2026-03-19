@@ -5,6 +5,7 @@ import { benefitCategories } from '../../../db/schema/benefit-categories';
 import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
 import { benefitRules } from '../../../db/schema/benefit-rules';
 import { benefits } from '../../../db/schema/benefits';
+import { employees } from '../../../db/schema/employees';
 import { rules } from '../../../db/schema/rules';
 import type { BenefitEligibilitySummary } from '../../generated/resolvers-types';
 
@@ -43,11 +44,17 @@ export async function listBenefitEligibilitySummary(DB: D1Database): Promise<Ben
 		const eligibilityRows = await db
 			.select({
 				benefitId: benefitEligibility.benefitId,
+				employmentStatus: employees.employmentStatus,
 				status: benefitEligibility.status,
 				count: sql<number>`count(*)`,
 			})
 			.from(benefitEligibility)
-			.groupBy(benefitEligibility.benefitId, benefitEligibility.status);
+			.innerJoin(employees, eq(employees.id, benefitEligibility.employeeId))
+			.groupBy(
+				benefitEligibility.benefitId,
+				benefitEligibility.status,
+				employees.employmentStatus,
+			);
 
 		const benefitRuleRows = await db
 			.select({
@@ -63,12 +70,17 @@ export async function listBenefitEligibilitySummary(DB: D1Database): Promise<Ben
 		for (const row of eligibilityRows) {
 			const current = countsByBenefit.get(row.benefitId) ?? createDefaultCounts();
 			const count = Number(row.count ?? 0);
+			const isTerminated = row.employmentStatus.trim().toLowerCase() === 'terminated';
 
 			if (row.status === 'active') {
-				current.activeEmployees += count;
-				current.eligibleEmployees += count;
+				if (!isTerminated) {
+					current.activeEmployees += count;
+					current.eligibleEmployees += count;
+				}
 			} else if (row.status === 'eligible') {
-				current.eligibleEmployees += count;
+				if (!isTerminated) {
+					current.eligibleEmployees += count;
+				}
 			} else if (row.status === 'locked') {
 				current.blockedEmployees += count;
 			} else if (row.status === 'pending') {

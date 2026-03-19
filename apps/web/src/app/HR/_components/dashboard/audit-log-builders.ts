@@ -5,6 +5,7 @@ import type {
   AuditLogsPageDataQuery,
 } from "./audit-logs.graphql";
 import type { AuditLogEntry, AuditLogResult } from "./audit-log-types";
+import { buildBenefitDeleteApprovalFallback, buildDirectBenefitDeleteEntityIds } from "./audit-log-delete-fallback";
 import { buildDirectAuditEntries } from "./audit-log-direct-entry-builders";
 import {
   buildPeopleIndex,
@@ -94,6 +95,7 @@ function buildApprovalEvent(
 function buildApprovalRequestEntries(
   request: AuditLogsApprovalRequestRecord,
   peopleIndex: Map<string, AuditLogsEmployeeRecord>,
+  directBenefitDeleteEntityIds: Set<string>,
 ) {
   const isBenefitDeleteRequest = request.entity_type === "benefit" && request.action_type === "delete";
   const payload = parseAuditPayload(request.payload_json);
@@ -105,12 +107,12 @@ function buildApprovalRequestEntries(
   const employee = payload?.employeeRequest?.employeeName?.trim() || formatPersonLabel(payload?.employeeRequest?.employeeEmail ?? payload?.employeeRequest?.employeeId);
   const requester = resolvePerson(request.requested_by, peopleIndex, formatApprovalRole(request.target_role));
   if (isBenefitDeleteRequest) {
-    if (request.status !== "rejected") {
-      return [];
+    if (request.status === "approved") {
+      if (request.entity_id && directBenefitDeleteEntityIds.has(request.entity_id)) return [];
+      return buildBenefitDeleteApprovalFallback(request, peopleIndex);
     }
-
+    if (request.status !== "rejected") return [];
     const reviewer = resolvePerson(request.reviewed_by, peopleIndex, formatApprovalRole(request.target_role));
-
     return [
       createEntry({
         actor: "admin",
@@ -162,8 +164,9 @@ function buildApprovalRequestEntries(
 
 export function buildAuditLogEntries(data?: AuditLogsPageDataQuery) {
   const peopleIndex = buildPeopleIndex(data?.employees);
+  const directBenefitDeleteEntityIds = buildDirectBenefitDeleteEntityIds(data?.listAuditLogEntries);
   return [...(data?.benefitRequests ?? []).flatMap((request) => buildBenefitRequestEntries(request, peopleIndex))]
-    .concat((data?.approvalRequests ?? []).flatMap((request) => buildApprovalRequestEntries(request, peopleIndex)))
+    .concat((data?.approvalRequests ?? []).flatMap((request) => buildApprovalRequestEntries(request, peopleIndex, directBenefitDeleteEntityIds)))
     .concat((data?.listAuditLogEntries ?? []).flatMap((entry) => buildDirectAuditEntries(entry)))
     .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime());
 }

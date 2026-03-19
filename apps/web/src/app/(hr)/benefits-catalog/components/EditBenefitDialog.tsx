@@ -2,6 +2,7 @@
 
 import { useQuery } from "@apollo/client/react";
 import { useMemo, useState } from "react";
+import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
 
 import ArchiveBenefitConfirmDialog from "./ArchiveBenefitConfirmDialog";
 import EditBenefitDialogFooter from "./EditBenefitDialogFooter";
@@ -38,6 +39,7 @@ export default function EditBenefitDialog({
   onClose,
   onSubmitted,
 }: EditBenefitDialogProps) {
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const [name, setName] = useState(benefitName);
   const [benefitDescription, setBenefitDescription] = useState(description);
   const [specificApproverId, setSpecificApproverId] = useState("");
@@ -49,13 +51,8 @@ export default function EditBenefitDialog({
   const [requiresContract, setRequiresContract] = useState(initialRequiresContract);
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { data } = useQuery<BenefitEditRulesQuery, BenefitEditRulesVariables>(BENEFIT_EDIT_RULES_QUERY, {
-    variables: { benefitId },
-  });
-  const specificApproverOptions = useMemo(
-    () => buildSpecificApproverOptions(data?.employees),
-    [data?.employees],
-  );
+  const { data } = useQuery<BenefitEditRulesQuery, BenefitEditRulesVariables>(BENEFIT_EDIT_RULES_QUERY, { variables: { benefitId } });
+  const specificApproverOptions = useMemo(() => buildSpecificApproverOptions(data?.employees), [data?.employees]);
   const selectedApprover = findSpecificApprover(specificApproverOptions, specificApproverId);
   const resolvedApprovalRole = selectedApprover?.role ?? approvalRole;
   const resolvedSpecificApproverId = selectedApprover?.id ?? "";
@@ -93,8 +90,10 @@ export default function EditBenefitDialog({
     subsidyPercentValue,
     vendorNameValue,
   });
-  const { archiveComment, archiveMode, handleArchiveCancel, handleArchiveClick, handleArchiveConfirmClick, handleArchiveSubmit, isArchiveConfirmOpen, setArchiveComment, setIsArchiveConfirmOpen } =
-    useEditBenefitArchiveFlow({ handleDelete, setErrorMessage });
+  const { archiveComment, archiveMode, handleArchiveCancel, handleArchiveClick, handleArchiveConfirmClick, handleArchiveSubmit, isArchiveConfirmOpen, setArchiveComment, setIsArchiveConfirmOpen } = useEditBenefitArchiveFlow({
+    handleDelete,
+    setErrorMessage,
+  });
 
   function handleRequiresContractChange(value: boolean) {
     setRequiresContract(value);
@@ -158,11 +157,12 @@ export default function EditBenefitDialog({
           onArchiveCommentChange={setArchiveComment}
           onArchiveClick={handleArchiveClick}
           onArchiveConfirm={handleArchiveConfirmClick}
-          onCancel={onClose}
+          onCancel={() => setIsDiscardConfirmOpen(true)}
           onSave={() => handleSave(setErrorMessage)}
           updating={updating}
         />
       </div>
+      {isDiscardConfirmOpen ? <DiscardChangesDialog description="Your edits to this benefit will not be saved." onClose={() => setIsDiscardConfirmOpen(false)} onConfirm={onClose} /> : null}
       {isArchiveConfirmOpen ? (
         <ArchiveBenefitConfirmDialog
           activeEmployees={activeEmployees}

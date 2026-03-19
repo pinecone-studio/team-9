@@ -2,6 +2,7 @@
 
 import { useQuery } from "@apollo/client/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
 import AddBenefitDialogFooter from "./AddBenefitDialogFooter";
 import AddBenefitDialogForm from "./AddBenefitDialogForm";
 import {
@@ -36,6 +37,7 @@ export default function AddBenefitDialog({
   onDraftChange,
   onSubmitted,
 }: AddBenefitDialogProps) {
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const [name, setName] = useState(initialDraft?.name ?? "");
   const [description, setDescription] = useState(initialDraft?.description ?? "");
   const [categoryId] = useState(initialDraft?.categoryId ?? defaultCategoryId ?? "");
@@ -55,14 +57,10 @@ export default function AddBenefitDialog({
   const selectedApprover = findSpecificApprover(specificApproverOptions, specificApproverId);
   const resolvedApprovalRole = selectedApprover?.role ?? approvalRole;
   const resolvedSpecificApproverId = selectedApprover?.id ?? "";
-  const {
-    assignedRules,
-    availableRules,
-    handleAddRule,
-    handleDeleteRule,
-    selectedRuleId,
-    setSelectedRuleId,
-  } = useBenefitRuleAssignments({ initialRules: [], ruleDefinitions: data?.ruleDefinitions });
+  const { assignedRules, availableRules, handleAddRule, handleDeleteRule, selectedRuleId, setSelectedRuleId } = useBenefitRuleAssignments({
+    initialRules: [],
+    ruleDefinitions: data?.ruleDefinitions,
+  });
   const { handleCloseWithDraft, handleSave, saving } = useAddBenefitDialogActions({
     approvalRole: resolvedApprovalRole,
     assignedRules,
@@ -165,12 +163,13 @@ export default function AddBenefitDialog({
           </div>
         ) : null}
         <AddBenefitDialogFooter
-          onCancel={handleCloseWithDraft}
+          onCancel={() => setIsDiscardConfirmOpen(true)}
           onSave={() => handleSave(setErrorMessage)}
           saveDisabled={saveDisabled}
           saving={saving}
         />
       </div>
+      {isDiscardConfirmOpen ? <DiscardChangesDialog description="Your edits to this benefit will not be saved." onClose={() => setIsDiscardConfirmOpen(false)} onConfirm={handleCloseWithDraft} /> : null}
     </div>
   );
 }

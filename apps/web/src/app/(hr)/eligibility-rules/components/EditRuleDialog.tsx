@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
 import { ApprovalRole, RuleValueType } from "@/shared/apollo/generated";
 
+import EditRuleDialogFooter from "./EditRuleDialogFooter";
 import EditRuleDialogFields from "./EditRuleDialogFields";
+import RuleDeleteConfirmDialog from "./RuleDeleteConfirmDialog";
 import RuleApprovalSection, {
   type ApprovalRoleValue,
 } from "./RuleApprovalSection";
+import { useEditRuleDeleteFlow } from "./useEditRuleDeleteFlow";
 import { buildRuleOptionsJson, validateRuleInput } from "./add-rule-dialog.helpers";
 import { parseOptionsJson } from "./edit-rule-dialog.utils";
 import { formatRulePreview } from "./rule-backend-formatters";
@@ -18,6 +21,7 @@ type EditRuleDialogProps = {
   onClose: () => void;
   onDelete: (payload: {
     approvalRole: ApprovalRoleValue;
+    deleteComment: string;
     id: string;
   }) => Promise<void>;
   onSave: (payload: {
@@ -40,6 +44,7 @@ export default function EditRuleDialog({
   rule,
   submitting = false,
 }: EditRuleDialogProps) {
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const parsedOptions = parseOptionsJson(rule.optionsJson);
   const template = getTemplateByRuleType(rule.ruleType, { employeeRoles: [] });
   const [name, setName] = useState(rule.name);
@@ -48,6 +53,20 @@ export default function EditRuleDialog({
   const [measurement, setMeasurement] = useState(rule.defaultUnit ?? "");
   const [approvalRole, setApprovalRole] = useState<ApprovalRoleValue>(ApprovalRole.HrAdmin);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const {
+    deleteComment,
+    deleteMode,
+    handleDeleteCancel,
+    handleDeleteClick,
+    handleDeleteConfirmClick,
+    handleDeleteSubmit,
+    isDeleteConfirmOpen,
+    setDeleteComment,
+  } = useEditRuleDeleteFlow({
+    onDelete,
+    ruleId: rule.id,
+    setErrorMessage: setValidationError,
+  });
 
   const enumOptions = parsedOptions.options;
   const configLabel = parsedOptions.configLabel ?? template.configLabel;
@@ -97,49 +116,59 @@ export default function EditRuleDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-      <div className="w-full max-w-[531px] rounded-[12px] bg-white p-6 shadow-[0_20px_45px_rgba(0,0,0,0.2)]">
-        <div className="flex w-full flex-col gap-8">
+      <div className="flex h-[760px] w-full max-w-[531px] flex-col overflow-hidden rounded-[12px] bg-white p-6 shadow-[0_20px_45px_rgba(0,0,0,0.2)]">
+        <div className="flex w-full flex-1 min-h-0 flex-col gap-8">
           <div className="flex w-full flex-col gap-2">
             <h2 className="text-[18px] leading-7 font-semibold text-[#0F172A]">Edit Rule</h2>
             <p className="text-[14px] leading-5 font-normal text-[#64748B]">Modify the conditions that determine this rule.</p>
           </div>
 
-          <EditRuleDialogFields
-            configHelpText={helpText}
-            description={description}
-            enumOptions={enumOptions}
-            measurement={measurement}
-            name={name}
-            onDescriptionChange={setDescription}
-            onMeasurementChange={setMeasurement}
-            onNameChange={setName}
-            onValueChange={setValue}
-            previewText={previewText}
-            unitOptions={unitOptions}
-            validationError={validationError}
-            value={value}
-            valueType={rule.valueType}
-          />
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex flex-col gap-8">
+              <EditRuleDialogFields
+                configHelpText={helpText}
+                description={description}
+                enumOptions={enumOptions}
+                measurement={measurement}
+                name={name}
+                onDescriptionChange={setDescription}
+                onMeasurementChange={setMeasurement}
+                onNameChange={setName}
+                onValueChange={setValue}
+                previewText={previewText}
+                unitOptions={unitOptions}
+                validationError={validationError}
+                value={value}
+                valueType={rule.valueType}
+              />
 
-          <RuleApprovalSection
-            approvalRole={approvalRole}
-            onApprovalRoleChange={setApprovalRole}
-          />
-
-          <div className="flex w-full items-center justify-between gap-[9px]">
-            <button className="flex h-[38px] items-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-white" disabled={submitting} onClick={() => void onDelete({ approvalRole, id: rule.id })} type="button">
-              <Trash2 className="h-[18px] w-[18px]" />
-              <span className="text-[14px] leading-4 font-medium">Delete</span>
-            </button>
-            <div className="flex items-center gap-[9px]">
-              <button className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black" onClick={onClose} type="button">Cancel</button>
-              <button className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white" disabled={submitting || !name.trim() || !description.trim()} onClick={() => void handleSave()} type="button">
-                {submitting ? "Submitting..." : "Submit Update"}
-              </button>
+              <RuleApprovalSection approvalRole={approvalRole} onApprovalRoleChange={setApprovalRole} />
             </div>
           </div>
+
+          <EditRuleDialogFooter
+            deleteComment={deleteComment}
+            deleteMode={deleteMode}
+            onCancel={() => setIsDiscardConfirmOpen(true)}
+            onDeleteCommentChange={setDeleteComment}
+            onDeleteCancel={handleDeleteCancel}
+            onDeleteClick={handleDeleteClick}
+            onDeleteConfirm={handleDeleteConfirmClick}
+            onSave={() => void handleSave()}
+            saveDisabled={submitting || !name.trim() || !description.trim()}
+            submitting={submitting}
+          />
         </div>
       </div>
+      {isDiscardConfirmOpen ? <DiscardChangesDialog description="Your edits to this rule will not be saved." onClose={() => setIsDiscardConfirmOpen(false)} onConfirm={onClose} /> : null}
+      {isDeleteConfirmOpen ? (
+        <RuleDeleteConfirmDialog
+          benefitUsageCount={rule.usageCount}
+          loading={submitting}
+          onClose={handleDeleteCancel}
+          onConfirm={() => void handleDeleteSubmit(approvalRole)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -17,6 +17,10 @@ import {
   getAllowedOperators,
   getFallbackCategoryId,
 } from "./rule-section-list.utils";
+import {
+  buildRuleDeletePayload,
+  buildRuleDeleteSnapshot,
+} from "./rule-delete-request-payload";
 
 type AddRuleInput = {
   approvalRole: ApprovalRoleValue;
@@ -42,6 +46,7 @@ type SaveRuleInput = {
 
 type DeleteRuleInput = {
   approvalRole: ApprovalRoleValue;
+  deleteComment: string;
   id: string;
 };
 
@@ -130,17 +135,7 @@ export async function submitDeleteRuleRequest(params: {
 }) {
   const { currentUserIdentifier, deleteRuleApprovalRequest, editingRule, input } =
     params;
-  const { approvalRole, id } = input;
-
-  if (editingRule?.id === id && editingRule.usageCount > 0) {
-    const list = editingRule.linkedBenefits
-      .map((benefit) => `- ${benefit.name}`)
-      .join("\n");
-    const shouldDelete = window.confirm(
-      `This rule is linked to ${editingRule.usageCount} benefit(s):\n${list}\n\nDelete anyway?`,
-    );
-    if (!shouldDelete) return false;
-  }
+  const { approvalRole, deleteComment, id } = input;
 
   const result = await deleteRuleApprovalRequest({
     variables: {
@@ -148,9 +143,11 @@ export async function submitDeleteRuleRequest(params: {
         actionType: ApprovalActionType.Delete as ApprovalActionType,
         entityId: id,
         entityType: ApprovalEntityType.Rule,
-        payloadJson: JSON.stringify({ rule: { id } }),
+        payloadJson: JSON.stringify(buildRuleDeletePayload(editingRule, id)),
         requestedBy: currentUserIdentifier,
-        snapshotJson: JSON.stringify(editingRule ?? { id }),
+        snapshotJson: JSON.stringify(
+          buildRuleDeleteSnapshot(editingRule, deleteComment, id),
+        ),
         targetRole: approvalRole ?? ApprovalRole.HrAdmin,
       },
     },

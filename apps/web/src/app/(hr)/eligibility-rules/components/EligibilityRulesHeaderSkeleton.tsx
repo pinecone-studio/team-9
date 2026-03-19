@@ -16,8 +16,19 @@ function DashboardCardSkeleton() {
 export default function EligibilityRulesHeaderSkeleton() {
   return (
     <section className="mx-auto flex w-full max-w-[1300px] flex-col items-center gap-[46px] px-4 pt-[18px] sm:px-0">
-      <div className="relative flex w-full flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-[linear-gradient(125deg,#9EC8FF_0%,#2B58D3_32%,#1D318E_66%,#0B0F3D_100%)] px-[30px] py-[50px] shadow-[0_24px_48px_rgba(25,43,107,0.22)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_18%,rgba(255,255,255,0.42),transparent_28%),radial-gradient(circle_at_88%_22%,rgba(255,255,255,0.14),transparent_24%),linear-gradient(120deg,rgba(255,255,255,0.08),transparent_48%)]" />
+      <div className="relative flex w-full flex-col items-center gap-8 overflow-hidden rounded-[16px] px-[30px] py-[50px] shadow-[0_24px_48px_rgba(25,43,107,0.22)]">
+        <video
+          autoPlay
+          className="absolute inset-0 h-full w-full object-cover"
+          loop
+          muted
+          playsInline
+          preload="auto"
+        >
+          <source src="/contracts-hero.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(66,130,255,0.08),rgba(18,27,83,0.18))]" />
+        <div className="absolute inset-0 rounded-[16px] border border-[#2EA8FF]" />
         <div className="relative flex w-full max-w-[560px] animate-pulse flex-col items-center gap-[5px]">
           <div className="h-[31px] w-52 rounded bg-white/30" />
           <div className="h-[18px] w-44 rounded bg-white/20" />

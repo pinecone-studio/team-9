@@ -1,4 +1,8 @@
 import { RuleValueType } from "@/shared/apollo/generated";
+import type { RuleType } from "@/shared/apollo/generated";
+
+import GateRuleEditorCard from "./GateRuleEditorCard";
+import LevelRuleEditorCard from "./LevelRuleEditorCard";
 
 type AddRuleDialogFieldsProps = {
   configHelpText: string;
@@ -6,6 +10,21 @@ type AddRuleDialogFieldsProps = {
   selectedConfigOptionLabel: string;
   description: string;
   enumOptions: string[];
+  gateRuleEditor?: {
+    onSourceFieldChange: (value: RuleType) => void;
+    onValueChange: (value: string) => void;
+    previewText: string;
+    requiredValueOptions: Array<{ label: string; value: string }>;
+    selectedRuleType: RuleType;
+    sourceFieldOptions: Array<{ label: string; value: RuleType }>;
+    value: string;
+  };
+  levelRuleEditor?: {
+    helperText: string;
+    onValueChange: (value: string) => void;
+    previewText: string;
+    value: string;
+  };
   previewText: string;
   ruleLabel: string;
   onConfigLabelChange: (value: string) => void;
@@ -27,6 +46,8 @@ export default function AddRuleDialogFields(props: AddRuleDialogFieldsProps) {
     selectedConfigOptionLabel,
     description,
     enumOptions,
+    gateRuleEditor,
+    levelRuleEditor,
     previewText,
     ruleLabel,
     onConfigLabelChange,
@@ -43,21 +64,67 @@ export default function AddRuleDialogFields(props: AddRuleDialogFieldsProps) {
   const showConfigSelector = configLabelOptions.length > 1;
   const showMeasurementSelector = unitOptions.length > 1;
 
+  if (gateRuleEditor) {
+    return (
+      <div className="flex w-full flex-col items-start gap-4 py-4">
+      <label className="flex w-full flex-col gap-2">
+          <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">Rule name</span>
+          <input className="h-9 rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-3 text-[14px] leading-[18px] text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onNameChange(event.target.value)} placeholder={`e.g., ${ruleLabel} approval gate`} type="text" />
+        </label>
+        <label className="flex w-full flex-col gap-2">
+          <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">What does this rule do?</span>
+          <textarea className="min-h-16 rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-3 py-[9px] text-[14px] leading-5 text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onDescriptionChange(event.target.value)} placeholder="Explain the condition in plain language..." value={description} />
+        </label>
+        <GateRuleEditorCard
+          onSourceFieldChange={gateRuleEditor.onSourceFieldChange}
+          onValueChange={gateRuleEditor.onValueChange}
+          previewText={gateRuleEditor.previewText}
+          requiredValueOptions={gateRuleEditor.requiredValueOptions}
+          selectedRuleType={gateRuleEditor.selectedRuleType}
+          sourceFieldOptions={gateRuleEditor.sourceFieldOptions}
+          value={gateRuleEditor.value}
+        />
+        {validationError && <p className="text-sm text-red-600">{validationError}</p>}
+      </div>
+    );
+  }
+
+  if (levelRuleEditor) {
+    return (
+      <div className="flex w-full flex-col items-start gap-4 py-4">
+        <label className="flex w-full flex-col gap-2">
+          <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">
+            Rule name
+          </span>
+          <input className="h-9 rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-3 text-[14px] leading-[18px] text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onNameChange(event.target.value)} placeholder={`e.g., ${ruleLabel} approval gate`} type="text" />
+        </label>
+        <label className="flex w-full flex-col gap-2">
+          <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">
+            What does this rule do?
+          </span>
+          <textarea className="min-h-16 rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-3 py-[9px] text-[14px] leading-5 text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onDescriptionChange(event.target.value)} placeholder="Explain the condition in plain language..." value={description} />
+        </label>
+        <LevelRuleEditorCard
+          helperText={levelRuleEditor.helperText}
+          onValueChange={levelRuleEditor.onValueChange}
+          previewText={levelRuleEditor.previewText}
+          value={levelRuleEditor.value}
+        />
+        {validationError && <p className="text-sm text-red-600">{validationError}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-full flex-col items-start gap-4 py-4">
       <label className="flex w-full flex-col gap-2">
-        <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">
-          Rule name
-        </span>
+        <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">Rule name</span>
         <input className="h-9 rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-3 text-[14px] leading-[18px] text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onNameChange(event.target.value)} placeholder={`e.g., ${ruleLabel} approval gate`} type="text" />
       </label>
       <label className="flex w-full flex-col gap-2">
-        <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">
-          What does this rule do?
-        </span>
+        <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">What does this rule do?</span>
         <textarea className="min-h-16 rounded-[6px] border border-[#E2E5E8] bg-[rgba(255,255,255,0.002)] px-3 py-[9px] text-[14px] leading-5 text-[#060B10] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#737373]" onChange={(event) => onDescriptionChange(event.target.value)} placeholder="Explain the condition in plain language..." value={description} />
       </label>
-
       {showConfigSelector ? (
         <label className="flex w-full flex-col gap-2">
           <span className="text-[14px] leading-[14px] font-medium text-[#060B10]">

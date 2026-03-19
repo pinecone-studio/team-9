@@ -56,6 +56,7 @@ type EmployeeBenefitRequestPayload = {
 const EMPLOYEE_REQUEST_ACTIVE_STATUS = 'active';
 const EMPLOYEE_REQUEST_DEFAULT_RESTORE_STATUS = 'eligible';
 const REVIEW_APPROVAL_SLOW_PHASE_MS = 250;
+const REQUEST_CANCELLED_BY_REQUESTER = 'REQUEST_CANCELLED_BY_REQUESTER';
 
 function isContractUploadPayload(value: unknown): value is ContractUploadPayload {
 	if (!value || typeof value !== 'object') {
@@ -106,6 +107,13 @@ function parseEmployeeBenefitRequestPayload(payload: unknown): EmployeeBenefitRe
 	}
 
 	return employeeRequest as EmployeeBenefitRequestPayload;
+}
+
+function isRequesterCancellation(input: MutationReviewApprovalRequestArgs['input']) {
+	return (
+		input.approved === false &&
+		input.reviewComment?.trim() === REQUEST_CANCELLED_BY_REQUESTER
+	);
 }
 
 async function createBenefitContractRecord(
@@ -182,6 +190,7 @@ export async function reviewApprovalRequest(
   const input = args.input;
   const logger = createReviewApprovalRequestLogger(input.id);
   const reviewedBy = input.reviewedBy.trim();
+  const isSelfCancellation = isRequesterCancellation(input);
 
   if (!reviewedBy) {
     throw new Error('reviewedBy is required');
@@ -203,7 +212,10 @@ export async function reviewApprovalRequest(
       throw new Error('Only pending approval requests can be reviewed');
     }
 
-    if (existing.requestedBy.trim().toLowerCase() === reviewedBy.toLowerCase()) {
+    if (
+      existing.requestedBy.trim().toLowerCase() === reviewedBy.toLowerCase() &&
+      !isSelfCancellation
+    ) {
       throw new Error('The requester cannot approve or reject their own request');
     }
 

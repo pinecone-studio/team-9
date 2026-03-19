@@ -41,7 +41,9 @@ type SaveRuleInput = {
   measurement?: string;
   name: string;
   optionsJson?: string;
+  ruleType?: RuleType;
   value?: string;
+  valueType?: RuleValueType;
 };
 
 type DeleteRuleInput = {
@@ -110,6 +112,8 @@ export async function submitUpdateRuleRequest(params: {
     id: editingRule.id,
     name: input.name,
     optionsJson: input.optionsJson,
+    ruleType: input.ruleType,
+    valueType: input.valueType,
   };
 
   await updateRuleApprovalRequest({

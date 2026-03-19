@@ -12,13 +12,19 @@ import {
   type BenefitDraft,
 } from "./benefit-draft";
 import { getBenefitRequestNoticeMessage } from "./benefit-request-notice";
-import { buildContractUploadInput } from "./contract-upload-client";
+import {
+  buildContractUploadInput,
+  isEditableDateComplete,
+  toIsoEditableDate,
+} from "./contract-upload-client";
 import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
 type UseAddBenefitDialogActionsProps = {
   approvalRole: ApprovalRoleValue;
   assignedRules: AssignedBenefitRule[];
   categoryId: string;
   contractFile: File | null;
+  contractEffectiveDate: string;
+  contractExpiryDate: string;
   coreBenefitEnabled: boolean;
   currentUserIdentifier: string;
   description: string;
@@ -38,6 +44,8 @@ export function useAddBenefitDialogActions({
   assignedRules,
   categoryId,
   contractFile,
+  contractEffectiveDate,
+  contractExpiryDate,
   coreBenefitEnabled,
   currentUserIdentifier,
   description,
@@ -127,11 +135,41 @@ export function useAddBenefitDialogActions({
       return;
     }
 
+    if (requiresContract && !contractEffectiveDate.trim()) {
+      setErrorMessage("Effective date is required when contract is enabled.");
+      return;
+    }
+
+    if (requiresContract && !contractExpiryDate.trim()) {
+      setErrorMessage("Expiry date is required when contract is enabled.");
+      return;
+    }
+
+    if (
+      requiresContract &&
+      (!isEditableDateComplete(contractEffectiveDate) || !isEditableDateComplete(contractExpiryDate))
+    ) {
+      setErrorMessage("Contract dates must use the yyyy.mm.dd format.");
+      return;
+    }
+
+    if (
+      requiresContract &&
+      toIsoEditableDate(contractExpiryDate) < toIsoEditableDate(contractEffectiveDate)
+    ) {
+      setErrorMessage("Expiry date must be on or after the effective date.");
+      return;
+    }
+
     setErrorMessage(null);
 
     try {
       const contractUpload = requiresContract && contractFile
-        ? await buildContractUploadInput(contractFile)
+        ? await buildContractUploadInput({
+            effectiveDate: contractEffectiveDate,
+            expiryDate: contractExpiryDate,
+            file: contractFile,
+          })
         : null;
 
       await createBenefit({

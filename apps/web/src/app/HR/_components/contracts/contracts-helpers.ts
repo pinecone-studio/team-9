@@ -1,5 +1,10 @@
 import { gql } from "@apollo/client";
-import type { BackendContract, ContractRow, ContractStatus } from "./contracts-types";
+import type {
+  BackendContract,
+  BenefitContractVersionsQuery,
+  ContractRow,
+  ContractStatus,
+} from "./contracts-types";
 
 export const BenefitContractForContractsDocument = gql`
   query BenefitContractForContracts($benefitId: ID!) {
@@ -32,6 +37,20 @@ export const BenefitAcceptedEmployeesDocument = gql`
   }
 `;
 
+export const BenefitContractVersionsDocument = gql`
+  query BenefitContractVersions($benefitId: ID!) {
+    benefitContractVersions(benefitId: $benefitId) {
+      id
+      benefitId
+      vendorName
+      version
+      effectiveDate
+      expiryDate
+      isActive
+    }
+  }
+`;
+
 export const UploadContractDocument = gql`
   mutation UploadContract($input: ContractInput!) {
     uploadContract(input: $input) {
@@ -45,6 +64,8 @@ export const UploadContractDocument = gql`
     }
   }
 `;
+
+export type { BenefitContractVersionsQuery };
 
 export function formatDate(value: string) {
   const parsed = new Date(value);

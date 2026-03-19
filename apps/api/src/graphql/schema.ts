@@ -452,6 +452,7 @@ export const typeDefs = /* GraphQL */ `
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     benefitContract(benefitId: ID!): Contract
+    benefitContractVersions(benefitId: ID!): [Contract!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
     contractSignedUrlByBenefit(benefitId: ID!): ContractSignedUrl!
     countPendingBenefitRequests: Int!

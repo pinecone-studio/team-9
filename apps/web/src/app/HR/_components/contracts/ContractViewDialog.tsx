@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@apollo/client/react";
 import { useContractSignedUrlByBenefitLazyQuery } from "@/shared/apollo/generated";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import ContractDialogFooter from "./ContractDialogFooter";
@@ -13,11 +14,16 @@ import {
 import {
   buildContractFileName,
   buildHistoryRows,
+  buildHistoryRowsFromContracts,
   deriveNextVersion,
   resolveSignedContractUrl,
   toEditableDate,
   type ContractViewContract,
 } from "./contract-view-utils";
+import {
+  BenefitContractVersionsDocument,
+  type BenefitContractVersionsQuery,
+} from "./contracts-helpers";
 import { normalizeDateInput } from "./contract-dialog-utils";
 
 type ContractViewDialogProps = {
@@ -55,6 +61,13 @@ export default function ContractViewDialog({
   const [fetchSignedUrl, { loading: downloading }] = useContractSignedUrlByBenefitLazyQuery({
     fetchPolicy: "network-only",
   });
+  const { data: historyData, error: historyError } = useQuery<BenefitContractVersionsQuery>(
+    BenefitContractVersionsDocument,
+    {
+      fetchPolicy: "cache-and-network",
+      variables: { benefitId: contract.benefitId },
+    },
+  );
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -64,7 +77,14 @@ export default function ContractViewDialog({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const historyRows = useMemo(() => buildHistoryRows(contract), [contract]);
+  const historyRows = useMemo(() => {
+    const historyContracts = historyData?.benefitContractVersions ?? [];
+    if (historyContracts.length > 0) {
+      return buildHistoryRowsFromContracts(historyContracts);
+    }
+
+    return buildHistoryRows(contract);
+  }, [contract, historyData?.benefitContractVersions]);
   const fileName = useMemo(
     () => selectedFile?.name ?? buildContractFileName(contract.vendor || contract.benefit, contract.version),
     [contract.benefit, contract.vendor, contract.version, selectedFile?.name],
@@ -163,7 +183,11 @@ export default function ContractViewDialog({
             onPickerValueChange={handleDatePickerValue}
           />
         ) : null}
-        <ContractHistorySection acceptedCount={contract.acceptedCount} rows={historyRows} />
+        <ContractHistorySection
+          acceptedCount={contract.acceptedCount}
+          errorMessage={historyError ? "Failed to load full version history." : null}
+          rows={historyRows}
+        />
       </div>
       <div className={editMode ? "" : "[&_button:last-child]:bg-[#737373]"}>
         <ContractDialogFooter

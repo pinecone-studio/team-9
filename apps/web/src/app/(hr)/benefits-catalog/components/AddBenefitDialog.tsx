@@ -47,6 +47,8 @@ export default function AddBenefitDialog({
   const [coreBenefitEnabled, setCoreBenefitEnabled] = useState(initialDraft?.coreBenefitEnabled ?? false);
   const [requiresContract, setRequiresContract] = useState(initialDraft?.requiresContract ?? false);
   const [contractFile, setContractFile] = useState<File | null>(null);
+  const [contractEffectiveDate, setContractEffectiveDate] = useState("");
+  const [contractExpiryDate, setContractExpiryDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const errorMessageRef = useRef<HTMLParagraphElement | null>(null);
   const { data } = useQuery<AddBenefitRulesQuery>(ADD_BENEFIT_RULES_QUERY);
@@ -70,6 +72,8 @@ export default function AddBenefitDialog({
     assignedRules,
     categoryId,
     contractFile,
+    contractEffectiveDate,
+    contractExpiryDate,
     coreBenefitEnabled,
     currentUserIdentifier,
     description,
@@ -99,11 +103,15 @@ export default function AddBenefitDialog({
     !Number.isInteger(parsedSubsidy) ||
     parsedSubsidy < 0 ||
     parsedSubsidy > 100 ||
-    (requiresContract && !contractFile);
+    (requiresContract && (!contractFile || !contractEffectiveDate || !contractExpiryDate));
 
   function handleRequiresContractChange(value: boolean) {
     setRequiresContract(value);
-    if (!value) setContractFile(null);
+    if (!value) {
+      setContractFile(null);
+      setContractEffectiveDate("");
+      setContractExpiryDate("");
+    }
   }
 
   function handleSpecificApproverChange(value: string) {
@@ -127,12 +135,16 @@ export default function AddBenefitDialog({
           assignedRules={assignedRules}
           availableRules={availableRules}
           contractFile={contractFile}
+          contractEffectiveDate={contractEffectiveDate}
+          contractExpiryDate={contractExpiryDate}
           coreBenefitEnabled={coreBenefitEnabled}
           description={description}
           name={name}
           onAddRule={handleAddRule}
           onApprovalRoleChange={setApprovalRole}
           onContractFileChange={setContractFile}
+          onContractEffectiveDateChange={setContractEffectiveDate}
+          onContractExpiryDateChange={setContractExpiryDate}
           onCoreBenefitEnabledChange={setCoreBenefitEnabled}
           onDescriptionChange={setDescription}
           onNameChange={setName}

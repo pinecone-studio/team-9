@@ -36,3 +36,7 @@ export type UploadContractMutation = {
 export type BenefitContractForContractsQuery = {
   benefitContract: BackendContract | null;
 };
+
+export type BenefitContractVersionsQuery = {
+  benefitContractVersions: BackendContract[];
+};

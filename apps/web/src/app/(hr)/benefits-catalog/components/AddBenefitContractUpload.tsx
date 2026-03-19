@@ -1,13 +1,17 @@
 "use client";
 
-import { Eye, FileText, Trash2, Upload } from "lucide-react";
+import { CalendarDays, Eye, FileText, Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
 const ACCEPTED_CONTRACT_TYPES = ".pdf,.doc,.docx";
 
 type AddBenefitContractUploadProps = {
   contractFile: File | null;
+  contractEffectiveDate: string;
+  contractExpiryDate: string;
   onContractFileChange: (file: File | null) => void;
+  onContractEffectiveDateChange: (value: string) => void;
+  onContractExpiryDateChange: (value: string) => void;
   requiresContract: boolean;
 };
 
@@ -29,12 +33,26 @@ function formatFileSize(bytes: number) {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
+function normalizeDateInput(value: string) {
+  return value.replace(/[^\d.]/g, "").slice(0, 10);
+}
+
+function formatNativeDate(value: string) {
+  return value.replace(/-/g, ".");
+}
+
 export default function AddBenefitContractUpload({
   contractFile,
+  contractEffectiveDate,
+  contractExpiryDate,
   onContractFileChange,
+  onContractEffectiveDateChange,
+  onContractExpiryDateChange,
   requiresContract,
 }: AddBenefitContractUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const effectiveDatePickerRef = useRef<HTMLInputElement | null>(null);
+  const expiryDatePickerRef = useRef<HTMLInputElement | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
   function openFilePicker() {
@@ -105,6 +123,64 @@ export default function AddBenefitContractUpload({
           {fileError}
         </p>
       ) : null}
+
+      <div className="grid w-full gap-3 sm:grid-cols-2">
+        <label className="flex flex-col gap-2">
+          <span className="text-[14px] leading-4 font-medium text-black">Effective Date</span>
+          <div className={`flex h-9 items-center rounded-[8px] border border-[#CBD5E1] bg-white px-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ${requiresContract ? "" : "opacity-60"}`}>
+            <input
+              className="w-full border-0 bg-transparent text-[14px] leading-5 text-[#0F172A] outline-none placeholder:text-[#94A3B8] disabled:cursor-not-allowed"
+              disabled={!requiresContract}
+              onChange={(event) => onContractEffectiveDateChange(normalizeDateInput(event.target.value))}
+              placeholder="yyyy.mm.dd"
+              type="text"
+              value={contractEffectiveDate}
+            />
+            <button
+              className="ml-2 text-black disabled:cursor-not-allowed disabled:text-[#94A3B8]"
+              disabled={!requiresContract}
+              onClick={() => effectiveDatePickerRef.current?.showPicker?.()}
+              type="button"
+            >
+              <CalendarDays className="h-[18px] w-[18px]" />
+            </button>
+            <input
+              className="hidden"
+              onChange={(event) => onContractEffectiveDateChange(formatNativeDate(event.target.value))}
+              ref={effectiveDatePickerRef}
+              type="date"
+            />
+          </div>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="text-[14px] leading-4 font-medium text-black">Expiry Date</span>
+          <div className={`flex h-9 items-center rounded-[8px] border border-[#CBD5E1] bg-white px-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ${requiresContract ? "" : "opacity-60"}`}>
+            <input
+              className="w-full border-0 bg-transparent text-[14px] leading-5 text-[#0F172A] outline-none placeholder:text-[#94A3B8] disabled:cursor-not-allowed"
+              disabled={!requiresContract}
+              onChange={(event) => onContractExpiryDateChange(normalizeDateInput(event.target.value))}
+              placeholder="yyyy.mm.dd"
+              type="text"
+              value={contractExpiryDate}
+            />
+            <button
+              className="ml-2 text-black disabled:cursor-not-allowed disabled:text-[#94A3B8]"
+              disabled={!requiresContract}
+              onClick={() => expiryDatePickerRef.current?.showPicker?.()}
+              type="button"
+            >
+              <CalendarDays className="h-[18px] w-[18px]" />
+            </button>
+            <input
+              className="hidden"
+              onChange={(event) => onContractExpiryDateChange(formatNativeDate(event.target.value))}
+              ref={expiryDatePickerRef}
+              type="date"
+            />
+          </div>
+        </label>
+      </div>
 
       {requiresContract && contractFile ? (
         <div className="flex w-full items-center justify-between rounded-[10px] border border-[#CBD5E1] bg-[rgba(245,245,245,0.3)] p-4">

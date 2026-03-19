@@ -12,6 +12,7 @@ import { listBenefitAcceptedEmployees } from './list-benefit-accepted-employees'
 import { listApprovalRequests } from './list-approval-requests';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
+import { listBenefitContractVersions } from './list-benefit-contract-versions';
 import { listBenefitEligibilitySummary } from './list-benefit-eligibility-summary';
 import { listEmployeeEligibilityRecords } from './list-employee-eligibility-records';
 import { listEligibilityRules } from './list-eligibility-rules';
@@ -81,6 +82,9 @@ export const queryResolvers = {
 
 	benefitContract: (_: unknown, { benefitId }: QueryBenefitContractArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getBenefitContract({ DB, CONTRACTS_BUCKET }, benefitId),
+
+	benefitContractVersions: (_: unknown, { benefitId }: { benefitId: string }, { DB }: GraphQLContext) =>
+		listBenefitContractVersions(DB, benefitId),
 
 	contractSignedUrl: (_: unknown, { contractId }: QueryContractSignedUrlArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getContractSignedUrl({ DB, CONTRACTS_BUCKET }, contractId),

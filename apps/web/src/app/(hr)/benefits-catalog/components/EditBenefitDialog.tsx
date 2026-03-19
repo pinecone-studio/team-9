@@ -13,6 +13,7 @@ import {
   type BenefitEditRulesQuery,
   type BenefitEditRulesVariables,
 } from "./edit-benefit-dialog.graphql";
+import { mapInitialAssignedRules } from "./edit-benefit-dialog.rules";
 import type { EditBenefitDialogProps } from "./edit-benefit-dialog.types";
 import { useEditBenefitArchiveFlow } from "./useEditBenefitArchiveFlow";
 import { useBenefitRuleAssignments } from "./useBenefitRuleAssignments";
@@ -30,7 +31,6 @@ export default function EditBenefitDialog({
   enabled: initialIsActive,
   eligibleEmployees,
   isCore: initialIsCore,
-  onDeleted,
   requiresContract: initialRequiresContract,
   subsidyPercent,
   vendorName,
@@ -64,21 +64,29 @@ export default function EditBenefitDialog({
     initialRules: data?.eligibilityRules,
     ruleDefinitions: data?.ruleDefinitions,
   });
+  const initialAssignedRules = mapInitialAssignedRules(data?.eligibilityRules);
   const { deleting, handleDelete, handleSave, updating } = useEditBenefitDialogActions({
     approvalRole: resolvedApprovalRole,
     assignedRules,
     benefitDescription,
     benefitId,
+    benefitName,
+    category,
     categoryId,
     contractFile,
     initialIsActive,
     currentUserIdentifier,
+    initialApprovalRole,
+    initialAssignedRules,
+    initialBenefitDescription: description,
+    initialIsCore,
     initialRequiresContract,
+    initialSubsidyPercent: subsidyPercent,
+    initialVendorName: vendorName,
     isActive,
     isCore,
     name,
     onClose,
-    onDeleted,
     onSaved,
     onSubmitted,
     requiresContract,

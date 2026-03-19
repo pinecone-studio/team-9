@@ -76,7 +76,7 @@ export default function ApprovalRequestBenefitCreateDetails({
   const newlyEligibleLabel = affectedEmployees !== null ? `+${affectedEmployees}` : "-";
   const benefitName = benefit?.name?.trim() || "Untitled Benefit";
   const description = benefit?.description?.trim() || "-";
-  const category = benefit?.category || benefit?.categoryId || "-";
+  const category = benefit?.category?.trim() || "-";
   const coreBenefitLabel = formatDetailYesNo(benefit?.isCore);
   const subsidy = formatDetailSubsidy(benefit?.subsidyPercent);
   const vendorName = benefit?.vendorName?.trim() || "-";

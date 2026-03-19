@@ -32,10 +32,12 @@ export function AuditLogSection({
                     ? "bg-[#22C55E]"
                     : entry.tone === "danger"
                       ? "bg-[#EF4444]"
-                      : "bg-[#D4D4D8]",
+                      : entry.id === "route"
+                        ? "bg-[#EAB308]"
+                        : "bg-[rgba(115,115,115,0.4)]",
                 ].join(" ")}
               />
-              {index < entries.length - 1 ? <span className="h-full w-px bg-[#E5E7EB]" /> : null}
+              {index < entries.length - 1 ? <span className="h-full w-px bg-[#E5E5E5]" /> : null}
             </div>
             <div className="pb-3 pt-[1px]">
               <p className="text-[14px] leading-5 text-[#0A0A0A]">{entry.label}</p>

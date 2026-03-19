@@ -6,8 +6,10 @@ import {
   BenefitRequestOverviewSection,
 } from "./BenefitRequestReviewSections";
 import {
+  BenefitRequestAssignedBanner,
   BenefitRequestApprovalProgressSection,
   BenefitRequestContractSection,
+  BenefitRequestReviewedBanner,
 } from "./BenefitRequestReviewStatusSections";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import type { BenefitRequestEligibilityItem } from "./benefit-request-review-utils";
@@ -32,11 +34,15 @@ type BenefitRequestReviewBodyProps = {
   eligibilityItems: BenefitRequestEligibilityItem[];
   eligibilityLoading: boolean;
   employmentStatus: string;
+  helperApproverLabel: string | null;
   isPending: boolean;
   level: number | null;
+  onReviewCommentChange: (value: string) => void;
   onViewContract: () => void;
   position: string;
+  reviewComment: string;
   request: BenefitRequestRecord;
+  reviewedBannerName: string;
   reviewedByLabel: string;
   reviewedPrimaryValue: string;
   reviewSecondaryValue: string;
@@ -58,11 +64,15 @@ export default function BenefitRequestReviewBody({
   eligibilityItems,
   eligibilityLoading,
   employmentStatus,
+  helperApproverLabel,
   isPending,
   level,
+  onReviewCommentChange,
   onViewContract,
   position,
+  reviewComment,
   request,
+  reviewedBannerName,
   reviewedByLabel,
   reviewedPrimaryValue,
   reviewSecondaryValue,
@@ -122,7 +132,15 @@ export default function BenefitRequestReviewBody({
           </>
         ) : null}
 
-        {request.reviewComment?.trim() ? (
+        {isPending && helperApproverLabel === null ? (
+          <BenefitRequestNotesSection
+            editable
+            onChange={onReviewCommentChange}
+            reviewComment={reviewComment}
+          />
+        ) : null}
+
+        {!isPending && request.reviewComment?.trim() ? (
           <>
             <BenefitRequestNotesSection reviewComment={request.reviewComment.trim()} />
             <div className="h-px w-full bg-[#E5E5E5]" />
@@ -133,6 +151,14 @@ export default function BenefitRequestReviewBody({
           entries={auditEntries}
           formatTimestamp={formatDetailDateTimeWithAt24Hour}
         />
+
+        {isPending && helperApproverLabel ? (
+          <BenefitRequestAssignedBanner approverLabel={helperApproverLabel} />
+        ) : null}
+
+        {!isPending ? (
+          <BenefitRequestReviewedBanner reviewedBy={reviewedBannerName} status={request.status} />
+        ) : null}
       </div>
     </div>
   );

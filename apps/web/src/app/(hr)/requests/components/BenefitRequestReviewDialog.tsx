@@ -7,12 +7,7 @@ import { useEmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
 import BenefitRequestReviewBody from "./BenefitRequestReviewBody";
 import BenefitRequestReviewFooter from "./BenefitRequestReviewFooter";
 import BenefitRequestReviewHeader from "./BenefitRequestReviewHeader";
-import {
-  BenefitRequestReviewedBanner,
-} from "./BenefitRequestReviewStatusSections";
-import {
-  type BenefitRequestRecord,
-} from "./benefit-requests.graphql";
+import { type BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
   buildBenefitRequestAuditEntries,
   buildBenefitRequestEligibilityItems,
@@ -24,9 +19,7 @@ import {
   getBenefitRequestResponsibilityLevel,
   getBenefitRequestStatusBadge,
 } from "./benefit-request-review-utils";
-import {
-  formatDetailDateTime,
-} from "./request-detail-formatters";
+import { formatDetailDateTime } from "./request-detail-formatters";
 import { useBenefitRequestReviewController } from "./useBenefitRequestReviewController";
 
 type BenefitRequestReviewDialogProps = {
@@ -44,7 +37,6 @@ export default function BenefitRequestReviewDialog({
   onReviewed,
   request,
 }: BenefitRequestReviewDialogProps) {
-  const [rejectMode, setRejectMode] = useState(false);
   const [reviewComment, setReviewComment] = useState("");
   const {
     contractError,
@@ -73,6 +65,12 @@ export default function BenefitRequestReviewDialog({
       ? isOwnRequest
         ? "You can view your own request, but you cannot approve or reject it."
         : "You can view this request, but only the assigned approver can review it."
+      : null;
+  const helperApproverLabel =
+    isPending && !canReview && !isOwnRequest
+      ? request.approval_role === "finance_manager"
+        ? "Financial Manager"
+        : "HR Admin"
       : null;
   const reviewedByLabel = request.reviewed_by?.name
     ? `${request.reviewed_by.name} (${formatBenefitReviewerRole(request.approval_role)})`
@@ -108,7 +106,6 @@ export default function BenefitRequestReviewDialog({
   );
 
   function handleApprove() {
-    setRejectMode(false);
     setReviewComment("");
     void handleReview(true, null);
   }
@@ -124,7 +121,7 @@ export default function BenefitRequestReviewDialog({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="mx-auto flex h-auto max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white shadow-[0_20px_48px_rgba(15,23,42,0.08)] md:h-[886px]">
+      <div className="mx-auto flex h-auto max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white shadow-[0_20px_48px_rgba(15,23,42,0.08)]">
         <BenefitRequestReviewHeader isPending={isPending} onClose={onClose} />
 
         <BenefitRequestReviewBody
@@ -137,35 +134,29 @@ export default function BenefitRequestReviewDialog({
           eligibilityItems={eligibilityItems}
           eligibilityLoading={eligibilityLoading}
           employmentStatus={employmentStatus}
+          helperApproverLabel={helperApproverLabel}
           isPending={isPending}
           level={level}
+          onReviewCommentChange={setReviewComment}
           onViewContract={() => void handleViewContract()}
           position={request.employee.position}
+          reviewComment={reviewComment}
           request={request}
+          reviewedBannerName={reviewedBannerName}
           reviewedByLabel={reviewedByLabel}
           reviewedPrimaryValue={primaryOverviewValue}
           reviewSecondaryValue={secondaryOverviewValue}
           statusBadge={statusBadge}
         />
 
-        <BenefitRequestReviewFooter
-          canReview={canReview}
-          errorMessage={errorMessage}
-          helperMessage={helperMessage}
-          isPending={isPending}
-          loading={loading}
-          onApprove={handleApprove}
-          onClose={onClose}
-          onRejectClick={() => {
-            setRejectMode(true);
-          }}
-          onRejectConfirm={handleReject}
-          onReviewCommentChange={setReviewComment}
-          rejectMode={rejectMode}
-          reviewComment={reviewComment}
-        />
-        {!isPending ? (
-          <BenefitRequestReviewedBanner reviewedBy={reviewedBannerName} status={request.status} />
+        {isPending ? (
+          <BenefitRequestReviewFooter
+            canReview={canReview}
+            errorMessage={errorMessage ?? helperMessage}
+            loading={loading}
+            onApprove={handleApprove}
+            onRejectConfirm={handleReject}
+          />
         ) : null}
       </div>
     </div>

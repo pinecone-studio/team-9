@@ -14,7 +14,7 @@ export function BenefitRequestStatusPill({
 }) {
   return (
     <span
-      className={`inline-flex w-fit items-center gap-[6px] rounded-[999px] px-3 py-1 text-[13px] leading-5 font-medium ${statusBadge.bgClassName} ${statusBadge.textClassName}`}
+      className={`inline-flex w-fit items-center gap-[6px] rounded-[4px] px-[9px] py-[3px] text-[12px] leading-4 font-medium ${statusBadge.bgClassName} ${statusBadge.textClassName}`}
     >
       <Clock3 className={`h-3 w-3 ${statusBadge.iconClassName}`} />
       {statusBadge.label}
@@ -32,7 +32,7 @@ export function SnapshotItem({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex h-9 items-center gap-2">
       {icon}
       <div className="min-w-0">
         <div className="text-[12px] leading-4 text-[#737373]">{label}</div>

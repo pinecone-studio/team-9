@@ -1,7 +1,6 @@
 import { BadgeCheck, BriefcaseBusiness, Building2, CheckCircle2, Clock3, IdCard, Sparkles, UserRound } from "lucide-react";
 import type { BenefitRequestEligibilityItem } from "./benefit-request-review-utils";
 import { BenefitRequestStatusPill, type BenefitRequestStatusBadge, SnapshotItem } from "./BenefitRequestReviewSectionParts";
-
 export function BenefitRequestOverviewSection({
   approvalRoute,
   benefitTitle,
@@ -32,7 +31,7 @@ export function BenefitRequestOverviewSection({
   const primaryLabel = isPending ? "Category" : "Submitted";
 
   return (
-    <section className="grid gap-x-8 gap-y-5 rounded-[10px] border border-[#E5E5E5] bg-[rgba(245,245,245,0.3)] p-[17px] md:grid-cols-2">
+    <section className="grid gap-x-[17px] gap-y-5 rounded-[10px] border border-[#E5E5E5] bg-[rgba(245,245,245,0.3)] p-[17px] md:grid-cols-2">
       <div className="flex flex-col gap-[10px]">
         <div className="flex flex-col gap-[6px]">
           <span className="text-[12px] leading-4 text-[#737373]">Employee</span>
@@ -80,7 +79,6 @@ export function BenefitRequestOverviewSection({
     </section>
   );
 }
-
 export function BenefitRequestEmployeeSnapshotSection({
   department,
   employmentStatus,
@@ -114,7 +112,6 @@ export function BenefitRequestEmployeeSnapshotSection({
     </section>
   );
 }
-
 export function BenefitRequestEligibilitySection({
   items,
   loading,
@@ -128,7 +125,7 @@ export function BenefitRequestEligibilitySection({
       {loading ? (
         <span className="text-[14px] leading-5 text-[#737373]">Loading eligibility details...</span>
       ) : items.length > 0 ? (
-        <div className="flex flex-wrap gap-x-[30px] gap-y-3">
+        <div className="flex max-w-[470px] flex-wrap gap-x-[30px] gap-y-2">
           {items.map((item) => (
             <div className="flex items-start gap-2" key={item.id}>
               <CheckCircle2
@@ -152,14 +149,31 @@ export function BenefitRequestEligibilitySection({
 }
 
 export function BenefitRequestNotesSection({
+  editable = false,
+  onChange,
+  placeholder = "Add notes for this decision...",
   reviewComment,
 }: {
+  editable?: boolean;
+  onChange?: (value: string) => void;
+  placeholder?: string;
   reviewComment: string;
 }) {
   return (
-    <section className="flex flex-col gap-4">
-      <h3 className="text-[16px] leading-6 font-semibold text-[#0A0A0A]">Decision Notes</h3>
-      <div className="rounded-[14px] border border-[#E2E8F0] bg-white px-4 py-3 text-[14px] leading-6 text-[#0A0A0A]">{reviewComment}</div>
+    <section className="flex flex-col gap-2">
+      <h3 className="text-[14px] leading-5 font-medium text-[#0A0A0A]">Decision Notes</h3>
+      {editable ? (
+        <textarea
+          className="min-h-[64px] w-full resize-none rounded-[8px] border border-[#E5E5E5] bg-transparent px-3 py-2 text-[14px] leading-5 text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#A3A3A3]"
+          onChange={(event) => onChange?.(event.target.value)}
+          placeholder={placeholder}
+          value={reviewComment}
+        />
+      ) : (
+        <div className="min-h-[64px] rounded-[8px] border border-[#E5E5E5] bg-transparent px-3 py-2 text-[14px] leading-5 text-[#0A0A0A] shadow-[0px_1px_2px_rgba(0,0,0,0.05)]">
+          {reviewComment}
+        </div>
+      )}
     </section>
   );
 }

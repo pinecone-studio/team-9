@@ -7,6 +7,7 @@ export default function AuditLogsPage() {
       activeKey="audit-logs"
       subtitle="Track system activity, approvals, overrides, and eligibility decisions."
       title="Audit Logs"
+      hideHeader={true}
     >
       <AuditLogs />
     </HrPageShell>

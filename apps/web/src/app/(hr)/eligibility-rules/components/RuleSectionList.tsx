@@ -19,6 +19,7 @@ import { getRuleRequestNoticeMessage } from "./rule-request-notice-message";
 import RulePendingRequestDialog from "./RulePendingRequestDialog";
 import RuleRequestNotice from "./RuleRequestNotice";
 import RuleSectionsView from "./RuleSectionsView";
+import { useAutoOpenRuleDialog } from "./useAutoOpenRuleDialog";
 import type { ApprovalRoleValue } from "./RuleApprovalSection";
 import { sectionMeta } from "../rule-sections";
 import type { RuleCardModel } from "../types";
@@ -26,11 +27,15 @@ import { buildSections, getAllowedOperators, getFallbackCategoryId } from "./rul
 
 type RuleSectionListProps = {
   currentUserIdentifier: string;
+  requestedCreateSection?: string | null;
   searchTerm?: string;
+  shouldAutoOpenCreateRule?: boolean;
 };
 export default function RuleSectionList({
   currentUserIdentifier,
+  requestedCreateSection,
   searchTerm = "",
+  shouldAutoOpenCreateRule = false,
 }: RuleSectionListProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleCardModel | null>(null);
@@ -45,6 +50,11 @@ export default function RuleSectionList({
   const [createRuleApprovalRequest] = useCreateRuleApprovalRequestMutation();
   const [updateRuleApprovalRequest] = useUpdateRuleApprovalRequestMutation();
   const [deleteRuleApprovalRequest] = useDeleteRuleApprovalRequestMutation();
+  useAutoOpenRuleDialog({
+    requestedCreateSection,
+    setActiveSection,
+    shouldAutoOpenCreateRule,
+  });
   const sections = useMemo(() => buildSections(data?.ruleDefinitions ?? [], approvalRequestsData?.approvalRequests ?? [], sectionMeta.map((meta) => meta.title), searchTerm), [approvalRequestsData?.approvalRequests, data?.ruleDefinitions, searchTerm]);
   const categoryNameToId = useMemo(() => {
     const map = new Map<string, string>();
@@ -94,7 +104,6 @@ export default function RuleSectionList({
       setSubmitting(false);
     }
   }
-
   async function handleSaveRule(payload: { approvalRole: ApprovalRoleValue; description: string; id: string; measurement?: string; name: string; optionsJson?: string; value?: string }) {
     if (!editingRule) return;
     setSubmitting(true);

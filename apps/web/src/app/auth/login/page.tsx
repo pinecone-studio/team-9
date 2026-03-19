@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getDefaultAppPath } from "@/shared/auth/get-current-user-access";
+import r55Image from "../public/r55.png";
 import LoginForm from "./LoginForm";
 import {
   ACCESS_LOOKUP_FAILURE_QUERY,
@@ -66,15 +67,31 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
       </section>
 
-      <section className="relative hidden min-h-screen overflow-hidden bg-black lg:block">
-        <Image
-          alt="Abstract login illustration"
-          className="object-contain object-right-bottom"
-          fill
-          priority
-          sizes="50vw"
-          src="/auth/login-visual.png"
-        />
+      <section className="relative hidden min-h-screen overflow-hidden bg-[#0D1A4D] lg:block">
+        <video
+          autoPlay
+          className="absolute inset-0 h-full w-full object-cover"
+          loop
+          muted
+          playsInline
+        >
+          <source src="/contracts-hero.mp4" type="video/mp4" />
+        </video>
+
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(30,64,175,0.08)_0%,rgba(37,99,235,0.18)_50%,rgba(15,23,42,0.2)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(125,211,252,0.72),transparent_32%),radial-gradient(circle_at_78%_14%,rgba(59,130,246,0.36),transparent_28%),radial-gradient(circle_at_16%_68%,rgba(103,232,249,0.34),transparent_22%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_48%,rgba(147,197,253,0.12)_100%)]" />
+
+        <div className="pointer-events-none absolute right-[-18px] bottom-[-40px] z-10 h-[592px] w-[592px]">
+          <Image
+            alt="Abstract ribbon sculpture"
+            className="object-contain object-bottom-right"
+            fill
+            priority
+            sizes="40vw"
+            src={r55Image}
+          />
+        </div>
       </section>
     </main>
   );

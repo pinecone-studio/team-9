@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import { useState } from "react";
 import { BenefitsGroup } from "./BenefitsGroup";
 import { EmployeeDashboardAutoRefresh } from "./EmployeeDashboardAutoRefresh";
+import EmployeeDashboardSkeleton from "./EmployeeDashboardSkeleton";
 import EmployeeRequestDialog from "./EmployeeRequestDialog";
 import { EligibilitySignals } from "./EligibilitySignals";
 import { EmployeeNav } from "./EmployeeNav";
@@ -17,6 +18,7 @@ type EmployeeContentProps = {
   employeeId: string;
   employeeName: string;
   errorMessage?: string | null;
+  isInitialLoading?: boolean;
   isLoading?: boolean;
 };
 
@@ -30,12 +32,17 @@ export function EmployeeContent({
   employeeId,
   employeeName,
   errorMessage,
+  isInitialLoading = false,
   isLoading = false,
 }: EmployeeContentProps) {
   const [selectedRequest, setSelectedRequest] = useState<EmployeeRequestItem | null>(null);
   const shouldAutoRefresh = dashboardData.requests.some(
     (request) => request.status === "Pending",
   );
+
+  if (isInitialLoading) {
+    return <EmployeeDashboardSkeleton />;
+  }
 
   return (
     <main className={`${geist.className} min-h-screen bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8`}>

@@ -5,6 +5,7 @@ import type {
   AuditLogsPageDataQuery,
 } from "./audit-logs.graphql";
 import type { AuditLogEntry, AuditLogResult } from "./audit-log-types";
+import { buildDirectAuditEntries } from "./audit-log-direct-entry-builders";
 import {
   buildPeopleIndex,
   formatApprovalRole,
@@ -154,5 +155,6 @@ export function buildAuditLogEntries(data?: AuditLogsPageDataQuery) {
   const peopleIndex = buildPeopleIndex(data?.employees);
   return [...(data?.benefitRequests ?? []).flatMap((request) => buildBenefitRequestEntries(request, peopleIndex))]
     .concat((data?.approvalRequests ?? []).flatMap((request) => buildApprovalRequestEntries(request, peopleIndex)))
+    .concat((data?.listAuditLogEntries ?? []).flatMap((entry) => buildDirectAuditEntries(entry)))
     .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime());
 }

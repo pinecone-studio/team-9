@@ -3,24 +3,23 @@
 import { useQuery } from "@apollo/client/react";
 import { useMemo, useState } from "react";
 
+import ArchiveBenefitConfirmDialog from "./ArchiveBenefitConfirmDialog";
 import EditBenefitDialogFooter from "./EditBenefitDialogFooter";
 import EditBenefitDialogForm from "./EditBenefitDialogForm";
-import {
-  buildSpecificApproverOptions,
-  findSpecificApprover,
-} from "./edit-benefit-dialog.approvers";
+import { buildSpecificApproverOptions, findSpecificApprover } from "./edit-benefit-dialog.approvers";
 import {
   BENEFIT_EDIT_RULES_QUERY,
   type ApprovalRoleValue,
   type BenefitEditRulesQuery,
   type BenefitEditRulesVariables,
 } from "./edit-benefit-dialog.graphql";
-import { mapInitialAssignedRules } from "./edit-benefit-dialog.rules";
 import type { EditBenefitDialogProps } from "./edit-benefit-dialog.types";
+import { useEditBenefitArchiveFlow } from "./useEditBenefitArchiveFlow";
 import { useBenefitRuleAssignments } from "./useBenefitRuleAssignments";
 import { useEditBenefitDialogActions } from "./useEditBenefitDialogActions";
 
 export default function EditBenefitDialog({
+  activeEmployees,
   approvalRole: initialApprovalRole,
   benefitId,
   benefitName,
@@ -29,7 +28,9 @@ export default function EditBenefitDialog({
   currentUserIdentifier,
   description,
   enabled: initialIsActive,
+  eligibleEmployees,
   isCore: initialIsCore,
+  onDeleted,
   requiresContract: initialRequiresContract,
   subsidyPercent,
   vendorName,
@@ -40,8 +41,6 @@ export default function EditBenefitDialog({
   const [name, setName] = useState(benefitName);
   const [benefitDescription, setBenefitDescription] = useState(description);
   const [specificApproverId, setSpecificApproverId] = useState("");
-  const [archiveComment, setArchiveComment] = useState("");
-  const [archiveMode, setArchiveMode] = useState(false);
   const [subsidyPercentValue, setSubsidyPercentValue] = useState(String(subsidyPercent));
   const [vendorNameValue, setVendorNameValue] = useState(vendorName);
   const [isActive, setIsActive] = useState(initialIsActive);
@@ -61,31 +60,15 @@ export default function EditBenefitDialog({
   const resolvedApprovalRole = selectedApprover?.role ?? approvalRole;
   const resolvedSpecificApproverId = selectedApprover?.id ?? "";
 
-  const {
-    assignedRules,
-    availableRules,
-    handleAddRule,
-    handleDeleteRule,
-    selectedRuleId,
-    setSelectedRuleId,
-  } = useBenefitRuleAssignments({
+  const { assignedRules, availableRules, handleAddRule, handleDeleteRule, selectedRuleId, setSelectedRuleId } = useBenefitRuleAssignments({
     initialRules: data?.eligibilityRules,
     ruleDefinitions: data?.ruleDefinitions,
   });
-  const initialAssignedRules = mapInitialAssignedRules(data?.eligibilityRules);
   const { deleting, handleDelete, handleSave, updating } = useEditBenefitDialogActions({
     approvalRole: resolvedApprovalRole,
     assignedRules,
     benefitDescription,
     benefitId,
-    benefitName,
-    category,
-    initialApprovalRole: initialApprovalRole,
-    initialAssignedRules,
-    initialBenefitDescription: description,
-    initialIsCore,
-    initialSubsidyPercent: subsidyPercent,
-    initialVendorName: vendorName,
     categoryId,
     contractFile,
     initialIsActive,
@@ -95,12 +78,15 @@ export default function EditBenefitDialog({
     isCore,
     name,
     onClose,
+    onDeleted,
     onSaved,
     onSubmitted,
     requiresContract,
     subsidyPercentValue,
     vendorNameValue,
   });
+  const { archiveComment, archiveMode, handleArchiveCancel, handleArchiveClick, handleArchiveConfirmClick, handleArchiveSubmit, isArchiveConfirmOpen, setArchiveComment, setIsArchiveConfirmOpen } =
+    useEditBenefitArchiveFlow({ handleDelete, setErrorMessage });
 
   function handleRequiresContractChange(value: boolean) {
     setRequiresContract(value);
@@ -160,21 +146,24 @@ export default function EditBenefitDialog({
           archiveMode={archiveMode}
           deleting={deleting}
           errorMessage={errorMessage}
-          onArchiveCancel={() => {
-            setArchiveComment("");
-            setArchiveMode(false);
-          }}
+          onArchiveCancel={handleArchiveCancel}
           onArchiveCommentChange={setArchiveComment}
-          onArchiveClick={() => {
-            setErrorMessage(null);
-            setArchiveMode(true);
-          }}
-          onArchiveConfirm={() => handleDelete(archiveComment, setErrorMessage)}
+          onArchiveClick={handleArchiveClick}
+          onArchiveConfirm={handleArchiveConfirmClick}
           onCancel={onClose}
           onSave={() => handleSave(setErrorMessage)}
           updating={updating}
         />
       </div>
+      {isArchiveConfirmOpen ? (
+        <ArchiveBenefitConfirmDialog
+          activeEmployees={activeEmployees}
+          eligibleEmployees={eligibleEmployees}
+          loading={deleting}
+          onClose={() => setIsArchiveConfirmOpen(false)}
+          onConfirm={() => void handleArchiveSubmit()}
+        />
+      ) : null}
     </div>
   );
 }

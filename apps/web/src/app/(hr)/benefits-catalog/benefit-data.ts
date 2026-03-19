@@ -18,9 +18,11 @@ import type {
 } from "./benefit-types";
 import {
   cardIconMatchers,
+  type CategoryIconKey,
   DEFAULT_CARD_ICON,
   DEFAULT_SECTION_ICON,
   findMatchingBenefitIcon,
+  getCategoryIconByKey,
   sectionIconMatchers,
 } from "./benefit-data-icons";
 
@@ -68,6 +70,7 @@ export function buildBenefitSections(
   benefits: BenefitCatalogRecord[],
   categories: BenefitCategory[] = [],
   approvalRequests: ApprovalRequestsQuery["approvalRequests"] = [],
+  categoryIconKeys: Partial<Record<string, CategoryIconKey>> = {},
 ): BenefitSection[] {
   const groupedBenefits = new Map<
     string,
@@ -104,11 +107,14 @@ export function buildBenefitSections(
   return Array.from(groupedBenefits.values())
     .sort((left, right) => left.categoryName.localeCompare(right.categoryName))
     .map(({ categoryId, categoryName, records }) => {
-      const sectionIcon = findMatchingBenefitIcon(
-        categoryName,
-        sectionIconMatchers,
-        DEFAULT_SECTION_ICON,
-      );
+      const customIconKey = categoryIconKeys[categoryId];
+      const sectionIcon = customIconKey
+        ? getCategoryIconByKey(customIconKey)
+        : findMatchingBenefitIcon(
+            categoryName,
+            sectionIconMatchers,
+            DEFAULT_SECTION_ICON,
+          );
 
       return {
         categoryId,

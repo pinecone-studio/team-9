@@ -1,5 +1,4 @@
 import { gql } from "@apollo/client";
-import type { ApprovalActionType, ApprovalEntityType, ApprovalRequestStatus } from "@/shared/apollo/generated";
 
 export type ApprovalRoleValue = "finance_manager" | "hr_admin";
 export type UpdatedBenefitPayload = {
@@ -15,23 +14,12 @@ export type UpdatedBenefitPayload = {
   vendorName?: string | null;
 };
 
-export type CreateBenefitDeleteApprovalRequestMutation = {
-  createApprovalRequest: {
-    id: string;
-    status: ApprovalRequestStatus;
-  };
+export type DeleteBenefitMutation = {
+  deleteBenefit: boolean;
 };
 
-export type CreateBenefitDeleteApprovalRequestVariables = {
-  input: {
-    actionType: ApprovalActionType;
-    entityId?: string | null;
-    entityType: ApprovalEntityType;
-    payloadJson: string;
-    requestedBy: string;
-    snapshotJson?: string | null;
-    targetRole: ApprovalRoleValue;
-  };
+export type DeleteBenefitVariables = {
+  id: string;
 };
 
 export type AvailableRuleDefinition = {
@@ -121,12 +109,10 @@ export type ContractSignedUrlByBenefitQuery = {
 export type ContractSignedUrlByBenefitVariables = {
   benefitId: string;
 };
-export const CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION = gql`
-  mutation CreateBenefitDeleteApprovalRequest($input: CreateApprovalRequestInput!) {
-    createApprovalRequest(input: $input) {
-      id
-      status
-    }
+
+export const DELETE_BENEFIT_MUTATION = gql`
+  mutation DeleteBenefit($id: ID!) {
+    deleteBenefit(id: $id)
   }
 `;
 

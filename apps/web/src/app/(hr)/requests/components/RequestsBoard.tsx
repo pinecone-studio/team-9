@@ -1,30 +1,25 @@
 "use client";
 
-import { useQuery } from "@apollo/client/react";
 import { useMemo, useState } from "react";
 
-import RequestsBoardContent from "./RequestsBoardContent";
+import {
+  useApprovalRequestsQuery,
+  useHrBenefitRequestsQuery,
+  useRequestsEmployeesDirectoryQuery,
+} from "@/shared/apollo/generated";
 import ApprovalRequestReviewDialog from "./ApprovalRequestReviewDialog";
 import BenefitRequestReviewDialog from "./BenefitRequestReviewDialog";
+import RequestsBoardContent from "./RequestsBoardContent";
 import { RequestPeopleProvider } from "./RequestPeopleContext";
-import {
-  APPROVAL_REQUESTS_QUERY,
-  type ApprovalRequestRecord,
-  type ApprovalRequestsQuery,
-  REQUESTS_EMPLOYEES_DIRECTORY_QUERY,
-  type RequestsEmployeesDirectoryQuery,
-} from "./approval-requests.graphql";
-import {
-  BENEFIT_REQUESTS_QUERY,
-  type BenefitRequestRecord,
-  type BenefitRequestsQuery,
-} from "./benefit-requests.graphql";
+import type { ApprovalRequestRecord } from "./approval-requests.graphql";
+import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
   buildEmployeeDirectory,
   buildRequestsBoardMetrics,
+  splitApprovalRequests,
 } from "./requests-board.utils";
 
-const EMPTY_REQUESTS: ApprovalRequestRecord[] = [];
+const EMPTY_APPROVAL_REQUESTS: ApprovalRequestRecord[] = [];
 const EMPTY_BENEFIT_REQUESTS: BenefitRequestRecord[] = [];
 
 type RequestsBoardProps = {
@@ -36,66 +31,61 @@ export default function RequestsBoard({
   currentUserIdentifier,
   currentUserRole,
 }: RequestsBoardProps) {
-  const normalizedRole = currentUserRole.trim().toLowerCase();
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedBenefitRequestId, setSelectedBenefitRequestId] = useState<string | null>(null);
-  const { data, error, loading, refetch } =
-    useQuery<ApprovalRequestsQuery>(APPROVAL_REQUESTS_QUERY, {
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "cache-first",
-      notifyOnNetworkStatusChange: true,
-    });
-  const { data: employeesDirectoryData } = useQuery<RequestsEmployeesDirectoryQuery>(
-    REQUESTS_EMPLOYEES_DIRECTORY_QUERY,
-    {
-      fetchPolicy: "cache-first",
-      nextFetchPolicy: "cache-first",
-      notifyOnNetworkStatusChange: false,
-    },
-  );
+  const {
+    data: approvalData,
+    error: approvalError,
+    loading: approvalLoading,
+    refetch: refetchApprovalRequests,
+  } = useApprovalRequestsQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: true,
+  });
+  const { data: employeesDirectoryData } = useRequestsEmployeesDirectoryQuery({
+    fetchPolicy: "cache-first",
+    nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: false,
+  });
   const {
     data: benefitRequestData,
     error: benefitRequestError,
     loading: benefitRequestLoading,
     refetch: refetchBenefitRequests,
-  } = useQuery<BenefitRequestsQuery>(BENEFIT_REQUESTS_QUERY, {
+  } = useHrBenefitRequestsQuery({
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
     notifyOnNetworkStatusChange: true,
   });
 
-  const requests = data?.approvalRequests ?? EMPTY_REQUESTS;
+  const approvalRequests = approvalData?.approvalRequests ?? EMPTY_APPROVAL_REQUESTS;
   const benefitRequests = benefitRequestData?.benefitRequests ?? EMPTY_BENEFIT_REQUESTS;
-  const roleScopedRequests = useMemo(() => {
-    return requests.filter((request) => request.target_role === normalizedRole);
-  }, [normalizedRole, requests]);
-
-  const configurationRequests = useMemo(() => {
-    return requests
-      .filter(
-        (request) =>
-          (request.entity_type === "benefit" || request.entity_type === "rule") &&
-          (request.action_type === "create" || request.action_type === "update"),
-      )
-      .sort((left, right) => right.created_at.localeCompare(left.created_at));
-  }, [requests]);
-
+  const { configurationRequests, overrideRequests } = useMemo(
+    () => splitApprovalRequests(approvalRequests),
+    [approvalRequests],
+  );
   const selectedBenefitRequest = useMemo(
     () =>
       benefitRequests.find((request) => request.id === selectedBenefitRequestId) ?? null,
     [benefitRequests, selectedBenefitRequestId],
   );
-
   const metrics = useMemo(
     () =>
       buildRequestsBoardMetrics({
         benefitRequests,
         configurationRequests,
         currentUserIdentifier,
-        requests,
-        roleScopedRequests,
+        currentUserRole,
+        overrideRequests,
       }),
-    [benefitRequests, configurationRequests, currentUserIdentifier, requests, roleScopedRequests],
+    [
+      benefitRequests,
+      configurationRequests,
+      currentUserIdentifier,
+      currentUserRole,
+      overrideRequests,
+    ],
   );
   const employeeDirectory = useMemo(
     () => buildEmployeeDirectory(employeesDirectoryData?.employees),
@@ -105,26 +95,28 @@ export default function RequestsBoard({
   return (
     <RequestPeopleProvider value={employeeDirectory}>
       <RequestsBoardContent
+        benefitError={benefitRequestError?.message ?? null}
         benefitRequests={benefitRequests}
+        configurationError={approvalError?.message ?? null}
         configurationRequests={configurationRequests}
         currentUserIdentifier={currentUserIdentifier}
         currentUserRole={currentUserRole}
-        benefitError={benefitRequestError?.message ?? null}
-        configurationError={error?.message ?? null}
-        loading={loading || benefitRequestLoading}
+        loading={approvalLoading || benefitRequestLoading}
         metrics={metrics}
         onBenefitReview={setSelectedBenefitRequestId}
         onConfigurationReview={setSelectedRequestId}
+        overrideRequests={overrideRequests}
       />
 
       {selectedRequestId ? (
         <ApprovalRequestReviewDialog
           currentUserIdentifier={currentUserIdentifier}
           onClose={() => setSelectedRequestId(null)}
-          onReviewed={refetch}
+          onReviewed={refetchApprovalRequests}
           requestId={selectedRequestId}
         />
       ) : null}
+
       {selectedBenefitRequest ? (
         <BenefitRequestReviewDialog
           currentUserIdentifier={currentUserIdentifier}

@@ -9,6 +9,7 @@ export {
   formatApprovalRequestName,
   formatApprovalRequestTitle,
   formatApprovalRole,
+  formatApprovalRoleShort,
   formatApprovalStatus,
   formatJsonLikeValue,
   formatPersonLabel,

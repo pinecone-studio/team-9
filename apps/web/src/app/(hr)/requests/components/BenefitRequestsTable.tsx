@@ -1,113 +1,103 @@
-import { CheckCircle2, CircleX, Clock3 } from "lucide-react";
+import type { KeyboardEvent } from "react";
 
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
-import { formatShortDate, formatShortDateTime } from "./approval-request-time-formatters";
+import {
+  DataTableHeader,
+  DataTableShell,
+  RequestStatusBadge,
+} from "./RequestsTableShared";
+import {
+  BenefitPrimaryCell,
+  BenefitRequestAssignee,
+} from "./BenefitRequestsTableParts";
+import { formatTableDateTime } from "./request-table-formatters";
 
 type BenefitRequestsTableProps = {
-  currentUserIdentifier: string;
   currentUserRole: string;
   onReview: (requestId: string) => void;
   requests: BenefitRequestRecord[];
 };
 
-function StatusBadge({
-  reviewedAt,
-  status,
-}: {
-  reviewedAt?: string | null;
-  status: BenefitRequestRecord["status"];
-}) {
-  if (status === "approved") {
-    return (
-      <div className="flex flex-col items-start gap-1">
-        <span className="inline-flex items-center gap-[6px] rounded-[4px] bg-[#DCFCE7] px-2 py-[2px] text-[12px] leading-4 font-medium text-[#016630]">
-          <CheckCircle2 className="h-3 w-3" />
-          Approved
-        </span>
-        {reviewedAt ? <span className="text-[11px] leading-4 text-[#737373]">{formatShortDateTime(reviewedAt)}</span> : null}
-      </div>
-    );
+function handleRowKeyDown(
+  event: KeyboardEvent<HTMLTableRowElement>,
+  onSelect: () => void,
+) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    onSelect();
   }
-
-  if (status === "rejected" || status === "cancelled") {
-    return (
-      <div className="flex flex-col items-start gap-1">
-        <span className="inline-flex items-center gap-[6px] rounded-[4px] border border-[#FFA2A2] bg-[#FEF2F2] px-2 py-[2px] text-[12px] leading-4 font-medium text-[#C10007]">
-          <CircleX className="h-3 w-3" />
-          {status === "cancelled" ? "Cancelled" : "Rejected"}
-        </span>
-        {reviewedAt ? <span className="text-[11px] leading-4 text-[#737373]">{formatShortDateTime(reviewedAt)}</span> : null}
-      </div>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-[6px] rounded-[4px] bg-[#FEF3C6] px-2 py-[2px] text-[12px] leading-4 font-medium text-[#973C00]">
-      <Clock3 className="h-3 w-3" />
-      Pending
-    </span>
-  );
-}
-
-function ReviewButton({
-  canReview,
-  isOwnRequest,
-  onClick,
-  status,
-}: {
-  canReview: boolean;
-  isOwnRequest: boolean;
-  onClick: () => void;
-  status: BenefitRequestRecord["status"];
-}) {
-  const label = status === "pending" && !isOwnRequest && canReview ? "Review" : "View";
-  return (
-    <button className="inline-flex h-8 items-center justify-center rounded-[8px] px-3 text-[14px] leading-5 font-medium text-[#0A0A0A] transition-colors hover:bg-[#F5F5F5]" onClick={onClick} type="button">
-      {label}
-    </button>
-  );
 }
 
 export default function BenefitRequestsTable({
-  currentUserIdentifier,
   currentUserRole,
   onReview,
   requests,
 }: BenefitRequestsTableProps) {
-  const normalizedUserIdentifier = currentUserIdentifier.trim().toLowerCase();
-  const normalizedUserRole = currentUserRole.trim().toLowerCase();
-
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-left">
-        <thead><tr className="text-[14px] leading-5 font-medium text-[#0A0A0A]"><th className="border-b border-[#E5E5E5] px-8 py-[10px]">Employee</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Benefit</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Submitted</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Approved By</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Progress</th><th className="border-b border-[#E5E5E5] px-2 py-[10px]">Status</th><th className="border-b border-[#E5E5E5] px-6 py-[10px] text-center">Action</th></tr></thead>
-        <tbody>
-          {requests.map((request) => {
-            const isOwnRequest =
-              request.employee.email.trim().toLowerCase() === normalizedUserIdentifier;
-            const canReview = request.approval_role === normalizedUserRole;
-            const progressLabel =
-              request.status === "approved"
-                ? "Approved"
-                : request.status === "rejected"
-                  ? "Rejected"
-                  : request.status === "cancelled"
-                    ? "Cancelled"
-                    : `Waiting for ${request.approval_role === "finance_manager" ? "Finance" : "HR"}`;
-            return (
-              <tr className={`text-[14px] leading-5 text-[#737373] ${request.status !== "pending" ? "opacity-80" : ""}`} key={request.id}>
-                <td className="border-b border-[#EDEDED] px-8 py-3"><div className="flex flex-col"><span className="font-medium text-[#0A0A0A]">{request.employee.name}</span><span className="text-[12px] leading-4 text-[#737373]">{request.employee.position}</span></div></td>
-                <td className="border-b border-[#EDEDED] px-2 py-3"><div className="flex flex-col"><span className="font-medium text-[#0A0A0A]">{request.benefit.title}</span><span className="text-[12px] leading-4 text-[#737373]">{request.benefit.category}</span></div></td>
-                <td className="border-b border-[#EDEDED] px-2 py-3">{formatShortDate(request.created_at)}</td>
-                <td className="border-b border-[#EDEDED] px-2 py-3">{request.reviewed_by ? request.reviewed_by.name : request.approval_role === "finance_manager" ? "Finance" : "HR"}</td>
-                <td className={`border-b border-[#EDEDED] px-2 py-3 ${request.status === "pending" ? "text-[#E17100]" : "text-[#737373]"}`}>{progressLabel}</td>
-                <td className="border-b border-[#EDEDED] px-2 py-3"><StatusBadge reviewedAt={request.updated_at} status={request.status} /></td>
-                <td className="border-b border-[#EDEDED] px-6 py-3 text-center"><ReviewButton canReview={canReview} isOwnRequest={isOwnRequest} onClick={() => onReview(request.id)} status={request.status} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <DataTableShell
+      tableClassName="mx-auto w-[1230.41px] min-w-[1230.41px]"
+      colgroup={
+        <colgroup>
+          <col className="w-[194.46px]" />
+          <col className="w-[299.8px]" />
+          <col className="w-[286.13px]" />
+          <col className="w-[241.39px]" />
+          <col className="w-[208.63px]" />
+        </colgroup>
+      }
+    >
+      <DataTableHeader
+        labels={["Employee", "Benefit", "Submitted At", "Assigned To", "Status"]}
+      />
+
+      <tbody>
+        {requests.map((request) => {
+          const isResolved = request.status !== "pending";
+
+          return (
+            <tr
+              className={`h-[54px] cursor-pointer border-b border-[#E5E5E5] align-middle transition-colors hover:bg-[#FAFBFC] focus-visible:outline-none ${
+                isResolved ? "opacity-60" : ""
+              }`}
+              key={request.id}
+              onClick={() => onReview(request.id)}
+              onKeyDown={(event) => handleRowKeyDown(event, () => onReview(request.id))}
+              tabIndex={0}
+            >
+              <td className="px-2 py-[9px]">
+                <BenefitPrimaryCell
+                  subtitle={request.employee.position}
+                  title={request.employee.name}
+                />
+              </td>
+              <td className="px-2 py-[9px]">
+                <BenefitPrimaryCell
+                  subtitle={request.benefit.category}
+                  title={request.benefit.title}
+                />
+              </td>
+              <td className="py-[16.39px] pr-2 pl-0 font-sans text-[14px] leading-5 font-normal text-[#737373]">
+                <span className="inline-flex w-[160px] items-center">
+                  {formatTableDateTime(request.created_at)}
+                </span>
+              </td>
+              <td className="py-[16.39px] pr-4 pl-0">
+                <div className="w-[225.39px]">
+                  <BenefitRequestAssignee
+                    currentUserRole={currentUserRole}
+                    request={request}
+                  />
+                </div>
+              </td>
+              <td className="py-[15.8px] pr-4 pl-0">
+                <div className="w-[192.63px]">
+                  <RequestStatusBadge status={request.status} />
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </DataTableShell>
   );
 }

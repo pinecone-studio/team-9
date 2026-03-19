@@ -1,21 +1,16 @@
 "use client";
 
-import { useMutation, useQuery } from "@apollo/client/react";
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  useApprovalRequestQuery,
+  useReviewApprovalRequestMutation,
+} from "@/shared/apollo/generated";
 import ApprovalRequestReviewDetails from "./ApprovalRequestReviewDetails";
 import ApprovalRequestReviewFooter from "./ApprovalRequestReviewFooter";
 import ApprovalRequestReviewHeader from "./ApprovalRequestReviewHeader";
 import ApprovalRequestReviewSkeleton from "./ApprovalRequestReviewSkeleton";
 import { useResolvedPersonName } from "./RequestPeopleContext";
-import {
-  APPROVAL_REQUEST_QUERY,
-  REVIEW_APPROVAL_REQUEST_MUTATION,
-  type ApprovalRequestQuery,
-  type ApprovalRequestQueryVariables,
-  type ReviewApprovalRequestMutation,
-  type ReviewApprovalRequestVariables,
-} from "./approval-requests.graphql";
 import { updateApprovalRequestReviewCache } from "./approval-request-review-cache";
 import { getApprovalRequestDialogCopy } from "./approval-request-review-dialog.copy";
 
@@ -38,17 +33,12 @@ export default function ApprovalRequestReviewDialog({
   const [reviewComment, setReviewComment] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showSlowReviewHint, setShowSlowReviewHint] = useState(false);
-  const { data, loading, refetch } = useQuery<
-    ApprovalRequestQuery,
-    ApprovalRequestQueryVariables
-  >(APPROVAL_REQUEST_QUERY, {
+  const { data, loading, refetch } = useApprovalRequestQuery({
     variables: { id: requestId },
     fetchPolicy: "network-only",
   });
-  const [reviewApprovalRequest, { loading: reviewing }] = useMutation<
-    ReviewApprovalRequestMutation,
-    ReviewApprovalRequestVariables
-  >(REVIEW_APPROVAL_REQUEST_MUTATION);
+  const [reviewApprovalRequest, { loading: reviewing }] =
+    useReviewApprovalRequestMutation();
   const request = data?.approvalRequest ?? null;
   const isPending = request?.status === "pending";
   const requesterName = useResolvedPersonName(request?.requested_by);

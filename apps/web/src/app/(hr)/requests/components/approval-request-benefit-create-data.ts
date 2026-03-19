@@ -1,4 +1,7 @@
-import { gql } from "@apollo/client";
+import {
+  BenefitCreateRuleDetailsDocument,
+  type BenefitCreateRuleDetailsQuery,
+} from "@/shared/apollo/generated";
 
 export type BenefitCreateShape = {
   approvalRole?: string;
@@ -21,27 +24,9 @@ export type BenefitCreateContractUpload = {
   version?: string;
 };
 
-export type BenefitCreateRuleDefinitionsQuery = {
-  employees: Array<{
-    id: string;
-  }> | null;
-  ruleDefinitions: Array<{
-    id: string;
-    name: string;
-  }>;
-};
+export type BenefitCreateRuleDefinitionsQuery = BenefitCreateRuleDetailsQuery;
 
-export const BENEFIT_CREATE_RULE_DETAILS_QUERY = gql`
-  query BenefitCreateRuleDetails {
-    ruleDefinitions {
-      id
-      name
-    }
-    employees {
-      id
-    }
-  }
-`;
+export const BENEFIT_CREATE_RULE_DETAILS_QUERY = BenefitCreateRuleDetailsDocument;
 
 export function parseBenefitCreatePayloadRecord(value: string) {
   try {

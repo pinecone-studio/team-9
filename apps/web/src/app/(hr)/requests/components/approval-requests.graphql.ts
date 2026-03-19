@@ -21,6 +21,8 @@ export type ApprovalRequestStatusValue = ApprovalRequestsQuery["approvalRequests
 export type ApprovalRequestRecord = ApprovalRequestsQuery["approvalRequests"][number];
 export type RequestsEmployeeDirectoryRecord =
   NonNullable<RequestsEmployeesDirectoryQuery["employees"]>[number];
+export type ReviewApprovalRequestVariables =
+  ReviewApprovalRequestMutationVariables;
 
 export type {
   ApprovalRequestQuery,

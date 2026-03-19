@@ -28,6 +28,10 @@ const yoga = createYoga({
 
 export default {
 	async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
-		return yoga.fetch(request, { ...env, ...ctx });
+		return yoga.fetch(request, {
+			...env,
+			passThroughOnException: ctx.passThroughOnException?.bind(ctx),
+			waitUntil: ctx.waitUntil?.bind(ctx),
+		});
 	},
 };

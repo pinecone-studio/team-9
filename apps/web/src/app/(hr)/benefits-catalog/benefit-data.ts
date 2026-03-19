@@ -3,9 +3,6 @@ import {
   StickyNote,
 } from "lucide-react";
 import {
-  ApprovalActionType,
-  ApprovalEntityType,
-  ApprovalRequestStatus,
   type ApprovalRequestsQuery,
 } from "@/shared/apollo/generated";
 
@@ -13,16 +10,23 @@ import type {
   BenefitBadge,
   BenefitCategory,
   BenefitCatalogRecord,
-  PendingBenefitRequest,
   BenefitSection,
 } from "./benefit-types";
 import {
   cardIconMatchers,
+  type CategoryIconKey,
   DEFAULT_CARD_ICON,
   DEFAULT_SECTION_ICON,
   findMatchingBenefitIcon,
+  getCategoryIconByKey,
   sectionIconMatchers,
 } from "./benefit-data-icons";
+import {
+  getPendingBenefitCreateRecords,
+  getPendingBenefitRequest,
+  isArchivedBenefit,
+} from "./benefit-data-approval";
+import { normalizePendingBenefitRequest } from "./benefit-data-pending";
 
 export type {
   BenefitBadge,
@@ -68,13 +72,19 @@ export function buildBenefitSections(
   benefits: BenefitCatalogRecord[],
   categories: BenefitCategory[] = [],
   approvalRequests: ApprovalRequestsQuery["approvalRequests"] = [],
+  categoryIconKeys: Partial<Record<string, CategoryIconKey>> = {},
 ): BenefitSection[] {
+  const pendingCreateRecords = getPendingBenefitCreateRecords(categories, approvalRequests);
   const groupedBenefits = new Map<
     string,
     { categoryId: string; categoryName: string; records: BenefitCatalogRecord[] }
   >();
 
-  benefits.forEach((benefit) => {
+  [...benefits, ...pendingCreateRecords].forEach((benefit) => {
+    if (isArchivedBenefit(benefit.id, approvalRequests)) {
+      return;
+    }
+
     const categoryName = benefit.category.trim() || "General";
     const categoryId = benefit.categoryId || categoryName;
     const group = groupedBenefits.get(categoryId) ?? {
@@ -104,11 +114,14 @@ export function buildBenefitSections(
   return Array.from(groupedBenefits.values())
     .sort((left, right) => left.categoryName.localeCompare(right.categoryName))
     .map(({ categoryId, categoryName, records }) => {
-      const sectionIcon = findMatchingBenefitIcon(
-        categoryName,
-        sectionIconMatchers,
-        DEFAULT_SECTION_ICON,
-      );
+      const customIconKey = categoryIconKeys[categoryId];
+      const sectionIcon = customIconKey
+        ? getCategoryIconByKey(customIconKey)
+        : findMatchingBenefitIcon(
+            categoryName,
+            sectionIconMatchers,
+            DEFAULT_SECTION_ICON,
+          );
 
       return {
         categoryId,
@@ -116,16 +129,9 @@ export function buildBenefitSections(
         count: `${records.length} Benefit${records.length === 1 ? "" : "s"}`,
         icon: sectionIcon,
         cards: records.map((record) => {
-          const pendingRequest = approvalRequests
-            .filter(
-              (request) =>
-                request.entity_type === ApprovalEntityType.Benefit &&
-                request.entity_id === record.id &&
-                request.status === ApprovalRequestStatus.Pending &&
-                (request.action_type === ApprovalActionType.Update ||
-                  request.action_type === ApprovalActionType.Delete),
-            )
-            .sort((left, right) => right.created_at.localeCompare(left.created_at))[0];
+          const pendingRequest = normalizePendingBenefitRequest(
+            record.pendingRequest ?? getPendingBenefitRequest(record.id, approvalRequests),
+          );
 
           return {
             activeEmployees: Math.max(0, record.activeEmployees ?? 0),
@@ -142,16 +148,7 @@ export function buildBenefitSections(
             enabled: record.isActive,
             isCore: record.isCore,
             eligibleEmployees: Math.max(0, record.eligibleEmployees ?? 0),
-            pendingRequest: pendingRequest
-              ? ({
-                  actionType: pendingRequest.action_type,
-                  createdAt: pendingRequest.created_at,
-                  id: pendingRequest.id,
-                  requestedBy: pendingRequest.requested_by,
-                  status: pendingRequest.status,
-                  targetRole: pendingRequest.target_role,
-                } satisfies PendingBenefitRequest)
-              : null,
+            pendingRequest,
             requiresContract: record.requiresContract,
             subsidyPercent: record.subsidyPercent,
             vendorName: record.vendorName ?? null,

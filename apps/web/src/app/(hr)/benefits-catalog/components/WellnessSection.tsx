@@ -5,8 +5,10 @@ import { useState } from "react";
 import AddBenefitCard from "./AddBenefitCard";
 import BenefitRequestNotice from "./BenefitRequestNotice";
 import BenefitsCatalogSkeleton from "./BenefitsCatalogSkeleton";
+import DeleteCategoryDialog from "./DeleteCategoryDialog";
 import DraftBenefitCard from "./DraftBenefitCard";
 import { useAutoOpenBenefitDialog } from "./useAutoOpenBenefitDialog";
+import { useCategoryDeleteDialog } from "./useCategoryDeleteDialog";
 import WellnessCategorySection from "./WellnessCategorySection";
 import WellnessSectionDialogs from "./WellnessSectionDialogs";
 import WellnessSectionNotice from "./WellnessSectionNotice";
@@ -38,11 +40,13 @@ export default function WellnessSection({
     benefitSections,
     closeAddDialog,
     creatingCategory,
+    deletingCategory,
     dialogCategoryId,
     dialogDraft,
     draftBenefit,
     error,
     handleBenefitDeleted,
+    handleCategoryDeleted,
     handleCreateCategory,
     isAddDialogOpen,
     loading,
@@ -55,32 +59,25 @@ export default function WellnessSection({
     setSelectedBenefit,
     shouldShowDraftCard,
   } = useWellnessCatalogState({ searchQuery });
+  const { categoryDeleteError, closeCategoryDeleteDialog, confirmCategoryDelete, openCategoryDeleteDialog, selectedCategoryForDelete } =
+    useCategoryDeleteDialog({ handleCategoryDeleted });
   const allBenefitCards = benefitSections.flatMap((section) => section.cards);
 
-  useAutoOpenBenefitDialog({
-    benefits: allBenefitCards,
-    requestedBenefitId,
-    setSelectedBenefit,
-  });
-  const showSkeleton =
-    loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
-  const showEmptyState =
-    !loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
-  const showDraftOnlyState =
-    !loading && !error && benefitSections.length === 0 && shouldShowDraftCard && !!draftBenefit;
+  useAutoOpenBenefitDialog({ benefits: allBenefitCards, requestedBenefitId, setSelectedBenefit });
+  const showSkeleton = loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
+  const showEmptyState = !loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
+  const showDraftOnlyState = !loading && !error && benefitSections.length === 0 && shouldShowDraftCard && !!draftBenefit;
   const showMainContent = !error && !showSkeleton && !showEmptyState && !showDraftOnlyState;
+  const handleRefresh = async () => {
+    await refetchApprovalRequests();
+    await refetch();
+  };
 
   return (
     <>
       <BenefitRequestNotice message={noticeMessage} onClose={() => setNoticeMessage(null)} />
       {showSkeleton ? <BenefitsCatalogSkeleton /> : null}
-      {!loading && error ? (
-        <WellnessSectionNotice
-          accentClassName="text-[#B42318]"
-          borderClassName="border-[#F3C7C7] bg-[#FFF7F7]"
-          message="Benefits data could not be loaded."
-        />
-      ) : null}
+      {!loading && error ? <WellnessSectionNotice accentClassName="text-[#B42318]" borderClassName="border-[#F3C7C7] bg-[#FFF7F7]" message="Benefits data could not be loaded." /> : null}
       {showEmptyState ? (
         <section className="mx-auto mt-[30px] w-full max-w-[1300px] px-4 sm:px-0">
           <div className="rounded-[8px] border border-dashed border-[#DBDEE1] bg-white p-6 text-[14px] text-[#51565B]">
@@ -91,12 +88,7 @@ export default function WellnessSection({
       {showDraftOnlyState && draftBenefit ? (
         <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col items-start gap-6 px-4 sm:px-0">
           <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-            <DraftBenefitCard
-              description={draftBenefit.description.trim() || "No description yet."}
-              onContinueEditing={openDraftBenefitDialog}
-              onDeleteDraft={() => setDraftBenefit(null)}
-              title={draftBenefit.name.trim() || "Untitled Benefit"}
-            />
+            <DraftBenefitCard description={draftBenefit.description.trim() || "No description yet."} onContinueEditing={openDraftBenefitDialog} onDeleteDraft={() => setDraftBenefit(null)} title={draftBenefit.name.trim() || "Untitled Benefit"} />
             <AddBenefitCard onClick={() => openNewBenefitDialog(draftBenefit.categoryId)} />
           </div>
         </section>
@@ -104,22 +96,8 @@ export default function WellnessSection({
       {showMainContent ? (
         <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col gap-[34px] px-4 sm:px-0">
           {benefitSections.map((section, index) => (
-            <div
-              className="flex flex-col gap-[34px]"
-              key={section.categoryId || section.title}
-            >
-              <WellnessCategorySection
-                draftBenefit={draftBenefit}
-                formatCategoryLabel={formatCategoryLabel}
-                onAddBenefit={openNewBenefitDialog}
-                onCancelRequest={setSelectedCancelRequestId}
-                onContinueDraft={openDraftBenefitDialog}
-                onDeleteDraft={() => setDraftBenefit(null)}
-                onEditBenefit={setSelectedBenefit}
-                onOpenRequest={setSelectedRequestId}
-                section={section}
-                shouldShowDraftCard={shouldShowDraftCard}
-              />
+            <div className="flex flex-col gap-[34px]" key={section.categoryId || section.title}>
+              <WellnessCategorySection draftBenefit={draftBenefit} formatCategoryLabel={formatCategoryLabel} onAddBenefit={openNewBenefitDialog} onCancelRequest={setSelectedCancelRequestId} onContinueDraft={openDraftBenefitDialog} onDeleteCategory={openCategoryDeleteDialog} onDeleteDraft={() => setDraftBenefit(null)} onEditBenefit={setSelectedBenefit} onOpenRequest={setSelectedRequestId} section={section} shouldShowDraftCard={shouldShowDraftCard} />
               {index < benefitSections.length - 1 ? (
                 <div className="h-px w-full bg-[#DBDEE1]" />
               ) : null}
@@ -131,10 +109,7 @@ export default function WellnessSection({
               Create a new category
             </h2>
             <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-              <AddBenefitCard
-                label="Create new category"
-                onClick={() => setIsCreateCategoryDialogOpen(true)}
-              />
+              <AddBenefitCard label="Create new category" onClick={() => setIsCreateCategoryDialogOpen(true)} />
             </div>
           </div>
         </section>
@@ -156,25 +131,26 @@ export default function WellnessSection({
         onDraftChange={setDraftBenefit}
         onEditDeleted={handleBenefitDeleted}
         onEditClose={() => setSelectedBenefit(null)}
-        onEditSaved={async () => {
-          await refetchApprovalRequests();
-          await refetch();
-        }}
-        onRequestCancelled={async () => {
-          await refetchApprovalRequests();
-          await refetch();
-        }}
+        onEditSaved={handleRefresh}
+        onRequestCancelled={handleRefresh}
         onRequestClose={() => setSelectedRequestId(null)}
         onRequestCancelClose={() => setSelectedCancelRequestId(null)}
-        onRequestReviewed={async () => {
-          await refetchApprovalRequests();
-          await refetch();
-        }}
+        onRequestReviewed={handleRefresh}
         pendingCancelRequestId={selectedCancelRequestId}
         onSubmitted={setNoticeMessage}
         pendingRequestId={selectedRequestId}
         selectedBenefit={selectedBenefit}
       />
+      {selectedCategoryForDelete ? (
+        <DeleteCategoryDialog
+          benefitCount={selectedCategoryForDelete.benefitCount}
+          categoryName={formatCategoryLabel(selectedCategoryForDelete.title)}
+          errorMessage={categoryDeleteError}
+          loading={deletingCategory}
+          onClose={closeCategoryDeleteDialog}
+          onConfirm={() => void confirmCategoryDelete()}
+        />
+      ) : null}
     </>
   );
 }

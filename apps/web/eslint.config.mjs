@@ -70,6 +70,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "src/shared/apollo/generated.ts",
+    "public/pdf.min.mjs",
+    "public/pdf.worker.min.mjs",
   ]),
 ]);
 

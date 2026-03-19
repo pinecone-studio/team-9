@@ -170,5 +170,5 @@ export function getOperatorForValueType(valueType: RuleValueType) {
     return "eq";
   }
 
-  return "gte";
+  return "lte";
 }

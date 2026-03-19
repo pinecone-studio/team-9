@@ -34,7 +34,6 @@ export const topBenefits: BenefitCard[] = [
       "#EF4444",
     ],
     passed: "3/6 passed",
-    note: "Does not meet all requirements",
   },
   {
     status: "Pending",
@@ -111,7 +110,6 @@ export const bottomBenefits: BenefitCard[] = [
       "#EF4444",
     ],
     passed: "3/6 passed",
-    note: "Does not meet all requirements",
   },
   {
     status: "Pending",

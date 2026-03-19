@@ -7,7 +7,13 @@ import {
   RuleType,
   RuleValueType,
 } from "@/shared/apollo/generated";
-import type { PendingRuleRequest, RuleCardModel, RuleSectionView } from "../types";
+import type { RuleCardModel, RuleSectionView } from "../types";
+import {
+  buildDefinitionRuleCard,
+  buildPendingCreateRuleCard,
+  type RuleDefinitionRow,
+  toPendingRuleRequest,
+} from "./rule-section-list.pending";
 
 export function toTitleCase(value?: string | null) {
   if (!value) return undefined;
@@ -98,23 +104,7 @@ export function matchesSearch(card: RuleCardModel, search: string): boolean {
 }
 
 export function buildSections(
-  definitions: Array<{
-    allowed_operators_json: string;
-    category_id: string;
-    category_name: string;
-    default_operator: Operator;
-    default_unit?: string | null;
-    default_value?: string | null;
-    description: string;
-    id: string;
-    is_active: boolean;
-    linked_benefits_json: string;
-    name: string;
-    options_json?: string | null;
-    rule_type: RuleType;
-    usage_count: number;
-    value_type: RuleValueType;
-  }>,
+  definitions: RuleDefinitionRow[],
   approvalRequests: ApprovalRequestsQuery["approvalRequests"],
   sectionTitles: string[],
   searchTerm: string,
@@ -134,37 +124,24 @@ export function buildSections(
       )
       .sort((left, right) => right.created_at.localeCompare(left.created_at))[0];
 
-    const card: RuleCardModel = {
-      categoryId: row.category_id,
-      categoryName: row.category_name,
-      defaultUnit: row.default_unit,
-      defaultValue: row.default_value,
-      description: row.description,
-      id: row.id,
-      linkedBenefits: parseLinkedBenefits(row.linked_benefits_json),
-      metricLabel: getMetricLabelFromOptionsJson(row.options_json) ?? getMetricLabel(row.rule_type),
-      metricSuffix: toTitleCase(row.default_unit),
-      metricValue: parseDisplayValue(row.default_value, row.value_type),
-      metricVariant: row.value_type === RuleValueType.Enum || row.value_type === RuleValueType.Boolean ? "select" : "number",
-      name: row.name,
-      optionsJson: row.options_json,
-      operator: row.default_operator,
-      pendingRequest: pendingRequest
-        ? ({
-            actionType: pendingRequest.action_type,
-            createdAt: pendingRequest.created_at,
-            id: pendingRequest.id,
-            requestedBy: pendingRequest.requested_by,
-            status: pendingRequest.status,
-            targetRole: pendingRequest.target_role,
-          } satisfies PendingRuleRequest)
-        : null,
-      ruleType: row.rule_type,
-      usageCount: row.usage_count,
-      valueType: row.value_type,
-    };
+    const card = buildDefinitionRuleCard(row);
+    card.pendingRequest = pendingRequest ? toPendingRuleRequest(pendingRequest) : null;
 
     grouped.get(grouped.has(row.category_name) ? row.category_name : "Threshold Rules")?.push(card);
+  }
+
+  const pendingCreateCards = approvalRequests
+    .filter(
+      (request) =>
+        request.entity_type === ApprovalEntityType.Rule &&
+        request.action_type === ApprovalActionType.Create &&
+        request.status === ApprovalRequestStatus.Pending,
+    )
+    .map((request) => buildPendingCreateRuleCard(request))
+    .filter((card): card is RuleCardModel => card !== null);
+
+  for (const card of pendingCreateCards) {
+    grouped.get(grouped.has(card.categoryName) ? card.categoryName : "Threshold Rules")?.push(card);
   }
 
   const normalizedSearch = normalizeSearchText(searchTerm);

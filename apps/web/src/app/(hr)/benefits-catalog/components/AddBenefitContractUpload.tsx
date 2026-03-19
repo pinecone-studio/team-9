@@ -2,39 +2,35 @@
 
 import { Eye, FileText, Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
-
-const ACCEPTED_CONTRACT_TYPES = ".pdf,.doc,.docx";
+import AddBenefitContractDateField from "./AddBenefitContractDateField";
+import {
+  ACCEPTED_CONTRACT_TYPES,
+  formatFileSize,
+  isAcceptedContractFile,
+} from "./add-benefit-contract-upload.utils";
 
 type AddBenefitContractUploadProps = {
   contractFile: File | null;
+  contractEffectiveDate: string;
+  contractExpiryDate: string;
   onContractFileChange: (file: File | null) => void;
+  onContractEffectiveDateChange: (value: string) => void;
+  onContractExpiryDateChange: (value: string) => void;
   requiresContract: boolean;
 };
 
-function isAcceptedContractFile(fileName: string) {
-  const lowered = fileName.toLowerCase();
-  return lowered.endsWith(".pdf") || lowered.endsWith(".doc") || lowered.endsWith(".docx");
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  const kb = bytes / 1024;
-  if (kb < 1024) {
-    return `${kb.toFixed(1)} KB`;
-  }
-
-  return `${(kb / 1024).toFixed(1)} MB`;
-}
-
 export default function AddBenefitContractUpload({
   contractFile,
+  contractEffectiveDate,
+  contractExpiryDate,
   onContractFileChange,
+  onContractEffectiveDateChange,
+  onContractExpiryDateChange,
   requiresContract,
 }: AddBenefitContractUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const effectiveDatePickerRef = useRef<HTMLInputElement | null>(null);
+  const expiryDatePickerRef = useRef<HTMLInputElement | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
   function openFilePicker() {
@@ -105,6 +101,23 @@ export default function AddBenefitContractUpload({
           {fileError}
         </p>
       ) : null}
+
+      <div className="grid w-full gap-3 sm:grid-cols-2">
+        <AddBenefitContractDateField
+          disabled={!requiresContract}
+          label="Effective Date"
+          onChange={onContractEffectiveDateChange}
+          pickerRef={effectiveDatePickerRef}
+          value={contractEffectiveDate}
+        />
+        <AddBenefitContractDateField
+          disabled={!requiresContract}
+          label="Expiry Date"
+          onChange={onContractExpiryDateChange}
+          pickerRef={expiryDatePickerRef}
+          value={contractExpiryDate}
+        />
+      </div>
 
       {requiresContract && contractFile ? (
         <div className="flex w-full items-center justify-between rounded-[10px] border border-[#CBD5E1] bg-[rgba(245,245,245,0.3)] p-4">

@@ -121,6 +121,7 @@ export type ContractSignedUrlByBenefitQuery = {
 export type ContractSignedUrlByBenefitVariables = {
   benefitId: string;
 };
+
 export const CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION = gql`
   mutation CreateBenefitDeleteApprovalRequest($input: CreateApprovalRequestInput!) {
     createApprovalRequest(input: $input) {

@@ -21,6 +21,7 @@ export type SpecificApproverOption = {
 };
 
 export type EditBenefitDialogProps = {
+  activeEmployees: number;
   approvalRole: ApprovalRoleValue;
   benefitId: string;
   benefitName: string;
@@ -29,6 +30,7 @@ export type EditBenefitDialogProps = {
   currentUserIdentifier: string;
   description: string;
   enabled: boolean;
+  eligibleEmployees: number;
   isCore: boolean;
   requiresContract: boolean;
   subsidyPercent: number;
@@ -73,6 +75,7 @@ export type UseEditBenefitDialogActionsProps = {
   isCore: boolean;
   name: string;
   onClose: () => void;
+  onDeleted?: (benefitId: string) => void | Promise<unknown>;
   onSaved?: () => void | Promise<unknown>;
   onSubmitted?: (message: string) => void;
   requiresContract: boolean;

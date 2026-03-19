@@ -1,17 +1,15 @@
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { useState } from "react";
 import { useApprovalRequestsQuery } from "@/shared/apollo/generated";
 
 import {
   BENEFIT_CATALOG_QUERY,
-  CREATE_BENEFIT_CATEGORY_MUTATION,
   type BenefitCatalogQuery,
-  type CreateBenefitCategoryMutation,
-  type CreateBenefitCategoryVariables,
 } from "./wellness-section.graphql";
 import { buildBenefitSections } from "../benefit-data";
 import type { BenefitCard } from "../benefit-types";
 import type { BenefitDraft } from "./benefit-draft";
+import { useBenefitCategoryManagement } from "./useBenefitCategoryManagement";
 
 type UseWellnessCatalogStateProps = {
   searchQuery: string;
@@ -26,10 +24,6 @@ export function useWellnessCatalogState({
   const [dialogDraft, setDialogDraft] = useState<BenefitDraft | null>(null);
   const [deletedBenefitIds, setDeletedBenefitIds] = useState<Set<string>>(new Set());
   const [selectedBenefit, setSelectedBenefit] = useState<BenefitCard | null>(null);
-  const [createBenefitCategory, { loading: creatingCategory }] = useMutation<
-    CreateBenefitCategoryMutation,
-    CreateBenefitCategoryVariables
-  >(CREATE_BENEFIT_CATEGORY_MUTATION);
   const { data, error, loading, refetch } = useQuery<BenefitCatalogQuery>(
     BENEFIT_CATALOG_QUERY,
     {
@@ -42,6 +36,14 @@ export function useWellnessCatalogState({
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
   });
+  const {
+    categoryIconKeys,
+    creatingCategory,
+    deletedCategoryIds,
+    deletingCategory,
+    handleCategoryDeleted,
+    handleCreateCategory,
+  } = useBenefitCategoryManagement({ refetch });
   const eligibilitySummaryByBenefitId = new Map(
     (data?.listBenefitEligibilitySummary ?? []).map((summary) => [
       summary.benefitId,
@@ -91,8 +93,11 @@ export function useWellnessCatalogState({
   const includeEmptyCategories = normalizedSearchQuery.length === 0;
   const benefitSections = buildBenefitSections(
     filteredBenefitRecords,
-    includeEmptyCategories ? data?.benefitCategories ?? [] : [],
+    includeEmptyCategories
+      ? (data?.benefitCategories ?? []).filter((category) => !deletedCategoryIds.has(category.id))
+      : [],
     approvalRequestsData?.approvalRequests ?? [],
+    categoryIconKeys,
   );
 
   function openNewBenefitDialog(defaultCategoryId?: string | null) {
@@ -125,36 +130,15 @@ export function useWellnessCatalogState({
     });
   }
 
-  async function handleCreateCategory(name: string) {
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      throw new Error("Category name is required.");
-    }
-
-    const result = await createBenefitCategory({
-      variables: {
-        name: trimmedName,
-      },
-    });
-
-    const createdCategory = result.data?.createBenefitCategory;
-
-    if (!createdCategory) {
-      throw new Error("Category could not be created.");
-    }
-
-    await refetch();
-    return createdCategory;
-  }
-
   return {
     benefitSections,
     closeAddDialog,
     creatingCategory,
+    deletingCategory,
     draftBenefit,
     error,
     handleBenefitDeleted,
+    handleCategoryDeleted,
     handleCreateCategory,
     isAddDialogOpen,
     loading,

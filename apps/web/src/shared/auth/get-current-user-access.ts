@@ -89,12 +89,6 @@ export async function getCurrentUserAccess(): Promise<CurrentUserAccess> {
       email,
       userId,
     });
-  } else if (!hasHrAccess) {
-    console.info("[auth] Authenticated user resolved without HR dashboard access.", {
-      email,
-      role,
-      userId,
-    });
   }
 
   return {

@@ -51,17 +51,27 @@ export default function EditBenefitDialogFooter({
           />
         </div>
       ) : null}
-      <div className="flex items-center justify-between gap-[9px]">
-        {archiveMode ? (
+      {archiveMode ? (
+        <div className="flex items-center justify-between gap-[9px]">
           <button
-            className="flex h-[38px] items-center justify-center gap-[10px] rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-medium text-black"
+            className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black"
             disabled={deleting || updating}
             onClick={onArchiveCancel}
             type="button"
           >
             Back
           </button>
-        ) : (
+          <button
+            className="flex h-9 items-center justify-center rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-[14px] leading-4 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#FCA5A5]"
+            disabled={deleting || updating}
+            onClick={onArchiveConfirm}
+            type="button"
+          >
+            Confirm Archive
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-[9px]">
           <button
             className="flex h-[38px] items-center justify-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-[14px] leading-4 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#FCA5A5]"
             disabled={deleting || updating}
@@ -71,35 +81,25 @@ export default function EditBenefitDialogFooter({
             <Trash2 className="h-[18px] w-[18px]" />
             Archive
           </button>
-        )}
-        <div className="flex items-center gap-[9px]">
-          <button
-            className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black"
-            onClick={onCancel}
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
-            disabled={updating || deleting || archiveMode}
-            onClick={onSave}
-            type="button"
-          >
-            {updating ? "Submitting..." : "Save Changes"}
-          </button>
-          {archiveMode ? (
+          <div className="flex items-center gap-[9px]">
             <button
-              className="flex h-9 items-center justify-center rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] text-[14px] leading-4 font-medium text-white disabled:cursor-not-allowed disabled:bg-[#FCA5A5]"
-              disabled={deleting || updating}
-              onClick={onArchiveConfirm}
+              className="flex h-9 items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] text-[14px] leading-4 font-normal text-black"
+              onClick={onCancel}
               type="button"
             >
-              {deleting ? "Archiving..." : "Confirm Archive"}
+              Cancel
             </button>
-          ) : null}
+            <button
+              className="flex h-9 items-center justify-center rounded-[6px] bg-black px-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
+              disabled={updating || deleting}
+              onClick={onSave}
+              type="button"
+            >
+              {updating ? "Submitting..." : "Save Changes"}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

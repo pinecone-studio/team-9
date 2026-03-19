@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CheckCircle2, FileClock, FileText, Users } from "lucide-react";
+import AcceptedEmployeesDialog from "./AcceptedEmployeesDialog";
 import ContractViewDialog from "./ContractViewDialog";
 import ContractsHero from "./ContractsHero";
 import ContractsSearch from "./ContractsSearch";
@@ -16,6 +17,8 @@ import { useContractsData } from "./useContractsData";
 export default function ContractsContent() {
   const [searchText, setSearchText] = useState("");
   const [selectedContract, setSelectedContract] = useState<ContractRow | null>(null);
+  const [acceptedEmployeesTarget, setAcceptedEmployeesTarget] =
+    useState<ContractRow | null>(null);
   const [renewContractTarget, setRenewContractTarget] = useState<ContractRow | null>(null);
   const [uploadContractTarget, setUploadContractTarget] = useState<{
     benefitId?: string;
@@ -89,6 +92,7 @@ export default function ContractsContent() {
           <ContractsTable
             contractsLoading={contractsLoading}
             loading={loading}
+            onAcceptedClick={setAcceptedEmployeesTarget}
             onRenew={setRenewContractTarget}
             onUpload={(row) =>
               setUploadContractTarget({
@@ -101,6 +105,14 @@ export default function ContractsContent() {
           />
         </>
       )}
+
+      {acceptedEmployeesTarget ? (
+        <AcceptedEmployeesDialog
+          contract={acceptedEmployeesTarget}
+          key={`${acceptedEmployeesTarget.benefitId}-${acceptedEmployeesTarget.version}`}
+          onClose={() => setAcceptedEmployeesTarget(null)}
+        />
+      ) : null}
 
       {selectedContract ? (
         <ContractViewDialog

@@ -61,19 +61,21 @@ export function buildArchiveApprovalSnapshot({
 }
 
 type SubmissionCallbacksParams = {
+  actionLabel?: string;
   approvalRole: ApprovalRoleValue;
   onClose: () => void;
   onSaved?: () => void | Promise<unknown>;
   onSubmitted?: (message: string) => void;
 };
 
-export async function finalizeBenefitSubmission({
+export async function finalizeBenefitUpdateRequestSubmission({
+  actionLabel,
   approvalRole,
   onClose,
   onSaved,
   onSubmitted,
 }: SubmissionCallbacksParams) {
-  onSubmitted?.(getBenefitRequestNoticeMessage(approvalRole));
+  onSubmitted?.(getBenefitRequestNoticeMessage(approvalRole, actionLabel));
 
   try {
     await onSaved?.();

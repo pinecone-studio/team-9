@@ -439,6 +439,7 @@ export const typeDefs = /* GraphQL */ `
     employees: [Employee]
     employee(id: ID!): Employee
     employeeByEmail(email: String!): Employee
+    benefitAcceptedEmployees(benefitId: ID!): [Employee!]!
     benefitCategories: [BenefitCategory!]!
     benefitCatalog: [Benefit]
     allBenefits: [Benefit]
@@ -451,6 +452,7 @@ export const typeDefs = /* GraphQL */ `
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
     benefitContract(benefitId: ID!): Contract
+    benefitContractVersions(benefitId: ID!): [Contract!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
     contractSignedUrlByBenefit(benefitId: ID!): ContractSignedUrl!
     countPendingBenefitRequests: Int!

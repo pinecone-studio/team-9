@@ -8,9 +8,11 @@ import { getContractSignedUrl } from './get-contract-signed-url';
 import { getContractSignedUrlByBenefit } from './get-contract-signed-url-by-benefit';
 import { getEmployeeById } from './get-employee-by-id';
 import { listAuditLogEntries } from './list-audit-log-entries';
+import { listBenefitAcceptedEmployees } from './list-benefit-accepted-employees';
 import { listApprovalRequests } from './list-approval-requests';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
+import { listBenefitContractVersions } from './list-benefit-contract-versions';
 import { listBenefitEligibilitySummary } from './list-benefit-eligibility-summary';
 import { listEmployeeEligibilityRecords } from './list-employee-eligibility-records';
 import { listEligibilityRules } from './list-eligibility-rules';
@@ -26,6 +28,7 @@ import type {
 	QueryEmployeeEligibilityArgs,
 	QueryListAuditLogEntriesArgs,
 	QueryApprovalRequestsArgs,
+	QueryBenefitAcceptedEmployeesArgs,
 	QueryBenefitRequestsArgs,
 	QueryBenefitContractArgs,
 	QueryContractSignedUrlArgs,
@@ -44,6 +47,12 @@ export const queryResolvers = {
 
 	employeeByEmail: (_: unknown, { email }: QueryEmployeeByEmailArgs, { DB }: GraphQLContext) =>
 		getEmployeeByEmail(DB, email),
+
+	benefitAcceptedEmployees: (
+		_: unknown,
+		{ benefitId }: QueryBenefitAcceptedEmployeesArgs,
+		{ DB }: GraphQLContext,
+	) => listBenefitAcceptedEmployees(DB, benefitId),
 
 	benefitCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCategories(DB),
 
@@ -73,6 +82,9 @@ export const queryResolvers = {
 
 	benefitContract: (_: unknown, { benefitId }: QueryBenefitContractArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getBenefitContract({ DB, CONTRACTS_BUCKET }, benefitId),
+
+	benefitContractVersions: (_: unknown, { benefitId }: { benefitId: string }, { DB }: GraphQLContext) =>
+		listBenefitContractVersions(DB, benefitId),
 
 	contractSignedUrl: (_: unknown, { contractId }: QueryContractSignedUrlArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getContractSignedUrl({ DB, CONTRACTS_BUCKET }, contractId),

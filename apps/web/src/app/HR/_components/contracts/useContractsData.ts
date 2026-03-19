@@ -103,7 +103,7 @@ export function useContractsData(searchText: string) {
 
       return [
         {
-          acceptedCount: summary?.eligibleEmployees ?? 0,
+          acceptedCount: summary?.activeEmployees ?? 0,
           benefit: benefit.title,
           benefitId: benefit.id,
           effectiveDate: formatDate(contract.effectiveDate),
@@ -156,7 +156,7 @@ export function useContractsData(searchText: string) {
       new Map(
         (data?.listBenefitEligibilitySummary ?? []).map((summary) => [
           summary.benefitId,
-          summary.eligibleEmployees ?? 0,
+          summary.activeEmployees ?? 0,
         ]),
       ),
     [data?.listBenefitEligibilitySummary],

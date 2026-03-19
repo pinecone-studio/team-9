@@ -7,6 +7,11 @@ import { benefits } from '../../../db/schema/benefits';
 import { contracts } from '../../../db/schema/contracts';
 import { deleteFromR2 } from '../../../lib/r2';
 import {
+	scheduleNotification,
+	sendApprovalReviewedNotification,
+	type NotificationRuntime,
+} from '../../../notifications';
+import {
 	ApprovalRequestStatus,
 	ApprovalEntityType,
 	type BenefitRuleAssignmentInput,
@@ -23,10 +28,11 @@ import {
 	recomputeBenefitEligibilityForAllEmployees,
 } from './benefit-eligibility-service';
 import { applyCreateBenefit, applyUpdateBenefit } from './benefit-service';
+import { deleteBenefit } from './delete-benefit';
 import { deleteRuleDefinition } from './delete-rule-definition';
 import { applyCreateRuleDefinition, applyUpdateRuleDefinition } from './rule-definition-service';
 
-type ReviewApprovalEnv = {
+type ReviewApprovalEnv = NotificationRuntime & {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
 };
@@ -328,31 +334,39 @@ export async function reviewApprovalRequest(
           });
 
           entityId = requestedBenefitId;
-        } else if (!benefitPayload.benefit) {
+        } else if (!benefitPayload.benefit && existing.actionType !== 'delete') {
           throw new Error('Approval request payload is missing benefit data');
         } else {
+          const benefitInput = benefitPayload.benefit;
           if (existing.actionType === 'create') {
             const created = await applyCreateBenefit(
               env.DB,
-              benefitPayload.benefit as CreateBenefitInput,
+              benefitInput as CreateBenefitInput,
               benefitPayload.ruleAssignments ?? [],
             );
             entityId = created.id;
           } else if (existing.actionType === 'update') {
             const updated = await applyUpdateBenefit(
               env.DB,
-              benefitPayload.benefit as UpdateBenefitInput,
+              benefitInput as UpdateBenefitInput,
               benefitPayload.ruleAssignments ?? [],
             );
             entityId = updated.id;
+          } else if (existing.actionType === 'delete') {
+            if (!existing.entityId) {
+              throw new Error('Delete approval request is missing entity id');
+            }
+
+            await deleteBenefit(env.DB, existing.entityId);
+            entityId = existing.entityId;
           }
           logger.mark('apply-benefit-change', {
             actionType: existing.actionType,
             entityId,
           });
 
-          if (entityId && isContractUploadPayload(benefitPayload.contractUpload)) {
-            const vendorName = benefitPayload.benefit.vendorName?.trim();
+          if (existing.actionType !== 'delete' && entityId && isContractUploadPayload(benefitPayload.contractUpload)) {
+            const vendorName = benefitInput?.vendorName?.trim();
             if (!vendorName) {
               throw new Error('Benefit vendorName is required to persist contract metadata');
             }
@@ -441,6 +455,18 @@ export async function reviewApprovalRequest(
       entityId,
       nextStatus,
     });
+
+    scheduleNotification(env, 'approval_request_reviewed', () =>
+      sendApprovalReviewedNotification(env, {
+        actionType: existing.actionType,
+        approved: input.approved,
+        entityType: existing.entityType,
+        requestId: existing.id,
+        requestedBy: existing.requestedBy,
+        reviewComment,
+        reviewedBy,
+      }),
+    );
 
     logger.done({
       approved: input.approved,

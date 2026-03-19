@@ -1,0 +1,75 @@
+query ApprovalRequests {
+  approvalRequests {
+    id
+    entity_id
+    entity_type
+    action_type
+    status
+    target_role
+    requested_by
+    reviewed_by
+    review_comment
+    payload_json
+    snapshot_json
+    created_at
+    reviewed_at
+    is_active
+  }
+}
+
+query RequestsEmployeesDirectory {
+  employees {
+    id
+    name
+    email
+    position
+  }
+}
+
+query ApprovalRequest($id: ID!) {
+  approvalRequest(id: $id) {
+    id
+    entity_id
+    entity_type
+    action_type
+    status
+    target_role
+    requested_by
+    reviewed_by
+    review_comment
+    payload_json
+    snapshot_json
+    created_at
+    reviewed_at
+    is_active
+  }
+}
+
+mutation ReviewApprovalRequest($input: ReviewApprovalRequestInput!) {
+  reviewApprovalRequest(input: $input) {
+    id
+    entity_id
+    entity_type
+    action_type
+    status
+    target_role
+    requested_by
+    reviewed_by
+    review_comment
+    payload_json
+    snapshot_json
+    created_at
+    reviewed_at
+    is_active
+  }
+}
+
+query BenefitCreateRuleDetails {
+  ruleDefinitions {
+    id
+    name
+  }
+  employees {
+    id
+  }
+}

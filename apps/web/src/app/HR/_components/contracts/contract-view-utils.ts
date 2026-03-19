@@ -1,4 +1,5 @@
-import type { ContractStatus } from "./contracts-types";
+import { deriveStatus, formatDate } from "./contracts-helpers";
+import type { BackendContract, ContractStatus } from "./contracts-types";
 
 export type ContractViewContract = {
   acceptedCount: number;
@@ -12,6 +13,7 @@ export type ContractViewContract = {
 };
 
 export type HistoryRow = {
+  id: string;
   actionLabel: string;
   actionTone: string;
   effectiveDate: string;
@@ -55,24 +57,6 @@ export function getStatusLabel(status: ContractStatus) {
   return "Active";
 }
 
-function shiftDate(value: string, years: number) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  parsed.setFullYear(parsed.getFullYear() + years);
-  return new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" }).format(parsed);
-}
-
-function derivePreviousVersion(version: string) {
-  const match = version.match(/^v(\d+)(?:\.(\d+))?$/i);
-  if (!match) return null;
-  const major = Number.parseInt(match[1] ?? "0", 10);
-  const minor = Number.parseInt(match[2] ?? "0", 10);
-  if (major <= 0 && minor <= 0) return null;
-  if (minor > 0) return `v${major}.${minor - 1}`;
-  if (major > 1) return `v${major - 1}.0`;
-  return null;
-}
-
 export function deriveNextVersion(version: string) {
   const match = version.match(/^v(\d+)(?:\.(\d+))?$/i);
   if (!match) return version;
@@ -81,27 +65,68 @@ export function deriveNextVersion(version: string) {
   return `v${major}.${minor + 1}`;
 }
 
+function buildHistoryAction(status: ContractStatus, isActive: boolean) {
+  if (isActive) {
+    return {
+      actionLabel: "Current",
+      actionTone: "text-[#00A63E]",
+    };
+  }
+
+  if (status === "expired") {
+    return {
+      actionLabel: "Expired",
+      actionTone: "text-[#E7000B]",
+    };
+  }
+
+  return {
+    actionLabel: "Archived",
+    actionTone: "text-[#525252]",
+  };
+}
+
+function deriveHistoryStatus(contract: BackendContract): ContractStatus {
+  if (contract.isActive) {
+    return deriveStatus(contract);
+  }
+
+  const expiry = new Date(contract.expiryDate);
+  if (!Number.isNaN(expiry.getTime()) && expiry < new Date()) {
+    return "expired";
+  }
+
+  return "archived";
+}
+
 export function buildHistoryRows(contract: ContractViewContract): HistoryRow[] {
-  const rows: HistoryRow[] = [{
-    actionLabel: contract.status === "active" ? "Current" : "Expired",
-    actionTone: contract.status === "active" ? "text-[#00A63E]" : "text-[#E7000B]",
+  const action = buildHistoryAction(contract.status, true);
+  return [{
+    id: `${contract.benefitId}-${contract.version}`,
+    actionLabel: action.actionLabel,
+    actionTone: action.actionTone,
     effectiveDate: contract.effectiveDate,
     expiryDate: contract.expiryDate,
     status: contract.status,
     version: contract.version,
   }];
-  const previousVersion = derivePreviousVersion(contract.version);
-  if (previousVersion) {
-    rows.push({
-      actionLabel: "Expired",
-      actionTone: "text-[#E7000B]",
-      effectiveDate: shiftDate(contract.effectiveDate, -1),
-      expiryDate: shiftDate(contract.expiryDate, -1),
-      status: "archived",
-      version: previousVersion,
-    });
-  }
-  return rows;
+}
+
+export function buildHistoryRowsFromContracts(contracts: BackendContract[]): HistoryRow[] {
+  return contracts.map((contract) => {
+    const status = deriveHistoryStatus(contract);
+    const action = buildHistoryAction(status, contract.isActive);
+
+    return {
+      id: contract.id,
+      actionLabel: action.actionLabel,
+      actionTone: action.actionTone,
+      effectiveDate: formatDate(contract.effectiveDate),
+      expiryDate: formatDate(contract.expiryDate),
+      status,
+      version: contract.version,
+    };
+  });
 }
 
 export function toEditableDate(value: string) {

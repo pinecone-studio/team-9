@@ -9,8 +9,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "team9_pinequest_dev",
-      "database_id": "4cb7fad9-625c-4540-a076-a0a2ea44b572",
+      "database_name": "team-9-pinequest-ebms",
+      "database_id": "9e1100e7-18c0-4047-b3fc-3dfd2c8ea6c4",
       "migrations_dir": "drizzle"
     }
   ],

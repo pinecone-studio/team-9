@@ -1,13 +1,13 @@
 import { useMutation } from "@apollo/client/react";
 import { ApprovalActionType, ApprovalEntityType } from "@/shared/apollo/generated";
 import { buildContractUploadInput } from "./contract-upload-client";
-import { buildArchiveApprovalSnapshot, finalizeBenefitSubmission } from "./useEditBenefitDialogActions.archive";
+import { buildArchiveApprovalSnapshot, finalizeBenefitUpdateRequestSubmission } from "./useEditBenefitDialogActions.archive";
 import { buildBenefitInput, buildRuleAssignments, isMissingIsActiveFieldError, validateBenefitSaveInput } from "./useEditBenefitDialogActions.helpers";
 import {
   CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION,
-  SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION,
   type CreateBenefitDeleteApprovalRequestMutation,
   type CreateBenefitDeleteApprovalRequestVariables,
+  SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION,
   type SubmitBenefitUpdateRequestMutation,
   type SubmitBenefitUpdateRequestVariables,
 } from "./edit-benefit-dialog.graphql";
@@ -23,11 +23,11 @@ export function useEditBenefitDialogActions({
   categoryId,
   contractFile,
   initialIsActive,
+  currentUserIdentifier,
   initialApprovalRole,
   initialAssignedRules,
   initialBenefitDescription,
   initialIsCore,
-  currentUserIdentifier,
   initialRequiresContract,
   initialSubsidyPercent,
   initialVendorName,
@@ -58,7 +58,7 @@ export function useEditBenefitDialogActions({
     const trimmedArchiveComment = archiveComment.trim();
     if (!trimmedArchiveComment) {
       setErrorMessage("Please add an archive comment before submitting.");
-      return;
+      return false;
     }
 
     try {
@@ -92,15 +92,24 @@ export function useEditBenefitDialogActions({
       });
       if (!result.data?.createApprovalRequest.id) {
         setErrorMessage("Benefit archive request could not be submitted.");
-        return;
+        return false;
       }
-      await finalizeBenefitSubmission({ approvalRole, onClose, onSaved, onSubmitted });
+
+      await finalizeBenefitUpdateRequestSubmission({
+        actionLabel: "archive huselt",
+        approvalRole,
+        onClose,
+        onSaved,
+        onSubmitted,
+      });
+      return true;
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
           : "Benefit archive request could not be submitted.",
       );
+      return false;
     }
   }
 
@@ -147,7 +156,7 @@ export function useEditBenefitDialogActions({
           },
         },
       });
-      await finalizeBenefitSubmission({ approvalRole, onClose, onSaved, onSubmitted });
+      await finalizeBenefitUpdateRequestSubmission({ approvalRole, onClose, onSaved, onSubmitted });
     } catch (error) {
       if (isMissingIsActiveFieldError(error)) {
         setErrorMessage(

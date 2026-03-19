@@ -65,7 +65,10 @@ export function useBenefitRequestReviewController({
         throw new Error("Contract link is unavailable.");
       }
 
-      const resolvedUrl = normalizeSignedBenefitUrl(window.location.origin, signedUrl);
+      const resolvedUrl = normalizeSignedBenefitUrl(
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
+        signedUrl,
+      );
       window.open(resolvedUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
       setContractError(

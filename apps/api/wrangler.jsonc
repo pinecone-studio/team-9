@@ -6,12 +6,6 @@
   "observability": {
     "enabled": true
   },
-  "migrations": [
-    {
-      "tag": "delete-realtimehub",
-      "deleted_classes": ["RealtimeHub"]
-    }
-  ],
   "d1_databases": [
     {
       "binding": "DB",

@@ -45,7 +45,7 @@ export function DataTableHeader({ labels }: { labels: string[] }) {
       <tr className="border-b border-[#E5E5E5]">
         {labels.map((label) => (
           <th
-            className="px-2 pt-[9.8px] pb-[10.2px] font-sans text-[14px] leading-5 font-medium text-[#0A0A0A]"
+            className="px-3 pt-[18px] pb-[18px] font-sans text-[14px] leading-5 font-medium text-[#171717]"
             key={label}
           >
             {label}
@@ -79,7 +79,7 @@ export function DataTableRow({
 }) {
   return (
     <tr
-      className={`h-10 cursor-pointer border-b border-[#E5E5E5] align-middle transition-colors hover:bg-[#FAFBFC] focus-visible:outline-none ${
+      className={`h-[58px] cursor-pointer border-b border-[#E5E5E5] align-middle transition-colors hover:bg-[#FAFBFC] focus-visible:outline-none ${
         highlighted ? "bg-[rgba(239,246,255,0.3)]" : "bg-transparent"
       } ${dimmed ? "opacity-60" : ""}`}
       onClick={onSelect}
@@ -100,11 +100,11 @@ export function PrimaryCell({
 }) {
   return (
     <div className="flex flex-col items-start gap-0 font-sans">
-      <span className="w-full truncate text-[14px] leading-5 font-medium text-[#0A0A0A]">
+      <span className="w-full truncate text-[16px] leading-6 font-medium text-[#171717]">
         {title}
       </span>
       {subtitle ? (
-        <span className="w-full truncate text-[12px] leading-4 font-normal text-[#737373]">
+        <span className="w-full truncate text-[14px] leading-5 font-normal text-[#737373]">
           {subtitle}
         </span>
       ) : null}

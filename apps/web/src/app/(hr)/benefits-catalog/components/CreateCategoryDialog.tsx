@@ -2,6 +2,10 @@
 
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 import {
   CATEGORY_ICON_OPTIONS,
@@ -45,14 +49,14 @@ export default function CreateCategoryDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-50 flex items-center justify-center`}
       onClick={(event) => {
         if (event.target === event.currentTarget && !creating) {
           onClose();
         }
       }}
     >
-      <div className="relative box-border flex w-full max-w-[512px] flex-col items-start gap-4 rounded-[10px] border border-[#E5E5E5] bg-white p-6">
+      <div className={`relative box-border flex w-full max-w-[512px] flex-col items-start gap-4 overflow-y-auto rounded-[10px] border border-[#E5E5E5] bg-white p-6 ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <button
           className="absolute top-[17px] right-[17px] flex h-6 w-6 items-center justify-center text-black disabled:opacity-50"
           disabled={creating}

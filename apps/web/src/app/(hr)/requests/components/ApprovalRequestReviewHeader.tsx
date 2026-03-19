@@ -14,7 +14,7 @@ export default function ApprovalRequestReviewHeader({
   title: string;
 }) {
   return (
-    <div className="relative flex items-start justify-between px-6 pt-6">
+    <div className="relative px-6 pt-6">
       <div className="flex min-w-0 flex-col gap-2">
         {loading ? (
           <>
@@ -36,7 +36,7 @@ export default function ApprovalRequestReviewHeader({
       </div>
       <button
         aria-label="Close dialog"
-        className="-mr-2 -mt-2 rounded-[8px] p-2 text-[#111827] transition hover:bg-[#F5F5F5]"
+        className="absolute right-[11px] top-[13px] rounded-[8px] p-0 text-[#111827] transition hover:bg-transparent"
         onClick={onClose}
         type="button"
       >

@@ -1,6 +1,10 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 type ArchiveBenefitConfirmDialogProps = {
   activeEmployees: number;
@@ -19,14 +23,14 @@ export default function ArchiveBenefitConfirmDialog({
 }: ArchiveBenefitConfirmDialogProps) {
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-[70] flex items-center justify-center`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="box-border flex w-full max-w-[462px] flex-col rounded-[12px] border border-[#CBD5E1] bg-white px-[31px] py-8 shadow-[0_20px_45px_rgba(0,0,0,0.2)]">
+      <div className={`box-border flex w-full max-w-[462px] flex-col overflow-y-auto rounded-[12px] border border-[#CBD5E1] bg-white px-[31px] py-8 shadow-[0_20px_45px_rgba(0,0,0,0.2)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <div className="flex w-full flex-col items-center gap-8">
           <div className="flex w-[414px] max-w-full flex-col items-center gap-2 self-center">
             <div className="flex h-[42px] w-[42px] items-center justify-center rounded-[9999px] bg-[#FFE8E8]">

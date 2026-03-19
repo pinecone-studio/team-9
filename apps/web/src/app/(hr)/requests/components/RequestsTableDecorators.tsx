@@ -48,7 +48,7 @@ function TypeChip({ children, icon }: { children: ReactNode; icon: ReactNode }) 
   return (
     <div className="inline-flex items-center gap-2 font-sans">
       <span className="inline-flex h-4 w-4 items-center justify-center text-[#737373]">{icon}</span>
-      <span className="inline-flex h-[21.6px] items-center justify-center rounded-[8px] border border-[#E5E5E5] bg-white px-[7.8px] py-[1.8px] text-[12px] leading-4 font-medium text-[#0A0A0A]">
+      <span className="inline-flex h-[28px] items-center justify-center rounded-[10px] border border-[#E5E5E5] bg-white px-[11px] py-[4px] text-[14px] leading-5 font-medium text-[#171717]">
         {children}
       </span>
     </div>
@@ -99,7 +99,7 @@ export function AssigneeLabel(props: {
   const label = reviewerName ? reviewerName : matchesCurrentRole ? formatApprovalRoleShort(reviewTarget) : formatApprovalRole(reviewTarget);
 
   return (
-    <span className={`inline-flex max-w-full truncate font-sans text-[14px] leading-5 ${matchesCurrentRole && !reviewerName ? "font-medium text-[#155DFC]" : "font-normal text-[#0A0A0A]"}`}>
+    <span className={`inline-flex max-w-full truncate font-sans text-[16px] leading-6 ${matchesCurrentRole && !reviewerName ? "font-medium text-[#2563EB]" : "font-normal text-[#737373]"}`}>
       {label}
     </span>
   );

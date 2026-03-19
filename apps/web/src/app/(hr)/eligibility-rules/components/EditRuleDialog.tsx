@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { ApprovalRole, RuleValueType } from "@/shared/apollo/generated";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 import EditRuleDialogFields from "./EditRuleDialogFields";
 import RuleApprovalSection, {
@@ -96,8 +100,8 @@ export default function EditRuleDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-      <div className="w-full max-w-[531px] rounded-[12px] bg-white p-6 shadow-[0_20px_45px_rgba(0,0,0,0.2)]">
+    <div className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-50 flex items-center justify-center`}>
+      <div className={`w-full max-w-[531px] overflow-y-auto rounded-[12px] bg-white p-6 shadow-[0_20px_45px_rgba(0,0,0,0.2)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <div className="flex w-full flex-col gap-8">
           <div className="flex w-full flex-col gap-2">
             <h2 className="text-[18px] leading-7 font-semibold text-[#0F172A]">Edit Rule</h2>

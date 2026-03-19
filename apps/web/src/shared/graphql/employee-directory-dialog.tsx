@@ -7,6 +7,10 @@ import {
   useOverrideEmployeeBenefitEligibilityMutation,
 } from "@/shared/apollo/generated";
 import type { Employee } from "@/shared/apollo/types";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 import EmployeeDirectoryDialogBenefits from "@/shared/graphql/employee-directory-dialog-benefits";
 import EmployeeEditDialog from "@/shared/graphql/employee-edit-dialog";
 import EmployeeDirectoryDialogOverview from "@/shared/graphql/employee-directory-dialog-overview";
@@ -99,7 +103,7 @@ export default function EmployeeDirectoryDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[70] overflow-y-auto bg-black/50 px-4 py-6"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-[70]`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -107,7 +111,7 @@ export default function EmployeeDirectoryDialog({
       }}
     >
       <div className="mx-auto flex min-h-full items-center justify-center">
-        <div className="relative flex h-[780px] max-h-[calc(100vh-48px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[12px] border border-[#D4D4D8] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)]">
+        <div className={`relative flex w-full max-w-[600px] flex-col overflow-hidden rounded-[12px] border border-[#D4D4D8] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
           <button aria-label="Close dialog" className="absolute top-3 right-3 rounded-[8px] p-2 text-[#737373]" onClick={onClose} type="button"><X className="h-5 w-5" /></button>
           <div className="shrink-0 border-b border-[#E5E5E5] px-6 py-5">
             <div className="flex flex-wrap items-center gap-3 pr-10">

@@ -26,7 +26,7 @@ export default function ApprovalRequestStatusBadge({
 
   return (
     <span
-      className={`inline-flex w-fit items-center gap-[6px] rounded-[4px] px-[9px] py-[3px] text-[12px] leading-4 font-medium ${palette}`}
+      className={`inline-flex w-fit items-center gap-[6px] ${variant === "soft" ? "rounded-[8px]" : "rounded-[4px]"} px-[9px] py-[3px] text-[12px] leading-4 font-medium whitespace-nowrap ${palette}`}
     >
       {variant === "pill" ? <Clock3 className="h-3 w-3" /> : null}
       {status === "pending" ? pendingLabel : formatApprovalStatus(status)}

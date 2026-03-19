@@ -46,7 +46,7 @@ export function LabeledValue({
   valueClassName?: string;
 }) {
   return (
-    <div>
+    <div className="flex flex-col gap-0">
       <div className="text-[12px] leading-4 text-[#737373]">{label}</div>
       <div className={valueClassName}>{value}</div>
     </div>
@@ -95,33 +95,33 @@ export function SubmissionDetailsCard({
 }) {
   return (
     <DetailCard>
-      <div className="grid gap-x-6 gap-y-8 md:grid-cols-2">
-        <div className="space-y-8">
-          <div>
+      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
+        <div className="space-y-4">
+          <div className="min-h-[52px]">
             <div className="text-[12px] leading-4 text-[#737373]">Submitted by</div>
             <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
               {requesterName}
             </div>
             <div className="text-[12px] leading-4 text-[#737373]">{requesterSubtitle}</div>
           </div>
-          <div>
-            <div className="text-[12px] leading-4 text-[#737373]">Assigned Approver</div>
+          <div className="min-h-[52px]">
+            <div className="text-[12px] leading-4 text-[#737373]">Assigned approver</div>
             <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
               {approverName}
             </div>
             <div className="text-[12px] leading-4 text-[#737373]">{approverSubtitle}</div>
           </div>
         </div>
-        <div className="space-y-8">
-          <div>
+        <div className="space-y-4">
+          <div className="min-h-[52px]">
             <div className="text-[12px] leading-4 text-[#737373]">Submitted</div>
             <div className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
               {submittedAt}
             </div>
           </div>
-          <div>
+          <div className="flex min-h-[52px] flex-col gap-1">
             <div className="text-[12px] leading-4 text-[#737373]">Status</div>
-            <div className="pt-1">{statusBadge}</div>
+            <div>{statusBadge}</div>
           </div>
         </div>
       </div>

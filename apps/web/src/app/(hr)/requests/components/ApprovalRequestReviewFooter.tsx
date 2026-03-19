@@ -40,7 +40,7 @@ export default function ApprovalRequestReviewFooter({
         </p>
       ) : null}
       {isPending ? (
-        <div className="mb-5 flex flex-col gap-2">
+        <div className="mb-7 flex flex-col gap-2">
           <label
             className="text-[14px] leading-5 font-medium text-[#0A0A0A]"
             htmlFor="approval-reject-comment"
@@ -56,9 +56,9 @@ export default function ApprovalRequestReviewFooter({
           />
         </div>
       ) : null}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <button
-          className="flex h-[40px] w-full items-center justify-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] py-[10px] text-[14px] leading-4 font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex h-[38px] w-full items-center justify-center gap-[10px] rounded-[6px] border border-[#FFC4C4] bg-[#EF4444] px-[10px] py-[10px] text-[14px] leading-4 font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
           disabled={reviewing || !isPending}
           onClick={rejectMode ? onRejectConfirm : onRejectClick}
           type="button"
@@ -70,7 +70,7 @@ export default function ApprovalRequestReviewFooter({
         </button>
         {isPending ? (
           <button
-            className="flex h-[40px] w-full items-center justify-center gap-[10px] rounded-[6px] bg-black px-[10px] py-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex h-[38px] w-full items-center justify-center gap-[10px] rounded-[6px] bg-black px-[10px] py-[10px] text-[14px] leading-4 font-normal text-white disabled:cursor-not-allowed disabled:opacity-70"
             disabled={reviewing || rejectMode}
             onClick={onApprove}
             type="button"
@@ -82,7 +82,7 @@ export default function ApprovalRequestReviewFooter({
           </button>
         ) : (
           <button
-            className="flex h-[40px] w-full items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] py-[10px] text-[14px] leading-4 text-black disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex h-[36px] w-full items-center justify-center rounded-[6px] border border-[#D8DFE6] bg-[#F3F5F8] px-[10px] py-[10px] text-[14px] leading-4 text-black disabled:cursor-not-allowed disabled:opacity-70"
             disabled={reviewing}
             onClick={onClose}
             type="button"

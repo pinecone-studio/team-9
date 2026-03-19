@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 type AddRuleDialogFrameProps = {
   children: ReactNode;
@@ -19,8 +23,8 @@ export default function AddRuleDialogFrame({
   submitting,
 }: AddRuleDialogFrameProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-      <div className="relative flex w-full max-w-[512px] flex-col items-start gap-4 rounded-[8px] border border-[#DBDEE1] bg-white px-6 py-[55px] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
+    <div className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-50 flex items-center justify-center`}>
+      <div className={`relative flex w-full max-w-[512px] flex-col items-start gap-4 overflow-y-auto rounded-[8px] border border-[#DBDEE1] bg-white px-6 py-[55px] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <button
           aria-label="Close dialog"
           className="absolute top-[17px] right-[17px] opacity-70"

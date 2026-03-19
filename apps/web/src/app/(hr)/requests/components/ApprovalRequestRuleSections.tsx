@@ -1,6 +1,5 @@
 import {
   Building2,
-  CheckCircle2,
   Users,
 } from "lucide-react";
 
@@ -74,7 +73,7 @@ export function RuleImpactSection({
   return (
     <DetailSection title="Impact Preview">
       <DetailCard>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-[#737373]" />
             <LabeledValue
@@ -89,14 +88,6 @@ export function RuleImpactSection({
               label="Benefits will use Rule"
               value={ruleUsageCount}
               valueClassName="text-[18px] leading-7 font-semibold text-[#0A0A0A]"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-[#737373]" />
-            <LabeledValue
-              label="Eligibility Effect"
-              value="Restrictive"
-              valueClassName="text-[18px] leading-7 font-semibold capitalize text-[#0A0A0A]"
             />
           </div>
         </div>

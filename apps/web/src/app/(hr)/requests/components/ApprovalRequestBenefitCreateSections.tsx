@@ -1,4 +1,4 @@
-import { CheckCircle2, Eye, FileText, StickyNote, Users } from "lucide-react";
+import { CheckCircle2, Eye, StickyNote, Users } from "lucide-react";
 import { DetailCard, DetailSection, LabeledValue } from "./ApprovalRequestDetailSections";
 
 export function BenefitCreateOverviewSection({
@@ -76,7 +76,7 @@ export function BenefitCreateContractSection({
     <DetailSection title="Contract File">
       <DetailCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <FileText className="h-8 w-8 shrink-0 text-[#737373]" />
+          <StickyNote className="h-8 w-8 shrink-0 text-[#737373]" />
           <div className="min-w-0">
             <div className="truncate text-[14px] leading-5 font-medium text-[#0A0A0A]">
               {fileName}

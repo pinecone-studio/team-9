@@ -3,6 +3,10 @@
 import { useMemo, useState } from "react";
 
 import { useEmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 import BenefitRequestReviewBody from "./BenefitRequestReviewBody";
 import BenefitRequestReviewFooter from "./BenefitRequestReviewFooter";
@@ -116,12 +120,12 @@ export default function BenefitRequestReviewDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[60] overflow-y-auto bg-[rgba(248,250,252,0.88)] px-4 py-6 backdrop-blur-[2px]"
+      className={`${HR_DIALOG_OVERLAY_BASE_CLASS} z-[60]`}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="mx-auto flex h-auto max-h-[calc(100vh-48px)] w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white shadow-[0_20px_48px_rgba(15,23,42,0.08)]">
+      <div className={`mx-auto flex h-auto w-full max-w-[626px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white shadow-[0_20px_48px_rgba(15,23,42,0.08)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}>
         <BenefitRequestReviewHeader isPending={isPending} onClose={onClose} />
 
         <BenefitRequestReviewBody

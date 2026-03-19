@@ -3,6 +3,10 @@
 import { useQuery } from "@apollo/client/react";
 import { useMemo, useState } from "react";
 import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
+import {
+  HR_DIALOG_MAX_HEIGHT_CLASS,
+  HR_DIALOG_OVERLAY_BASE_CLASS,
+} from "@/shared/ui/dialog-styles";
 
 import ArchiveBenefitConfirmDialog from "./ArchiveBenefitConfirmDialog";
 import EditBenefitDialogFooter from "./EditBenefitDialogFooter";

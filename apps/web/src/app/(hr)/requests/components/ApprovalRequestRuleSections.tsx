@@ -1,5 +1,6 @@
 import {
   Building2,
+  CheckCircle2,
   Users,
 } from "lucide-react";
 

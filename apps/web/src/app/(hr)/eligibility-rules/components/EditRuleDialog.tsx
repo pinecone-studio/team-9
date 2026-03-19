@@ -3,10 +3,6 @@
 import { useState } from "react";
 import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
 import { ApprovalRole, RuleValueType } from "@/shared/apollo/generated";
-import {
-  HR_DIALOG_MAX_HEIGHT_CLASS,
-  HR_DIALOG_OVERLAY_BASE_CLASS,
-} from "@/shared/ui/dialog-styles";
 
 import EditRuleDialogFooter from "./EditRuleDialogFooter";
 import EditRuleDialogFields from "./EditRuleDialogFields";

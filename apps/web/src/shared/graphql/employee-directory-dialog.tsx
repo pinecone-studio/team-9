@@ -4,10 +4,7 @@ import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useEmployeeDirectoryDialogQuery, useOverrideEmployeeBenefitEligibilityMutation } from "@/shared/apollo/generated";
 import type { Employee } from "@/shared/apollo/types";
-import {
-  HR_DIALOG_MAX_HEIGHT_CLASS,
-  HR_DIALOG_OVERLAY_BASE_CLASS,
-} from "@/shared/ui/dialog-styles";
+import { HR_DIALOG_OVERLAY_BASE_CLASS } from "@/shared/ui/dialog-styles";
 import EmployeeDirectoryDialogBenefits from "@/shared/graphql/employee-directory-dialog-benefits";
 import EmployeeDirectoryDialogLoading from "@/shared/graphql/employee-directory-dialog-loading";
 import EmployeeEditDialog from "@/shared/graphql/employee-edit-dialog";

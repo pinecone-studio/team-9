@@ -9,25 +9,15 @@ import AddRuleDialogFrame from "./AddRuleDialogFrame";
 import AddRuleDialogFields from "./AddRuleDialogFields";
 import RuleApprovalSection, { type ApprovalRoleValue } from "./RuleApprovalSection";
 import { buildRuleOptionsJson, validateRuleInput } from "./add-rule-dialog.helpers";
+import { getAddRuleDialogPresentation } from "./add-rule-dialog.presentation";
 import { getRuleTypeLabel } from "./add-rule-dialog.utils";
 import { getBackendRuleTemplates, getDefaultValueForTemplate, getOperatorForValueType } from "./rule-backend-metadata";
-import { formatRulePreview } from "./rule-backend-formatters";
 import { useRuleDescriptionSync } from "./useRuleDescriptionSync";
 
 type AddRuleDialogProps = {
   employeeRoles: string[];
   onClose: () => void;
-  onSubmit: (input: {
-    approvalRole: ApprovalRoleValue;
-    defaultOperator: Operator;
-    defaultUnit?: string;
-    description: string;
-    name: string;
-    optionsJson?: string;
-    ruleType: RuleType;
-    valueType: RuleValueType;
-    value: string;
-  }) => Promise<void>;
+  onSubmit: (input: { approvalRole: ApprovalRoleValue; defaultOperator: Operator; defaultUnit?: string; description: string; name: string; optionsJson?: string; ruleType: RuleType; valueType: RuleValueType; value: string }) => Promise<void>;
   sectionTitle: string;
   submitting?: boolean;
 };
@@ -66,7 +56,18 @@ export default function AddRuleDialog({
   });
 
   const enumOptions = selectedTemplate?.enumOptions ?? [];
-  const previewText = formatRulePreview({ configLabel, ruleLabel, unit, value, valueType });
+  const { isGateRule, isLevelRule, previewText, requiredValueOptions, sourceFieldOptions } =
+    getAddRuleDialogPresentation({
+      configLabel,
+      enumOptions,
+      ruleLabel,
+      ruleType,
+      sectionTitle,
+      templates,
+      unit,
+      value,
+      valueType,
+    });
 
   function handleConfigLabelChange(nextLabel: string) {
     const nextTemplate = templates.find((template) => template.configLabel === nextLabel) ?? templates[0];
@@ -84,6 +85,11 @@ export default function AddRuleDialog({
   function handleValueChange(nextValue: string) {
     setValue(nextValue);
     syncDescriptionIfNeeded({ configLabel, unit, value: nextValue, valueType });
+  }
+
+  function handleGateSourceFieldChange(nextRuleType: RuleType) {
+    const matchingTemplate = templates.find((template) => template.ruleType === nextRuleType);
+    handleConfigLabelChange(matchingTemplate?.configLabel ?? configLabel);
   }
 
   function handleUnitChange(nextUnit: string) {
@@ -125,13 +131,25 @@ export default function AddRuleDialog({
         selectedConfigOptionLabel={selectedTemplate?.businessLabel ?? ""}
         description={description}
         enumOptions={enumOptions}
+        gateRuleEditor={
+          isGateRule && ruleType
+            ? {
+                onSourceFieldChange: handleGateSourceFieldChange,
+                onValueChange: handleValueChange,
+                previewText,
+                requiredValueOptions,
+                selectedRuleType: ruleType,
+                sourceFieldOptions,
+                value,
+              }
+            : undefined
+        }
+        levelRuleEditor={
+          isLevelRule ? { helperText: "Employees must have at least this responsibility level to qualify.", onValueChange: handleValueChange, previewText, value } : undefined
+        }
         previewText={previewText}
         ruleLabel={ruleLabel}
-        onConfigLabelChange={(businessLabel) => {
-          const matchingTemplate = templates.find((template) => template.businessLabel === businessLabel);
-
-          handleConfigLabelChange(matchingTemplate?.configLabel ?? businessLabel);
-        }}
+        onConfigLabelChange={(businessLabel) => handleConfigLabelChange(templates.find((template) => template.businessLabel === businessLabel)?.configLabel ?? businessLabel)}
         onDescriptionChange={(nextDescription) => handleDescriptionChange(nextDescription, previewText)}
         onNameChange={setName}
         onUnitChange={handleUnitChange}
@@ -143,13 +161,7 @@ export default function AddRuleDialog({
         valueType={valueType}
       />
       <RuleApprovalSection approvalRole={approvalRole} onApprovalRoleChange={setApprovalRole} />
-      {isDiscardConfirmOpen ? (
-        <DiscardChangesDialog
-          description="Your edits to this rule will not be saved."
-          onClose={() => setIsDiscardConfirmOpen(false)}
-          onConfirm={onClose}
-        />
-      ) : null}
+      {isDiscardConfirmOpen ? <DiscardChangesDialog description="Your edits to this rule will not be saved." onClose={() => setIsDiscardConfirmOpen(false)} onConfirm={onClose} /> : null}
     </AddRuleDialogFrame>
   );
 }

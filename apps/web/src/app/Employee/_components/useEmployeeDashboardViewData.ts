@@ -90,7 +90,7 @@ export function useEmployeeDashboardViewData({
               : "Unable to refresh eligibility results.",
         });
       });
-  }, [dashboardQuery, employeeId, recalculateEmployeeEligibility, shouldSkip]);
+  }, [benefitRequestsQuery, dashboardQuery, employeeId, recalculateEmployeeEligibility, shouldSkip]);
 
   if (shouldSkip) {
     return {

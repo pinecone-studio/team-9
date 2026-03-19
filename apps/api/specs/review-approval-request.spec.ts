@@ -313,4 +313,39 @@ describe("reviewApprovalRequest", () => {
       ),
     ).rejects.toThrow("A review comment is required when rejecting a request");
   });
+
+  it("allows the requester to cancel their own pending approval request", async () => {
+    await bootstrapReviewApprovalRequestFixtures();
+
+    const result = await reviewApprovalRequest(
+      {
+        DB: env.DB,
+        CONTRACTS_BUCKET: {} as R2Bucket,
+      },
+      {
+        input: {
+          approved: false,
+          id: "approval-benefit-a",
+          reviewComment: "REQUEST_CANCELLED_BY_REQUESTER",
+          reviewedBy: "requester@example.com",
+        },
+      },
+    );
+
+    expect(result.status).toBe("rejected");
+    expect(result.reviewed_by).toBe("requester@example.com");
+    expect(result.review_comment).toBe("REQUEST_CANCELLED_BY_REQUESTER");
+
+    const approvalRow = await env.DB.prepare(`
+      SELECT status, reviewed_by, review_comment
+      FROM approval_requests
+      WHERE id = 'approval-benefit-a'
+    `).first<{ status: string; reviewed_by: string | null; review_comment: string | null }>();
+
+    expect(approvalRow).toEqual({
+      review_comment: "REQUEST_CANCELLED_BY_REQUESTER",
+      reviewed_by: "requester@example.com",
+      status: "rejected",
+    });
+  });
 });

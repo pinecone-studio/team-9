@@ -93,7 +93,7 @@ export default function RuleSectionList({ currentUserIdentifier, currentUserRole
       setSubmitting(false);
     }
   }
-  async function handleSaveRule(payload: { approvalRole: ApprovalRoleValue; description: string; id: string; measurement?: string; name: string; optionsJson?: string; value?: string }) {
+  async function handleSaveRule(payload: { approvalRole: ApprovalRoleValue; description: string; id: string; measurement?: string; name: string; optionsJson?: string; ruleType?: RuleType; value?: string; valueType?: RuleValueType }) {
     if (!editingRule) return;
     setSubmitting(true);
     try {
@@ -143,7 +143,7 @@ export default function RuleSectionList({ currentUserIdentifier, currentUserRole
         sections={sections}
       />
       {activeSection && <AddRuleDialog employeeRoles={employeeRoles} onClose={() => setActiveSection(null)} onSubmit={handleAddRule} sectionTitle={activeSection} submitting={submitting} />}
-      {editingRule && <EditRuleDialog onDelete={handleDeleteRule} onClose={() => setEditingRule(null)} onSave={handleSaveRule} rule={editingRule} submitting={submitting} />}
+      {editingRule && <EditRuleDialog employeeRoles={employeeRoles} onDelete={handleDeleteRule} onClose={() => setEditingRule(null)} onSave={handleSaveRule} rule={editingRule} submitting={submitting} />}
       <RuleCancelRequestDialog
         currentUserIdentifier={currentUserIdentifier}
         onCancelled={async () => {

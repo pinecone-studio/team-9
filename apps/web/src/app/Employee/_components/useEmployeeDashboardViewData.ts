@@ -8,7 +8,6 @@ import {
 } from "@/shared/apollo/generated";
 
 import { hasMissingActiveBenefitRecords } from "./employee-dashboard-benefits";
-import type { DashboardQueryResult } from "./employee-dashboard.graphql";
 import {
   buildEmployeeDashboardViewData,
   buildEmptyDashboardData,

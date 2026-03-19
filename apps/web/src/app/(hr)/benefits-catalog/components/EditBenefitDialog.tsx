@@ -7,7 +7,6 @@ import {
   HR_DIALOG_MAX_HEIGHT_CLASS,
   HR_DIALOG_OVERLAY_BASE_CLASS,
 } from "@/shared/ui/dialog-styles";
-
 import ArchiveBenefitConfirmDialog from "./ArchiveBenefitConfirmDialog";
 import EditBenefitDialogFooter from "./EditBenefitDialogFooter";
 import EditBenefitDialogForm from "./EditBenefitDialogForm";

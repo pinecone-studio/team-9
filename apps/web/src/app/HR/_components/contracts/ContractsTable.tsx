@@ -59,6 +59,7 @@ export function ContractsTableSkeleton() {
 type ContractsTableProps = {
   contractsLoading: boolean;
   loading: boolean;
+  onAcceptedClick: (row: ContractRow) => void;
   onRenew: (row: ContractRow) => void;
   onUpload: (row: ContractRow) => void;
   onView: (row: ContractRow) => void;
@@ -68,6 +69,7 @@ type ContractsTableProps = {
 export default function ContractsTable({
   contractsLoading,
   loading,
+  onAcceptedClick,
   onRenew,
   onUpload,
   onView,
@@ -102,7 +104,16 @@ export default function ContractsTable({
                 <td className="px-2 py-[16.5px] text-[14px] leading-5 whitespace-nowrap text-[#737373]">{row.effectiveDate}</td>
                 <td className="px-2 py-[16.5px] text-[14px] leading-5 whitespace-nowrap text-[#737373]">{row.expiryDate}</td>
                 <td className="px-2 py-[15.5px]">{renderStatusBadge(row.status)}</td>
-                <td className="px-2 py-[16.5px] text-[14px] leading-5 text-[#737373]"><span className="inline-flex items-center gap-1.5"><Users className="h-[14px] w-[14px]" />{row.acceptedCount} accepted</span></td>
+                <td className="px-2 py-[16.5px] text-[14px] leading-5 text-[#737373]">
+                  <button
+                    className="inline-flex items-center gap-1.5 rounded-[8px] px-1 py-0.5 text-left transition hover:bg-[#F5F5F5] hover:text-[#0A0A0A]"
+                    onClick={() => onAcceptedClick(row)}
+                    type="button"
+                  >
+                    <Users className="h-[14px] w-[14px]" />
+                    {row.acceptedCount} accepted
+                  </button>
+                </td>
                 <td className="px-0 py-[11px] pr-[18px]">
                   <div className="flex h-8 items-center justify-end gap-1">
                     <button className="inline-flex h-8 min-w-[75px] items-center justify-center gap-1.5 rounded-[8px] px-2.5 text-[14px] leading-5 font-medium text-[#0A0A0A]" onClick={() => onView(row)} type="button"><Eye className="h-4 w-4" />View</button>

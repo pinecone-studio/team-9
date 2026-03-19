@@ -15,6 +15,23 @@ export const BenefitContractForContractsDocument = gql`
   }
 `;
 
+export const BenefitAcceptedEmployeesDocument = gql`
+  query BenefitAcceptedEmployees($benefitId: ID!) {
+    benefitAcceptedEmployees(benefitId: $benefitId) {
+      id
+      name
+      email
+      position
+      department
+      employmentStatus
+      hireDate
+      responsibilityLevel
+      okrSubmitted
+      lateArrivalCount
+    }
+  }
+`;
+
 export const UploadContractDocument = gql`
   mutation UploadContract($input: ContractInput!) {
     uploadContract(input: $input) {

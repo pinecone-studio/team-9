@@ -8,6 +8,7 @@ import { getContractSignedUrl } from './get-contract-signed-url';
 import { getContractSignedUrlByBenefit } from './get-contract-signed-url-by-benefit';
 import { getEmployeeById } from './get-employee-by-id';
 import { listAuditLogEntries } from './list-audit-log-entries';
+import { listBenefitAcceptedEmployees } from './list-benefit-accepted-employees';
 import { listApprovalRequests } from './list-approval-requests';
 import { listBenefitCatalog } from './list-benefit-catalog';
 import { listBenefitCategories } from './list-benefit-categories';
@@ -26,6 +27,7 @@ import type {
 	QueryEmployeeEligibilityArgs,
 	QueryListAuditLogEntriesArgs,
 	QueryApprovalRequestsArgs,
+	QueryBenefitAcceptedEmployeesArgs,
 	QueryBenefitRequestsArgs,
 	QueryBenefitContractArgs,
 	QueryContractSignedUrlArgs,
@@ -44,6 +46,12 @@ export const queryResolvers = {
 
 	employeeByEmail: (_: unknown, { email }: QueryEmployeeByEmailArgs, { DB }: GraphQLContext) =>
 		getEmployeeByEmail(DB, email),
+
+	benefitAcceptedEmployees: (
+		_: unknown,
+		{ benefitId }: QueryBenefitAcceptedEmployeesArgs,
+		{ DB }: GraphQLContext,
+	) => listBenefitAcceptedEmployees(DB, benefitId),
 
 	benefitCategories: (_: unknown, __: unknown, { DB }: GraphQLContext) => listBenefitCategories(DB),
 

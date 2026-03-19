@@ -107,14 +107,14 @@ export default function EmployeeDashboardSkeleton() {
         </section>
 
         <section className="mt-7 flex flex-col gap-[28px] pb-16">
-          {Array.from({ length: 2 }, (_, groupIndex) => (
+          {Array.from({ length: 2 }, (_group, groupIndex) => (
             <div className="flex flex-col gap-5" key={`employee-benefit-group-skeleton-${groupIndex}`}>
               <div className="flex items-center justify-between">
                 <SkeletonBlock className="h-7 w-56" />
                 <SkeletonBlock className="h-5 w-16 rounded-full" />
               </div>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 3 }, (_, cardIndex) => (
+                {Array.from({ length: 3 }, (_card, cardIndex) => (
                   <SectionCardSkeleton
                     className="p-4 shadow-none"
                     key={`employee-benefit-card-skeleton-${groupIndex}-${cardIndex}`}

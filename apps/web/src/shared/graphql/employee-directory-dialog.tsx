@@ -8,25 +8,19 @@ import {
 } from "@/shared/apollo/generated";
 import type { Employee } from "@/shared/apollo/types";
 import EmployeeDirectoryDialogBenefits from "@/shared/graphql/employee-directory-dialog-benefits";
+import EmployeeDirectoryDialogLoading from "@/shared/graphql/employee-directory-dialog-loading";
 import EmployeeEditDialog from "@/shared/graphql/employee-edit-dialog";
 import EmployeeDirectoryDialogOverview from "@/shared/graphql/employee-directory-dialog-overview";
 import EmployeeDirectoryDialogRecentActions from "@/shared/graphql/employee-directory-dialog-recent-actions";
 import { formatStatusLabel } from "@/shared/graphql/employee-directory-dialog-utils";
 import { getStatusBadgeTone } from "@/shared/graphql/employees-page-view-utils";
-
 const BULK_OVERRIDE_KEY = "__bulk__";
-
 type EmployeeDirectoryDialogProps = {
   allEmployees: Employee[];
   currentUserIdentifier: string | null;
   employee: Employee;
   onClose: () => void;
 };
-
-function LoadingBlock({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-md bg-slate-200/80 ${className}`} />;
-}
-
 export default function EmployeeDirectoryDialog({
   allEmployees,
   currentUserIdentifier,
@@ -153,9 +147,9 @@ export default function EmployeeDirectoryDialog({
 
             {loading && !data ? (
               <div className="space-y-3">
-                <LoadingBlock className="h-24 w-full" />
-                <LoadingBlock className="h-20 w-full" />
-                <LoadingBlock className="h-20 w-full" />
+                <EmployeeDirectoryDialogLoading className="h-24 w-full" />
+                <EmployeeDirectoryDialogLoading className="h-20 w-full" />
+                <EmployeeDirectoryDialogLoading className="h-20 w-full" />
               </div>
             ) : (
               <div className="space-y-6">

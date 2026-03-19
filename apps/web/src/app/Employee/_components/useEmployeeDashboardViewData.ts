@@ -102,6 +102,7 @@ export function useEmployeeDashboardViewData({
     return {
       dashboardData: emptyDashboardData,
       errorMessage: null,
+      isInitialLoading: false,
       isLoading: false,
     };
   }
@@ -136,10 +137,14 @@ export function useEmployeeDashboardViewData({
     dashboardQuery.error?.message ??
     benefitRequestsQuery.error?.message ??
     null;
+  const isInitialLoading =
+    (dashboardQuery.loading && !dashboardQuery.data) ||
+    (benefitRequestsQuery.loading && !benefitRequestsQuery.data);
 
   return {
     dashboardData,
     errorMessage,
+    isInitialLoading,
     isLoading:
       dashboardQuery.loading ||
       benefitRequestsQuery.loading ||

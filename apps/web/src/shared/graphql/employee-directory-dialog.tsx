@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useEmployeeDirectoryDialogQuery,
   useOverrideEmployeeBenefitEligibilityMutation,
@@ -36,6 +36,7 @@ export default function EmployeeDirectoryDialog({
   const [actionError, setActionError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [overridingKey, setOverridingKey] = useState<string | null>(null);
+  const isEditDialogOpenRef = useRef(false);
   const { data, error, loading, refetch } = useEmployeeDirectoryDialogQuery({
     fetchPolicy: "network-only",
     variables: { employeeId: employee.id },
@@ -48,6 +49,7 @@ export default function EmployeeDirectoryDialog({
     !currentUserIdentifier ||
     overridingKey !== null ||
     employeeBenefits.every((benefit) => benefit.status !== "locked");
+  isEditDialogOpenRef.current = isEditDialogOpen;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -55,7 +57,7 @@ export default function EmployeeDirectoryDialog({
     document.body.style.overflow = "hidden";
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !isEditDialogOpenRef.current) {
         onClose();
       }
     }
@@ -97,6 +99,24 @@ export default function EmployeeDirectoryDialog({
     }
   }
 
+  if (isEditDialogOpen) {
+    return (
+      <EmployeeEditDialog
+        employee={dialogEmployee}
+        employees={allEmployees}
+        onClose={() => setIsEditDialogOpen(false)}
+        onDeleted={() => {
+          setIsEditDialogOpen(false);
+          onClose();
+        }}
+        onSaved={async () => {
+          await refetch();
+          setIsEditDialogOpen(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-[70] overflow-y-auto bg-black/50 px-4 py-6"
@@ -106,7 +126,14 @@ export default function EmployeeDirectoryDialog({
         }
       }}
     >
-      <div className="mx-auto flex min-h-full items-center justify-center">
+      <div
+        className="mx-auto flex min-h-full items-center justify-center"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div className="relative flex h-[780px] max-h-[calc(100vh-48px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[12px] border border-[#D4D4D8] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)]">
           <button aria-label="Close dialog" className="absolute top-3 right-3 rounded-[8px] p-2 text-[#737373]" onClick={onClose} type="button"><X className="h-5 w-5" /></button>
           <div className="shrink-0 border-b border-[#E5E5E5] px-6 py-5">
@@ -154,22 +181,6 @@ export default function EmployeeDirectoryDialog({
           </div>
         </div>
       </div>
-
-      {isEditDialogOpen ? (
-        <EmployeeEditDialog
-          employee={dialogEmployee}
-          employees={allEmployees}
-          onClose={() => setIsEditDialogOpen(false)}
-          onDeleted={() => {
-            setIsEditDialogOpen(false);
-            onClose();
-          }}
-          onSaved={async () => {
-            await refetch();
-            setIsEditDialogOpen(false);
-          }}
-        />
-      ) : null}
     </div>
   );
 }

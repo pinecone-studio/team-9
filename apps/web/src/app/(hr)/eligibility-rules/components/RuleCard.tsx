@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { useState } from "react";
 
 import { formatRelativeTimestamp } from "@/app/(hr)/requests/components/approval-request-time-formatters";
@@ -5,17 +6,20 @@ import type { RuleCardModel } from "../types";
 import { getRuleConditionLabel } from "./rule-card-condition";
 
 type RuleCardProps = RuleCardModel & {
+  onCancelRequest?: (requestId: string) => void;
   onEdit?: () => void;
   onOpenRequest?: (requestId: string) => void;
 };
 
 export default function RuleCard({
   description,
+  lastUpdatedAt,
   linkedBenefits,
   metricLabel,
   metricSuffix,
   metricValue,
   name,
+  onCancelRequest,
   onEdit,
   onOpenRequest,
   operator,
@@ -23,6 +27,7 @@ export default function RuleCard({
   usageCount,
 }: RuleCardProps) {
   const [showUsage, setShowUsage] = useState(false);
+  const activePendingRequest = pendingRequest ?? null;
   const isPending = Boolean(pendingRequest);
   const footerStatusClassName = isPending ? "text-[#BB4D00]" : "text-[#007A55]";
   const footerDotClassName = isPending ? "bg-[#FE9A00]" : "bg-[#00BC7D]";
@@ -39,12 +44,14 @@ export default function RuleCard({
     operator,
   );
   const relativeText = pendingRequest
-    ? formatRelativeTimestamp(pendingRequest.createdAt)
-    : "Current definition";
+    ? `Submitted ${formatRelativeTimestamp(activePendingRequest?.createdAt ?? "")}`
+    : lastUpdatedAt
+      ? `Last updated ${formatRelativeTimestamp(lastUpdatedAt)}`
+      : "Last updated recently";
 
   function handleCardClick() {
     if (pendingRequest) {
-      onOpenRequest?.(pendingRequest.id);
+      onOpenRequest?.(activePendingRequest?.id ?? "");
       return;
     }
 
@@ -66,7 +73,7 @@ export default function RuleCard({
         tabIndex={0}
       >
         <div className="flex w-full flex-col gap-4 px-5 pt-5">
-          <div className="flex min-h-[42px] w-full items-start">
+          <div className="flex min-h-[42px] w-full items-start justify-between gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <h3 className="truncate text-[14px] leading-[18px] font-semibold text-[#080C0F]">
                 {name}
@@ -75,6 +82,32 @@ export default function RuleCard({
                 {description}
               </p>
             </div>
+            {isPending ? (
+              <button
+                className="shrink-0 rounded-[4px] border border-[#FFD6DB] bg-[#FFF1F2] px-2 py-[5px] text-[12px] leading-4 font-medium text-[#EF4444]"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onCancelRequest?.(activePendingRequest?.id ?? "");
+                }}
+                type="button"
+              >
+                Cancel Request
+              </button>
+            ) : (
+              <button
+                className="box-border flex h-[24px] shrink-0 items-center justify-center gap-1 rounded-[4px] border border-[#E5E7EB] bg-white px-3 text-[#52525B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit?.();
+                }}
+                type="button"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="text-[14px] leading-4 font-medium text-[#52525B]">
+                  edit
+                </span>
+              </button>
+            )}
           </div>
 
           <div className="flex h-[72px] w-full flex-col items-start rounded-[6px] border border-[rgba(222,226,228,0.6)] bg-[rgba(239,242,245,0.3)] px-4 py-3">

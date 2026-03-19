@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import DiscardChangesDialog from "@/app/(hr)/components/DiscardChangesDialog";
 import { ApprovalRole, RuleValueType } from "@/shared/apollo/generated";
 import type { Operator, RuleType } from "@/shared/apollo/generated";
 
@@ -38,6 +39,7 @@ export default function AddRuleDialog({
   sectionTitle,
   submitting = false,
 }: AddRuleDialogProps) {
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const ruleLabel = getRuleTypeLabel(sectionTitle);
   const templates = useMemo(() => getBackendRuleTemplates(sectionTitle, { employeeRoles }), [employeeRoles, sectionTitle]);
   const initialTemplate = templates[0];
@@ -111,7 +113,7 @@ export default function AddRuleDialog({
 
   return (
     <AddRuleDialogFrame
-      onClose={onClose}
+      onClose={() => setIsDiscardConfirmOpen(true)}
       onSubmit={() => void handleSubmit()}
       ruleLabel={ruleLabel}
       submitDisabled={submitting || !name.trim() || !description.trim()}
@@ -141,6 +143,13 @@ export default function AddRuleDialog({
         valueType={valueType}
       />
       <RuleApprovalSection approvalRole={approvalRole} onApprovalRoleChange={setApprovalRole} />
+      {isDiscardConfirmOpen ? (
+        <DiscardChangesDialog
+          description="Your edits to this rule will not be saved."
+          onClose={() => setIsDiscardConfirmOpen(false)}
+          onConfirm={onClose}
+        />
+      ) : null}
     </AddRuleDialogFrame>
   );
 }

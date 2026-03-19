@@ -10,6 +10,7 @@ type WellnessCategorySectionProps = {
   draftBenefit: BenefitDraft | null;
   formatCategoryLabel: (value: string) => string;
   onAddBenefit: (categoryId: string | null) => void;
+  onCancelRequest: (requestId: string) => void;
   onContinueDraft: () => void;
   onDeleteDraft: () => void;
   onEditBenefit: (benefit: BenefitCardData) => void;
@@ -22,6 +23,7 @@ export default function WellnessCategorySection({
   draftBenefit,
   formatCategoryLabel,
   onAddBenefit,
+  onCancelRequest,
   onContinueDraft,
   onDeleteDraft,
   onEditBenefit,
@@ -55,6 +57,7 @@ export default function WellnessCategorySection({
           <BenefitCard
             key={`${title}-${card.title}`}
             {...card}
+            onCancelRequest={onCancelRequest}
             onEdit={onEditBenefit}
             onOpenRequest={onOpenRequest}
           />

@@ -56,7 +56,7 @@ export default function AddBenefitDialogForm({
   vendorName,
 }: AddBenefitDialogFormProps) {
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex w-full flex-col items-start gap-8 px-[2px]">
         <div className="sticky top-0 z-10 flex w-full flex-col items-start gap-2 bg-white pb-2">
           <h2 className="w-full text-[18px] leading-7 font-semibold text-[#0F172A]">

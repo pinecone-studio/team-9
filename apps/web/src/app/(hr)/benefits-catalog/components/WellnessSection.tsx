@@ -11,7 +11,6 @@ import WellnessCategorySection from "./WellnessCategorySection";
 import WellnessSectionDialogs from "./WellnessSectionDialogs";
 import WellnessSectionNotice from "./WellnessSectionNotice";
 import { useWellnessCatalogState } from "./useWellnessCatalogState";
-
 type WellnessSectionProps = {
   currentUserIdentifier: string;
   requestedBenefitId?: string | null;
@@ -34,6 +33,7 @@ export default function WellnessSection({
   const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [selectedCancelRequestId, setSelectedCancelRequestId] = useState<string | null>(null);
   const {
     benefitSections,
     closeAddDialog,
@@ -101,7 +101,6 @@ export default function WellnessSection({
           </div>
         </section>
       ) : null}
-
       {showMainContent ? (
         <section className="mx-auto mt-[30px] flex w-full max-w-[1300px] flex-col gap-[34px] px-4 sm:px-0">
           {benefitSections.map((section, index) => (
@@ -113,6 +112,7 @@ export default function WellnessSection({
                 draftBenefit={draftBenefit}
                 formatCategoryLabel={formatCategoryLabel}
                 onAddBenefit={openNewBenefitDialog}
+                onCancelRequest={setSelectedCancelRequestId}
                 onContinueDraft={openDraftBenefitDialog}
                 onDeleteDraft={() => setDraftBenefit(null)}
                 onEditBenefit={setSelectedBenefit}
@@ -125,9 +125,7 @@ export default function WellnessSection({
               ) : null}
             </div>
           ))}
-
           <div className="h-px w-full bg-[#DBDEE1]" />
-
           <div className="flex w-full flex-col items-start gap-6">
             <h2 className="text-[16px] leading-[21px] font-semibold text-[#060B10]">
               Create a new category
@@ -141,7 +139,6 @@ export default function WellnessSection({
           </div>
         </section>
       ) : null}
-
       <WellnessSectionDialogs
         creatingCategory={creatingCategory}
         currentUserIdentifier={currentUserIdentifier}
@@ -163,11 +160,17 @@ export default function WellnessSection({
           await refetchApprovalRequests();
           await refetch();
         }}
+        onRequestCancelled={async () => {
+          await refetchApprovalRequests();
+          await refetch();
+        }}
         onRequestClose={() => setSelectedRequestId(null)}
+        onRequestCancelClose={() => setSelectedCancelRequestId(null)}
         onRequestReviewed={async () => {
           await refetchApprovalRequests();
           await refetch();
         }}
+        pendingCancelRequestId={selectedCancelRequestId}
         onSubmitted={setNoticeMessage}
         pendingRequestId={selectedRequestId}
         selectedBenefit={selectedBenefit}

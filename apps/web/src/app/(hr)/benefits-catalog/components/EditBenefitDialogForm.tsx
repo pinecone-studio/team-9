@@ -7,7 +7,11 @@ import EditBenefitRulesSection from "./EditBenefitRulesSection";
 import EditBenefitStatusSection from "./EditBenefitStatusSection";
 import EditBenefitValueSection from "./EditBenefitValueSection";
 import type { ApprovalRoleValue } from "./edit-benefit-dialog.graphql";
-import type { AssignedBenefitRule, RuleOption } from "./edit-benefit-dialog.types";
+import type {
+  AssignedBenefitRule,
+  RuleOption,
+  SpecificApproverOption,
+} from "./edit-benefit-dialog.types";
 
 type EditBenefitDialogFormProps = {
   approvalRole: ApprovalRoleValue;
@@ -30,11 +34,14 @@ type EditBenefitDialogFormProps = {
   onNameChange: (value: string) => void;
   onRequiresContractChange: (checked: boolean) => void;
   onSelectedRuleIdChange: (value: string) => void;
+  onSpecificApproverChange: (value: string) => void;
   onSubsidyPercentChange: (value: string) => void;
   onVendorNameChange: (value: string) => void;
   isActive: boolean;
   requiresContract: boolean;
   selectedRuleId: string;
+  specificApproverId: string;
+  specificApproverOptions: SpecificApproverOption[];
   subsidyPercentValue: string;
   vendorNameValue: string;
 };
@@ -60,17 +67,20 @@ export default function EditBenefitDialogForm({
   onNameChange,
   onRequiresContractChange,
   onSelectedRuleIdChange,
+  onSpecificApproverChange,
   onSubsidyPercentChange,
   onVendorNameChange,
   isActive,
   requiresContract,
   selectedRuleId,
+  specificApproverId,
+  specificApproverOptions,
   subsidyPercentValue,
   vendorNameValue,
 }: EditBenefitDialogFormProps) {
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex flex-col gap-8 px-[2px]">
+    <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex w-full flex-col gap-8 px-[2px]">
         <div className="flex flex-col gap-2">
           <h2 className="text-[18px] leading-7 font-semibold text-[#0F172A]">Edit Benefit</h2>
           <div className="flex items-center gap-2 text-[14px] leading-5 text-[#64748B]">
@@ -152,6 +162,9 @@ export default function EditBenefitDialogForm({
         <EditBenefitApprovalSection
           approvalRole={approvalRole}
           onApprovalRoleChange={onApprovalRoleChange}
+          onSpecificApproverChange={onSpecificApproverChange}
+          specificApproverId={specificApproverId}
+          specificApproverOptions={specificApproverOptions}
         />
       </div>
     </div>

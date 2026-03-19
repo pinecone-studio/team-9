@@ -11,7 +11,7 @@ export default function AddBenefitCard({
 }: AddBenefitCardProps) {
   return (
     <button
-      className="flex h-[184px] w-full flex-col items-center justify-center gap-2 rounded-[8px] border-2 border-dashed border-[rgba(219,222,225,0.6)] text-[#51565B] xl:max-w-[420px]"
+      className="flex h-[184px] w-full flex-col items-center justify-center gap-2 rounded-[8px] border-2 border-dashed border-[rgba(219,222,225,0.6)] bg-white text-[#51565B] xl:max-w-[420px]"
       onClick={onClick}
       type="button"
     >

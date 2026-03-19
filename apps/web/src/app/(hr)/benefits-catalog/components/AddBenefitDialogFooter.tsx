@@ -12,7 +12,7 @@ export default function AddBenefitDialogFooter({
   saving,
 }: AddBenefitDialogFooterProps) {
   return (
-    <div className="sticky bottom-0 z-10 shrink-0 border-t border-[#E6EBF0] bg-white px-6 py-4">
+    <div className="shrink-0 border-t border-[#E6EBF0] bg-white pt-4">
       <div className="flex w-full justify-end">
         <div className="flex items-center gap-[9px]">
           <button

@@ -13,6 +13,12 @@ export type AvailableRuleDefinition = {
 };
 
 export type AddBenefitRulesQuery = {
+  employees?: Array<{
+    email: string;
+    id: string;
+    name: string;
+    position: string;
+  } | null> | null;
   ruleDefinitions: AvailableRuleDefinition[];
 };
 
@@ -57,6 +63,12 @@ export type CreateBenefitVariables = {
 
 export const ADD_BENEFIT_RULES_QUERY = gql`
   query AddBenefitRules {
+    employees {
+      id
+      name
+      email
+      position
+    }
     ruleDefinitions {
       id
       name

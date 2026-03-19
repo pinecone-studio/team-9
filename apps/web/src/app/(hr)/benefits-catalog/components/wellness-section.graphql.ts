@@ -27,6 +27,14 @@ export type CreateBenefitCategoryVariables = {
   name: string;
 };
 
+export type DeleteBenefitCategoryMutation = {
+  deleteBenefitCategory: boolean;
+};
+
+export type DeleteBenefitCategoryVariables = {
+  id: string;
+};
+
 export const BENEFIT_CATALOG_QUERY = gql`
   query BenefitCatalogPage {
     benefitCategories {
@@ -60,5 +68,11 @@ export const CREATE_BENEFIT_CATEGORY_MUTATION = gql`
       id
       name
     }
+  }
+`;
+
+export const DELETE_BENEFIT_CATEGORY_MUTATION = gql`
+  mutation DeleteBenefitCategory($id: ID!) {
+    deleteBenefitCategory(id: $id)
   }
 `;

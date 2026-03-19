@@ -5,7 +5,10 @@ import BenefitDialogToggle from "./BenefitDialogToggle";
 import EditBenefitApprovalSection from "./EditBenefitApprovalSection";
 import EditBenefitRulesSection from "./EditBenefitRulesSection";
 import type { ApprovalRoleValue, AvailableRuleDefinition } from "./add-benefit-dialog.graphql";
-import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
+import type {
+  AssignedBenefitRule,
+  SpecificApproverOption,
+} from "./edit-benefit-dialog.types";
 
 type AddBenefitDialogFormProps = {
   approvalRole: ApprovalRoleValue;
@@ -24,10 +27,13 @@ type AddBenefitDialogFormProps = {
   onRequiresContractChange: (value: boolean) => void;
   onRuleDelete: (ruleId: string) => void;
   onSelectedRuleIdChange: (value: string) => void;
+  onSpecificApproverChange: (value: string) => void;
   onSubsidyPercentChange: (value: string) => void;
   onVendorNameChange: (value: string) => void;
   requiresContract: boolean;
   selectedRuleId: string;
+  specificApproverId: string;
+  specificApproverOptions: SpecificApproverOption[];
   subsidyPercent: string;
   vendorName: string;
 };
@@ -48,10 +54,13 @@ export default function AddBenefitDialogForm({
   onRequiresContractChange,
   onRuleDelete,
   onSelectedRuleIdChange,
+  onSpecificApproverChange,
   onSubsidyPercentChange,
   onVendorNameChange,
   requiresContract,
   selectedRuleId,
+  specificApproverId,
+  specificApproverOptions,
   subsidyPercent,
   vendorName,
 }: AddBenefitDialogFormProps) {
@@ -149,6 +158,9 @@ export default function AddBenefitDialogForm({
         <EditBenefitApprovalSection
           approvalRole={approvalRole}
           onApprovalRoleChange={onApprovalRoleChange}
+          onSpecificApproverChange={onSpecificApproverChange}
+          specificApproverId={specificApproverId}
+          specificApproverOptions={specificApproverOptions}
         />
       </div>
     </div>

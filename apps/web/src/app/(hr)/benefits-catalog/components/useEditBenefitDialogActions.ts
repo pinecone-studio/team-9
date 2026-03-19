@@ -1,13 +1,12 @@
 import { useMutation } from "@apollo/client/react";
-import { ApprovalActionType, ApprovalEntityType } from "@/shared/apollo/generated";
 import { buildContractUploadInput } from "./contract-upload-client";
-import { buildArchiveApprovalSnapshot, finalizeBenefitSubmission } from "./useEditBenefitDialogActions.archive";
+import { finalizeBenefitUpdateRequestSubmission } from "./useEditBenefitDialogActions.archive";
 import { buildBenefitInput, buildRuleAssignments, isMissingIsActiveFieldError, validateBenefitSaveInput } from "./useEditBenefitDialogActions.helpers";
 import {
-  CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION,
+  DELETE_BENEFIT_MUTATION,
+  type DeleteBenefitMutation,
+  type DeleteBenefitVariables,
   SUBMIT_BENEFIT_UPDATE_REQUEST_MUTATION,
-  type CreateBenefitDeleteApprovalRequestMutation,
-  type CreateBenefitDeleteApprovalRequestVariables,
   type SubmitBenefitUpdateRequestMutation,
   type SubmitBenefitUpdateRequestVariables,
 } from "./edit-benefit-dialog.graphql";
@@ -18,33 +17,26 @@ export function useEditBenefitDialogActions({
   assignedRules,
   benefitDescription,
   benefitId,
-  benefitName,
-  category,
   categoryId,
   contractFile,
   initialIsActive,
-  initialApprovalRole,
-  initialAssignedRules,
-  initialBenefitDescription,
-  initialIsCore,
   currentUserIdentifier,
   initialRequiresContract,
-  initialSubsidyPercent,
-  initialVendorName,
   isActive,
   isCore,
   name,
   onClose,
+  onDeleted,
   onSaved,
   onSubmitted,
   requiresContract,
   subsidyPercentValue,
   vendorNameValue,
 }: UseEditBenefitDialogActionsProps) {
-  const [createBenefitDeleteApprovalRequest, { loading: deleting }] = useMutation<
-    CreateBenefitDeleteApprovalRequestMutation,
-    CreateBenefitDeleteApprovalRequestVariables
-  >(CREATE_BENEFIT_DELETE_APPROVAL_REQUEST_MUTATION);
+  const [deleteBenefit, { loading: deleting }] = useMutation<
+    DeleteBenefitMutation,
+    DeleteBenefitVariables
+  >(DELETE_BENEFIT_MUTATION);
   const [submitBenefitUpdateRequest, { loading: updating }] = useMutation<
     SubmitBenefitUpdateRequestMutation,
     SubmitBenefitUpdateRequestVariables
@@ -58,49 +50,32 @@ export function useEditBenefitDialogActions({
     const trimmedArchiveComment = archiveComment.trim();
     if (!trimmedArchiveComment) {
       setErrorMessage("Please add an archive comment before submitting.");
-      return;
+      return false;
     }
 
     try {
-      const archiveSnapshot = buildArchiveApprovalSnapshot({
-        archiveComment: trimmedArchiveComment,
-        benefitId,
-        benefitName,
-        category,
-        categoryId,
-        initialApprovalRole,
-        initialAssignedRules,
-        initialBenefitDescription,
-        initialIsActive,
-        initialIsCore,
-        initialRequiresContract,
-        initialSubsidyPercent,
-        initialVendorName,
-      });
-      const result = await createBenefitDeleteApprovalRequest({
-        variables: {
-          input: {
-            actionType: ApprovalActionType.Delete,
-            entityId: benefitId,
-            entityType: ApprovalEntityType.Benefit,
-            payloadJson: JSON.stringify(archiveSnapshot),
-            requestedBy: currentUserIdentifier,
-            snapshotJson: JSON.stringify(archiveSnapshot),
-            targetRole: approvalRole,
-          },
-        },
-      });
-      if (!result.data?.createApprovalRequest.id) {
-        setErrorMessage("Benefit archive request could not be submitted.");
-        return;
+      const result = await deleteBenefit({ variables: { id: benefitId } });
+      if (!result.data?.deleteBenefit) {
+        setErrorMessage("Benefit could not be archived.");
+        return false;
       }
-      await finalizeBenefitSubmission({ approvalRole, onClose, onSaved, onSubmitted });
+
+      try {
+        await onDeleted?.(benefitId);
+        await onSaved?.();
+      } catch {
+        // The archive already succeeded; ignore refresh callback failures.
+      }
+
+      onClose();
+      return true;
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Benefit archive request could not be submitted.",
+          : "Benefit could not be archived.",
       );
+      return false;
     }
   }
 
@@ -147,7 +122,7 @@ export function useEditBenefitDialogActions({
           },
         },
       });
-      await finalizeBenefitSubmission({ approvalRole, onClose, onSaved, onSubmitted });
+      await finalizeBenefitUpdateRequestSubmission({ approvalRole, onClose, onSaved, onSubmitted });
     } catch (error) {
       if (isMissingIsActiveFieldError(error)) {
         setErrorMessage(

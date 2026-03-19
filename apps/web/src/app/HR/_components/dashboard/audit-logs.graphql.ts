@@ -46,10 +46,20 @@ export type AuditLogsEmployeeRecord = {
   position: string;
 };
 
+export type AuditLogsDirectEntryRecord = {
+  action: string;
+  createdAt: string;
+  entityId?: string | null;
+  entityType: string;
+  id: string;
+  metadata?: string | null;
+};
+
 export type AuditLogsPageDataQuery = {
   approvalRequests: AuditLogsApprovalRequestRecord[];
   benefitRequests: AuditLogsBenefitRequestRecord[];
   employees?: AuditLogsEmployeeRecord[] | null;
+  listAuditLogEntries: AuditLogsDirectEntryRecord[];
 };
 
 export const AUDIT_LOGS_PAGE_QUERY = gql`
@@ -96,6 +106,14 @@ export const AUDIT_LOGS_PAGE_QUERY = gql`
       name
       email
       position
+    }
+    listAuditLogEntries(limit: 50) {
+      id
+      action
+      entityType
+      entityId
+      metadata
+      createdAt
     }
   }
 `;

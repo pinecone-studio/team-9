@@ -5,6 +5,11 @@ import {
   type ApprovalRequest,
   type MutationCreateApprovalRequestArgs,
 } from "../../generated/resolvers-types";
+import {
+  scheduleNotification,
+  sendApprovalRequestSubmittedNotification,
+  type NotificationRuntime,
+} from "../../../notifications";
 import { mapApprovalRequest } from "../approval-request-mappers";
 
 function hasEmployeeRequestPayload(payload: unknown): boolean {
@@ -17,10 +22,10 @@ function hasEmployeeRequestPayload(payload: unknown): boolean {
 }
 
 export async function createApprovalRequest(
-  DB: D1Database,
+  env: NotificationRuntime,
   args: MutationCreateApprovalRequestArgs,
 ): Promise<ApprovalRequest> {
-  const db = getDb({ DB });
+  const db = getDb({ DB: env.DB });
   const input = args.input;
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -63,6 +68,16 @@ export async function createApprovalRequest(
     createdAt: now,
     isActive: true,
   });
+
+  scheduleNotification(env, "approval_request_submitted", () =>
+    sendApprovalRequestSubmittedNotification(env, {
+      actionType: input.actionType,
+      entityType: input.entityType,
+      requestId: id,
+      requestedBy,
+      targetRole: input.targetRole,
+    }),
+  );
 
   return mapApprovalRequest({
     id,

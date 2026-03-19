@@ -8,6 +8,11 @@ import type {
   BenefitRequest,
   MutationReviewBenefitRequestArgs,
 } from "../../generated/resolvers-types";
+import {
+  scheduleNotification,
+  sendBenefitRequestReviewedNotification,
+  type NotificationRuntime,
+} from "../../../notifications";
 import { listBenefitRequests } from "../queries/list-benefit-requests";
 
 const ACTIVE_STATUS = "active";
@@ -15,10 +20,10 @@ const ELIGIBLE_STATUS = "eligible";
 const PENDING_STATUS = "pending";
 
 export async function reviewBenefitRequest(
-  DB: D1Database,
+  env: NotificationRuntime,
   args: MutationReviewBenefitRequestArgs,
 ): Promise<BenefitRequest> {
-  const db = getDb({ DB });
+  const db = getDb({ DB: env.DB });
   const input = args.input;
   const reviewComment = input.reviewComment?.trim() || null;
 
@@ -122,12 +127,22 @@ export async function reviewBenefitRequest(
           .where(eq(benefitRequests.id, input.id));
       });
 
-    const result = (await listBenefitRequests(DB, {})).find(
+    const result = (await listBenefitRequests(env.DB, {})).find(
       (request) => request.id === input.id,
     );
     if (!result) {
       throw new Error("Reviewed benefit request could not be loaded");
     }
+
+    scheduleNotification(env, "benefit_request_reviewed", () =>
+      sendBenefitRequestReviewedNotification(env, {
+        approved: input.approved,
+        benefitTitle: result.benefit.title,
+        employeeEmail: result.employee.email,
+        requestId: result.id,
+        reviewerName: result.reviewed_by?.name ?? null,
+      }),
+    );
 
     return result;
   } catch (error) {

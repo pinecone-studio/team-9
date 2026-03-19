@@ -10,6 +10,11 @@ import type {
   BenefitRequest,
   MutationSubmitEmployeeBenefitRequestArgs,
 } from "../../generated/resolvers-types";
+import {
+  scheduleNotification,
+  sendEmployeeBenefitRequestSubmittedNotification,
+  type NotificationRuntime,
+} from "../../../notifications";
 import { listBenefitRequests } from "../queries/list-benefit-requests";
 
 const ACTIVE_STATUS = "active";
@@ -17,10 +22,10 @@ const ELIGIBLE_STATUS = "eligible";
 const PENDING_STATUS = "pending";
 
 export async function submitEmployeeBenefitRequest(
-  DB: D1Database,
+  env: NotificationRuntime,
   args: MutationSubmitEmployeeBenefitRequestArgs,
 ): Promise<BenefitRequest> {
-  const db = getDb({ DB });
+  const db = getDb({ DB: env.DB });
   const input = args.input;
   const benefitId = input.benefitId.trim();
   const employeeId = input.employeeId.trim();
@@ -166,17 +171,56 @@ export async function submitEmployeeBenefitRequest(
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    await db.insert(benefitRequests).values({
-      id,
-      employeeId,
-      benefitId,
-      status: PENDING_STATUS,
-      contractAcceptedAt,
-      contractVersionAccepted,
-      reviewedBy: null,
-      createdAt: now,
-      updatedAt: now,
-    });
+    try {
+      await db.insert(benefitRequests).values({
+        id,
+        employeeId,
+        benefitId,
+        status: PENDING_STATUS,
+        contractAcceptedAt,
+        contractVersionAccepted,
+        reviewedBy: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } catch (error) {
+      if (!isMissingReviewCommentColumnError(error)) {
+        throw error;
+      }
+
+      console.warn(
+        "[submitEmployeeBenefitRequest] review_comment column is unavailable. Saving request without comment persistence.",
+      );
+
+      await env.DB
+        .prepare(
+          `
+            INSERT INTO benefit_requests (
+              id,
+              employee_id,
+              benefit_id,
+              status,
+              contract_version_accepted,
+              contract_accepted_at,
+              reviewed_by,
+              created_at,
+              updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+        )
+        .bind(
+          id,
+          employeeId,
+          benefitId,
+          PENDING_STATUS,
+          contractVersionAccepted,
+          contractAcceptedAt,
+          null,
+          now,
+          now,
+        )
+        .run();
+    }
 
     try {
       await db
@@ -199,12 +243,29 @@ export async function submitEmployeeBenefitRequest(
       throw error;
     }
 
-    const createdRequest = (await listBenefitRequests(DB, { employeeId })).find(
+    const createdRequest = (await listBenefitRequests(env.DB, { employeeId })).find(
       (request) => request.id === id,
     );
     if (!createdRequest) {
       throw new Error("Submitted benefit request could not be loaded");
     }
+
+    console.info("[notifications] Queueing employee benefit request notification.", {
+      approvalRole: "hr_admin",
+      employeeId: createdRequest.employee.id,
+      kind: "employee_benefit_request_submitted",
+      requestId: createdRequest.id,
+    });
+
+    scheduleNotification(env, "employee_benefit_request_submitted", () =>
+      sendEmployeeBenefitRequestSubmittedNotification(env, {
+        approvalRole: "hr_admin",
+        benefitTitle: createdRequest.benefit.title,
+        employeeId: createdRequest.employee.id,
+        employeeName: createdRequest.employee.name,
+        requestId: createdRequest.id,
+      }),
+    );
 
     return createdRequest;
   } catch (error) {
@@ -213,4 +274,17 @@ export async function submitEmployeeBenefitRequest(
     }
     throw new Error("Failed to submit employee benefit request.");
   }
+}
+
+function isMissingReviewCommentColumnError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes("review_comment") &&
+    (
+      message.includes("no such column") ||
+      message.includes("has no column named") ||
+      message.includes('insert into "benefit_requests"')
+    )
+  );
 }

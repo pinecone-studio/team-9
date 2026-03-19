@@ -7,6 +7,11 @@ import { benefits } from '../../../db/schema/benefits';
 import { contracts } from '../../../db/schema/contracts';
 import { deleteFromR2 } from '../../../lib/r2';
 import {
+	scheduleNotification,
+	sendApprovalReviewedNotification,
+	type NotificationRuntime,
+} from '../../../notifications';
+import {
 	ApprovalRequestStatus,
 	ApprovalEntityType,
 	type BenefitRuleAssignmentInput,
@@ -27,7 +32,7 @@ import { deleteBenefit } from './delete-benefit';
 import { deleteRuleDefinition } from './delete-rule-definition';
 import { applyCreateRuleDefinition, applyUpdateRuleDefinition } from './rule-definition-service';
 
-type ReviewApprovalEnv = {
+type ReviewApprovalEnv = NotificationRuntime & {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
 };
@@ -450,6 +455,18 @@ export async function reviewApprovalRequest(
       entityId,
       nextStatus,
     });
+
+    scheduleNotification(env, 'approval_request_reviewed', () =>
+      sendApprovalReviewedNotification(env, {
+        actionType: existing.actionType,
+        approved: input.approved,
+        entityType: existing.entityType,
+        requestId: existing.id,
+        requestedBy: existing.requestedBy,
+        reviewComment,
+        reviewedBy,
+      }),
+    );
 
     logger.done({
       approved: input.approved,

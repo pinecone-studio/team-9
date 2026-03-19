@@ -23,6 +23,7 @@ import {
 	type UpdateBenefitInput,
 } from '../../generated/resolvers-types';
 import { mapApprovalRequest } from '../approval-request-mappers';
+import { createApprovalReviewEvent } from '../approval-request-review-events';
 import {
 	listBenefitIdsForRule,
 	recomputeBenefitEligibilityForAllEmployees,
@@ -208,6 +209,9 @@ export async function reviewApprovalRequest(
 
     const nextStatus = input.approved ? ApprovalRequestStatus.Approved : ApprovalRequestStatus.Rejected;
     const reviewComment = input.reviewComment?.trim() || null;
+    if (!input.approved && !reviewComment) {
+      throw new Error('A review comment is required when rejecting a request');
+    }
     const reviewedAt = new Date().toISOString();
     let entityId = existing.entityId;
     const payload = JSON.parse(existing.payloadJson) as Record<string, unknown>;
@@ -455,6 +459,14 @@ export async function reviewApprovalRequest(
       entityId,
       nextStatus,
     });
+    await createApprovalReviewEvent(env.DB, {
+      approvalRequestId: input.id,
+      approved: input.approved,
+      createdAt: reviewedAt,
+      reviewComment,
+      reviewedBy,
+    });
+    logger.mark('persist-approval-review-event');
 
     scheduleNotification(env, 'approval_request_reviewed', () =>
       sendApprovalReviewedNotification(env, {

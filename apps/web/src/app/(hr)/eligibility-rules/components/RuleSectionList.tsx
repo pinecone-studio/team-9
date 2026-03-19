@@ -26,12 +26,13 @@ import type { RuleCardModel } from "../types";
 
 type RuleSectionListProps = {
   currentUserIdentifier: string;
+  currentUserRole: string;
   onSearchChange: (value: string) => void;
   requestedCreateSection?: string | null;
   searchTerm?: string;
   shouldAutoOpenCreateRule?: boolean;
 };
-export default function RuleSectionList({ currentUserIdentifier, onSearchChange, requestedCreateSection, searchTerm = "", shouldAutoOpenCreateRule = false }: RuleSectionListProps) {
+export default function RuleSectionList({ currentUserIdentifier, currentUserRole, onSearchChange, requestedCreateSection, searchTerm = "", shouldAutoOpenCreateRule = false }: RuleSectionListProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleCardModel | null>(null);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
@@ -154,6 +155,7 @@ export default function RuleSectionList({ currentUserIdentifier, onSearchChange,
       />
       <RulePendingRequestDialog
         currentUserIdentifier={currentUserIdentifier}
+        currentUserRole={currentUserRole}
         onClose={() => setSelectedRequestId(null)}
         onReviewed={async () => {
           await refetchApprovalRequests();

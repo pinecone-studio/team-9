@@ -2,6 +2,7 @@ import {
   ApprovalRequestDocument,
   ApprovalRequestsDocument,
   RequestsEmployeesDirectoryDocument,
+  RuleApprovalRequestReviewDocument,
   ReviewApprovalRequestDocument,
   type ApprovalActionType,
   type ApprovalEntityType,
@@ -10,6 +11,8 @@ import {
   type ApprovalRequestsQuery,
   type ApprovalRole,
   type RequestsEmployeesDirectoryQuery,
+  type RuleApprovalRequestReviewQuery,
+  type RuleApprovalRequestReviewQueryVariables,
   type ReviewApprovalRequestMutation,
   type ReviewApprovalRequestMutationVariables,
 } from "@/shared/apollo/generated";
@@ -29,6 +32,8 @@ export type {
   ApprovalRequestQueryVariables,
   ApprovalRequestsQuery,
   RequestsEmployeesDirectoryQuery,
+  RuleApprovalRequestReviewQuery,
+  RuleApprovalRequestReviewQueryVariables,
   ReviewApprovalRequestMutation,
   ReviewApprovalRequestMutationVariables,
 };
@@ -36,4 +41,6 @@ export type {
 export const APPROVAL_REQUESTS_QUERY = ApprovalRequestsDocument;
 export const REQUESTS_EMPLOYEES_DIRECTORY_QUERY = RequestsEmployeesDirectoryDocument;
 export const APPROVAL_REQUEST_QUERY = ApprovalRequestDocument;
+export const RULE_APPROVAL_REQUEST_REVIEW_QUERY =
+  RuleApprovalRequestReviewDocument;
 export const REVIEW_APPROVAL_REQUEST_MUTATION = ReviewApprovalRequestDocument;

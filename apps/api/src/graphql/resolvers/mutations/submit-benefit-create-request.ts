@@ -21,6 +21,7 @@ import {
 	sendApprovalRequestSubmittedNotification,
 	type NotificationRuntime,
 } from '../../../notifications';
+import { createInitialApprovalRequestEvents } from '../approval-request-review-events';
 
 type SubmitBenefitCreateEnv = NotificationRuntime & {
 	DB: D1Database;
@@ -121,6 +122,12 @@ export async function submitBenefitCreateRequest(
 			snapshotJson: null,
 			createdAt,
 			isActive: true,
+		});
+		await createInitialApprovalRequestEvents(env.DB, {
+			approvalRequestId: id,
+			createdAt,
+			requestedBy,
+			targetRole: prepared.approvalRole,
 		});
 	} catch (error) {
 		if (contractUploadPayload) {

@@ -7,12 +7,14 @@ import RuleSectionList from "./components/RuleSectionList";
 
 type EligibilityRulesPageContentProps = {
   currentUserIdentifier: string;
+  currentUserRole: string;
   requestedCreateSection?: string | null;
   shouldAutoOpenCreateRule?: boolean;
 };
 
 export default function EligibilityRulesPageContent({
   currentUserIdentifier,
+  currentUserRole,
   requestedCreateSection,
   shouldAutoOpenCreateRule = false,
 }: EligibilityRulesPageContentProps) {
@@ -27,6 +29,7 @@ export default function EligibilityRulesPageContent({
     >
       <RuleSectionList
         currentUserIdentifier={currentUserIdentifier}
+        currentUserRole={currentUserRole}
         onSearchChange={setSearchTerm}
         requestedCreateSection={requestedCreateSection}
         searchTerm={searchTerm}

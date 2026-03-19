@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   useApprovalRequestsQuery,
@@ -9,8 +9,10 @@ import {
 } from "@/shared/apollo/generated";
 import ApprovalRequestReviewDialog from "./ApprovalRequestReviewDialog";
 import BenefitRequestReviewDialog from "./BenefitRequestReviewDialog";
+import RequestsReviewToast from "./RequestsReviewToast";
 import RequestsBoardContent from "./RequestsBoardContent";
 import { RequestPeopleProvider } from "./RequestPeopleContext";
+import RuleApprovalRequestReviewDialog from "./RuleApprovalRequestReviewDialog";
 import type { ApprovalRequestRecord } from "./approval-requests.graphql";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
@@ -33,6 +35,7 @@ export default function RequestsBoard({
 }: RequestsBoardProps) {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedBenefitRequestId, setSelectedBenefitRequestId] = useState<string | null>(null);
+  const [reviewToastMessage, setReviewToastMessage] = useState<string | null>(null);
   const {
     data: approvalData,
     error: approvalError,
@@ -70,6 +73,10 @@ export default function RequestsBoard({
       benefitRequests.find((request) => request.id === selectedBenefitRequestId) ?? null,
     [benefitRequests, selectedBenefitRequestId],
   );
+  const selectedApprovalRequest = useMemo(
+    () => approvalRequests.find((request) => request.id === selectedRequestId) ?? null,
+    [approvalRequests, selectedRequestId],
+  );
   const metrics = useMemo(
     () =>
       buildRequestsBoardMetrics({
@@ -92,6 +99,18 @@ export default function RequestsBoard({
     [employeesDirectoryData?.employees],
   );
 
+  useEffect(() => {
+    if (!reviewToastMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setReviewToastMessage(null);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [reviewToastMessage]);
+
   return (
     <RequestPeopleProvider value={employeeDirectory}>
       <RequestsBoardContent
@@ -108,7 +127,25 @@ export default function RequestsBoard({
         overrideRequests={overrideRequests}
       />
 
-      {selectedRequestId ? (
+      {selectedApprovalRequest?.entity_type === "rule" ? (
+        selectedApprovalRequest.action_type === "update" ? (
+          <RuleApprovalRequestReviewDialog
+            currentUserIdentifier={currentUserIdentifier}
+            currentUserRole={currentUserRole}
+            onClose={() => setSelectedRequestId(null)}
+            onReviewed={refetchApprovalRequests}
+            onReviewSuccess={setReviewToastMessage}
+            requestId={selectedApprovalRequest.id}
+          />
+        ) : (
+          <ApprovalRequestReviewDialog
+            currentUserIdentifier={currentUserIdentifier}
+            onClose={() => setSelectedRequestId(null)}
+            onReviewed={refetchApprovalRequests}
+            requestId={selectedApprovalRequest.id}
+          />
+        )
+      ) : selectedRequestId ? (
         <ApprovalRequestReviewDialog
           currentUserIdentifier={currentUserIdentifier}
           onClose={() => setSelectedRequestId(null)}
@@ -126,6 +163,8 @@ export default function RequestsBoard({
           request={selectedBenefitRequest}
         />
       ) : null}
+
+      <RequestsReviewToast message={reviewToastMessage} />
     </RequestPeopleProvider>
   );
 }

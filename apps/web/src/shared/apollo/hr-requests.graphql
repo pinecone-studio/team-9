@@ -23,6 +23,11 @@ query RequestsEmployeesDirectory {
     name
     email
     position
+    employmentStatus
+    hireDate
+    responsibilityLevel
+    okrSubmitted
+    lateArrivalCount
   }
 }
 
@@ -42,6 +47,81 @@ query ApprovalRequest($id: ID!) {
     created_at
     reviewed_at
     is_active
+  }
+}
+
+query RuleApprovalRequestReview($id: ID!) {
+  ruleApprovalRequestReview(id: $id) {
+    title
+    subtitle
+    actionBadgeLabel
+    actionBadgeTone
+    decisionNoteRequiredOnReject
+    request {
+      id
+      entity_id
+      entity_type
+      action_type
+      status
+      target_role
+      requested_by
+      reviewed_by
+      review_comment
+      payload_json
+      snapshot_json
+      created_at
+      reviewed_at
+      is_active
+    }
+    overview {
+      ruleName
+      description
+      ruleTypeLabel
+      valueFieldLabel
+      requirementValue
+      measurement
+      condition
+      technicalExpression
+    }
+    impact {
+      affectedEmployees
+      benefitsUsingRule
+      eligibilityEffect
+      summary
+    }
+    appliedBenefits {
+      id
+      name
+    }
+    submissionDetails {
+      submittedAt
+      status
+      reviewComment
+      reviewedAt
+      submittedBy {
+        identifier
+        name
+        position
+      }
+      assignedApprover {
+        identifier
+        name
+        position
+      }
+      reviewedBy {
+        identifier
+        name
+        position
+      }
+    }
+    auditLog {
+      id
+      label
+      actorType
+      actorIdentifier
+      reviewComment
+      createdAt
+    }
   }
 }
 

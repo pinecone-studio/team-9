@@ -2,7 +2,7 @@ import type { EmployeeMetrics } from '../graphql/generated/resolvers-types';
 
 export type EmployeeRow = {
 	employment_status: string;
-	okr_submitted: number;
+	okr_submitted: boolean | number;
 	late_arrival_count: number;
 	responsibility_level: number;
 	role: string;

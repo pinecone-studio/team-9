@@ -11,6 +11,7 @@ import {
   type NotificationRuntime,
 } from "../../../notifications";
 import { mapApprovalRequest } from "../approval-request-mappers";
+import { createInitialApprovalRequestEvents } from "../approval-request-review-events";
 
 function hasEmployeeRequestPayload(payload: unknown): boolean {
   if (!payload || typeof payload !== "object") {
@@ -67,6 +68,12 @@ export async function createApprovalRequest(
     snapshotJson: input.snapshotJson ?? null,
     createdAt: now,
     isActive: true,
+  });
+  await createInitialApprovalRequestEvents(env.DB, {
+    approvalRequestId: id,
+    createdAt: now,
+    requestedBy,
+    targetRole: input.targetRole,
   });
 
   scheduleNotification(env, "approval_request_submitted", () =>

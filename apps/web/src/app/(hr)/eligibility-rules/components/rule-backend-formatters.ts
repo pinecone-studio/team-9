@@ -19,7 +19,7 @@ export function formatRulePreview(params: {
   }
 
   const suffix = unit ? ` ${unit}` : "";
-  return `This ${ruleLabel.toLowerCase()} rule checks whether "${configLabel}" is at least ${value || "0"}${suffix}.`;
+  return `This ${ruleLabel.toLowerCase()} rule checks whether "${configLabel}" is at most ${value || "0"}${suffix}.`;
 }
 
 export function getValueTypeLabel(valueType: RuleValueType) {

@@ -3,6 +3,7 @@ import type { EmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
 import EmployeeBenefitDialogContractSection from "./EmployeeBenefitDialogContractSection";
 import EmployeeBenefitDialogEligibilitySection from "./EmployeeBenefitDialogEligibilitySection";
 import EmployeeBenefitDialogTimelineSection from "./EmployeeBenefitDialogTimelineSection";
+import { buildContractDateItems } from "./employee-benefit-contract.helpers";
 import {
   buildActiveTimelineItems,
   buildContractAgreementNote,
@@ -36,6 +37,7 @@ export default function EmployeeActiveBenefitDialogContent({
   ruleItems,
 }: EmployeeActiveBenefitDialogContentProps) {
   const timelineItems = buildActiveTimelineItems(request);
+  const contractDateItems = buildContractDateItems(contract);
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +62,20 @@ export default function EmployeeActiveBenefitDialogContent({
       />
 
       {loading ? (
-        <p className="text-[13px] leading-5 text-[#64748B]">Loading activation history...</p>
+        <p className="text-[13px] leading-5 text-[#64748B]">
+          {requiresContract ? "Loading contract dates..." : "Loading activation history..."}
+        </p>
+      ) : requiresContract ? (
+        contractDateItems.length > 0 ? (
+          <EmployeeBenefitDialogTimelineSection
+            items={contractDateItems}
+            title="Contract Dates"
+          />
+        ) : (
+          <p className="rounded-[8px] border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-[13px] leading-5 text-[#92400E]">
+            Contract dates could not be found for this benefit.
+          </p>
+        )
       ) : timelineItems.length > 0 ? (
         <EmployeeBenefitDialogTimelineSection items={timelineItems} />
       ) : (

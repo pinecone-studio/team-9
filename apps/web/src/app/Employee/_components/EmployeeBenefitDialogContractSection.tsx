@@ -3,7 +3,7 @@ import { Eye, FileText } from "lucide-react";
 import {
   formatContractPeriod,
   getContractFileName,
-} from "./employee-benefit-dialog.helpers";
+} from "./employee-benefit-contract.helpers";
 
 type EmployeeBenefitDialogContractSectionProps = {
   acceptedContract: boolean;

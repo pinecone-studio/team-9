@@ -13,6 +13,7 @@ type EmployeeLockedBenefitDialogContentProps = {
   loading: boolean;
   onViewContract: () => void;
   overrideMessage: string | null;
+  contractStatusMessage?: string | null;
   requiresContract: boolean;
   ruleItems: BenefitDialogRuleItem[];
 };
@@ -24,6 +25,7 @@ export default function EmployeeLockedBenefitDialogContent({
   loading,
   onViewContract,
   overrideMessage,
+  contractStatusMessage = null,
   requiresContract,
   ruleItems,
 }: EmployeeLockedBenefitDialogContentProps) {
@@ -44,6 +46,12 @@ export default function EmployeeLockedBenefitDialogContent({
         loading={loading}
         overrideMessage={overrideMessage}
       />
+
+      {contractStatusMessage ? (
+        <p className="rounded-[8px] border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-[13px] leading-5 text-[#92400E]">
+          {contractStatusMessage}
+        </p>
+      ) : null}
 
       {errorMessage ? (
         <p className="rounded-[8px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] leading-5 text-[#B91C1C]">

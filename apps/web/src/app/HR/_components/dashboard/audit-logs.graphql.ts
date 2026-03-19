@@ -7,6 +7,7 @@ export type AuditLogsApprovalRequestRecord = {
   entity_type: "benefit" | "rule";
   id: string;
   payload_json: string;
+  review_comment?: string | null;
   requested_by: string;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
@@ -16,19 +17,25 @@ export type AuditLogsApprovalRequestRecord = {
 };
 
 export type AuditLogsBenefitRequestRecord = {
+  approval_role: "finance_manager" | "hr_admin";
   benefit: {
+    category: string;
     id: string;
+    requiresContract: boolean;
     title: string;
     vendorName?: string | null;
   };
+  contractAcceptedAt?: string | null;
   created_at: string;
   employee: {
+    department: string;
     email: string;
     id: string;
     name: string;
     position: string;
   };
   id: string;
+  reviewComment?: string | null;
   reviewed_by?: {
     email: string;
     id: string;
@@ -40,6 +47,7 @@ export type AuditLogsBenefitRequestRecord = {
 };
 
 export type AuditLogsEmployeeRecord = {
+  department: string;
   email: string;
   id: string;
   name: string;
@@ -73,6 +81,7 @@ export const AUDIT_LOGS_PAGE_QUERY = gql`
       target_role
       requested_by
       reviewed_by
+      review_comment
       payload_json
       snapshot_json
       created_at
@@ -81,6 +90,8 @@ export const AUDIT_LOGS_PAGE_QUERY = gql`
     benefitRequests {
       id
       status
+      approval_role
+      contractAcceptedAt
       created_at
       updated_at
       employee {
@@ -88,12 +99,16 @@ export const AUDIT_LOGS_PAGE_QUERY = gql`
         name
         email
         position
+        department
       }
       benefit {
         id
         title
+        category
+        requiresContract
         vendorName
       }
+      reviewComment
       reviewed_by {
         id
         name
@@ -106,6 +121,7 @@ export const AUDIT_LOGS_PAGE_QUERY = gql`
       name
       email
       position
+      department
     }
     listAuditLogEntries(limit: 50) {
       id

@@ -25,7 +25,24 @@ function getEventIcon(event: string): LucideIcon {
   return ListChecks;
 }
 
-export default function AuditLogsTable({ entries }: { entries: AuditLogEntry[] }) {
+type AuditLogsTableProps = {
+  entries: AuditLogEntry[];
+  onEntryClick?: (entry: AuditLogEntry) => void;
+};
+
+function isBenefitRequestDecisionEntry(entry: AuditLogEntry) {
+  return (
+    ((entry.result === "Approved" || entry.result === "Rejected") &&
+      Boolean(entry.benefitRequestDetail)) ||
+    (entry.result === "Cancelled" && Boolean(entry.benefitRequestDetail)) ||
+    ((entry.result === "Approved" || entry.result === "Rejected") &&
+      Boolean(entry.benefitApprovalDetail)) ||
+    ((entry.result === "Approved" || entry.result === "Rejected") &&
+      Boolean(entry.ruleApprovalDetail))
+  );
+}
+
+export default function AuditLogsTable({ entries, onEntryClick }: AuditLogsTableProps) {
   return (
     <section className="rounded-[14px] border border-[#E5E5E5] bg-white py-4 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
       <div className="overflow-auto">
@@ -46,8 +63,34 @@ export default function AuditLogsTable({ entries }: { entries: AuditLogEntry[] }
             {entries.length > 0 ? (
               entries.map((entry) => {
                 const Icon = getEventIcon(entry.event);
+                const isInteractive = isBenefitRequestDecisionEntry(entry);
                 return (
-                  <tr className="border-b border-[#F0F0F0] last:border-b-0" key={entry.id}>
+                  <tr
+                    aria-label={
+                      isInteractive ? `Open details for ${entry.event}` : undefined
+                    }
+                    className={`border-b border-[#F0F0F0] transition-colors hover:bg-[#EFF6FF] last:border-b-0 ${
+                      isInteractive ? "cursor-pointer outline-none focus:bg-[#DBEAFE]" : ""
+                    }`}
+                    key={entry.id}
+                    onClick={() => {
+                      if (isInteractive) {
+                        onEntryClick?.(entry);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (!isInteractive) {
+                        return;
+                      }
+
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onEntryClick?.(entry);
+                      }
+                    }}
+                    role={isInteractive ? "button" : undefined}
+                    tabIndex={isInteractive ? 0 : undefined}
+                  >
                     <td className="px-6 py-4 text-[14px] leading-5 text-[#737373]">
                       {formatShortDateTime(entry.occurredAt)}
                     </td>

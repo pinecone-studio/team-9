@@ -14,6 +14,38 @@ export function applyAuditLogFilters(entries: AuditLogEntry[], filters: AuditLog
     if (filters.event !== "all" && entry.event !== filters.event) return false;
     if (filters.result !== "all" && entry.result !== filters.result) return false;
     if (filters.actor !== "all" && entry.actor !== filters.actor) return false;
+    if (filters.search.trim()) {
+      const normalizedSearch = filters.search.trim().toLowerCase();
+      const haystack = [
+        entry.event,
+        entry.employee,
+        entry.benefitRule,
+        entry.performedBy.name,
+        entry.performedBy.role,
+        entry.reviewedBy,
+        entry.result,
+        entry.benefitRequestDetail?.reviewComment ?? "",
+        entry.benefitRequestDetail?.employee.department ?? "",
+        entry.benefitApprovalDetail?.name ?? "",
+        entry.benefitApprovalDetail?.category ?? "",
+        entry.benefitApprovalDetail?.vendorName ?? "",
+        entry.benefitApprovalDetail?.subsidyPercentage ?? "",
+        entry.benefitApprovalDetail?.approverRole ?? "",
+        entry.benefitApprovalDetail?.description ?? "",
+        entry.benefitApprovalDetail?.reviewComment ?? "",
+        ...(entry.benefitApprovalDetail?.attachedRules ?? []),
+        entry.ruleApprovalDetail?.name ?? "",
+        entry.ruleApprovalDetail?.category ?? "",
+        entry.ruleApprovalDetail?.sourceField ?? "",
+        entry.ruleApprovalDetail?.blockingMessage ?? "",
+        entry.ruleApprovalDetail?.reviewComment ?? "",
+        ...(entry.ruleApprovalDetail?.targetBenefits ?? []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      if (!haystack.includes(normalizedSearch)) return false;
+    }
     return true;
   });
 }

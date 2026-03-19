@@ -63,6 +63,7 @@ export function buildDefinitionRuleCard(row: RuleDefinitionRow): RuleCardModel {
     defaultValue: row.default_value,
     description: row.description,
     id: row.id,
+    lastUpdatedAt: null,
     linkedBenefits: parseLinkedBenefits(row.linked_benefits_json),
     metricLabel:
       getMetricLabelFromOptionsJson(row.options_json) ??
@@ -142,6 +143,7 @@ export function buildPendingCreateRuleCard(
       defaultValue,
       description: record.description,
       id: `pending-rule-${request.id}`,
+      lastUpdatedAt: request.created_at,
       linkedBenefits: [],
       metricLabel:
         getMetricLabelFromOptionsJson(optionsJson) ?? getMetricLabel(ruleType),

@@ -4,9 +4,11 @@ import type {
   EligibilityRuleDashboardStat,
   EligibilityRuleFilterTab,
 } from "./eligibility-rules-dashboard";
+import EligibilityRulesHeaderSkeleton from "./EligibilityRulesHeaderSkeleton";
 
 type EligibilityRulesHeaderProps = {
   activeTab: string;
+  loading?: boolean;
   onSearchChange: (value: string) => void;
   onTabChange: (value: string) => void;
   searchValue: string;
@@ -16,12 +18,15 @@ type EligibilityRulesHeaderProps = {
 
 export default function EligibilityRulesHeader({
   activeTab,
+  loading = false,
   onTabChange,
   searchValue,
   onSearchChange,
   stats,
   tabs,
 }: EligibilityRulesHeaderProps) {
+  if (loading) return <EligibilityRulesHeaderSkeleton />;
+
   const statIcons: LucideIcon[] = [ListChecks, CheckSquare2, History];
 
   return (

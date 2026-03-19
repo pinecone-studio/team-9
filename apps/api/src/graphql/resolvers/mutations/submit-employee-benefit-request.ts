@@ -15,6 +15,7 @@ import {
   sendEmployeeBenefitRequestSubmittedNotification,
   type NotificationRuntime,
 } from "../../../notifications";
+import { isContractExpired } from "../../../utils/contract-validity";
 import { listBenefitRequests } from "../queries/list-benefit-requests";
 
 const ACTIVE_STATUS = "active";
@@ -98,12 +99,18 @@ export async function submitEmployeeBenefitRequest(
 
       const [activeContract] = benefit.activeContractId
         ? await db
-            .select({ version: contracts.version })
+            .select({
+              expiryDate: contracts.expiryDate,
+              version: contracts.version,
+            })
             .from(contracts)
             .where(eq(contracts.id, benefit.activeContractId))
             .limit(1)
         : await db
-            .select({ version: contracts.version })
+            .select({
+              expiryDate: contracts.expiryDate,
+              version: contracts.version,
+            })
             .from(contracts)
             .where(
               and(
@@ -115,6 +122,11 @@ export async function submitEmployeeBenefitRequest(
 
       if (!activeContract) {
         throw new Error("No active contract is attached to this benefit");
+      }
+      if (isContractExpired(activeContract.expiryDate)) {
+        throw new Error(
+          `This benefit is locked because the current contract expired on ${activeContract.expiryDate}. Please wait for HR to upload a renewed contract.`,
+        );
       }
       if (activeContract.version !== submittedVersion) {
         throw new Error(

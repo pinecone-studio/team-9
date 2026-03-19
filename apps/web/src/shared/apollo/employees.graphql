@@ -11,6 +11,12 @@ query EmployeesPage {
     okrSubmitted
     lateArrivalCount
   }
+  employeeEligibilitySummaries {
+    employeeId
+    active
+    eligible
+    locked
+  }
 }
 
 query EmployeeEligibility($employeeId: ID!) {

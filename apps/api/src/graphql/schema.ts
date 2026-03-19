@@ -43,6 +43,13 @@ export const typeDefs = /* GraphQL */ `
     overrideExpiresAt: String
   }
 
+  type EmployeeEligibilitySummary {
+    employeeId: ID!
+    active: Int!
+    eligible: Int!
+    locked: Int!
+  }
+
   type Contract {
     id: ID!
     benefitId: String!
@@ -289,6 +296,77 @@ export const typeDefs = /* GraphQL */ `
     createdAt: String!
   }
 
+  type ApprovalRequestPersonSummary {
+    identifier: String
+    name: String!
+    position: String
+  }
+
+  type ApprovalRequestTimelineEntry {
+    id: ID!
+    label: String!
+    actorType: String!
+    actorIdentifier: String
+    reviewComment: String
+    createdAt: String!
+  }
+
+  type RuleReviewBenefit {
+    id: ID!
+    name: String!
+  }
+
+  type RuleApprovalOverview {
+    ruleName: String!
+    description: String!
+    ruleTypeLabel: String!
+    valueFieldLabel: String!
+    requirementValue: String!
+    measurement: String!
+    condition: String!
+    technicalExpression: String!
+  }
+
+  type RuleApprovalImpact {
+    affectedEmployees: Int!
+    newlyRestrictedEmployees: Int!
+    benefitsUsingRule: Int!
+    eligibilityEffect: String!
+    summary: String!
+  }
+
+  type RuleApprovalChangeSummaryItem {
+    id: String!
+    label: String!
+    previousValue: String!
+    nextValue: String!
+  }
+
+  type RuleApprovalSubmissionDetails {
+    submittedBy: ApprovalRequestPersonSummary!
+    assignedApprover: ApprovalRequestPersonSummary!
+    submittedAt: String!
+    status: ApprovalRequestStatus!
+    reviewedBy: ApprovalRequestPersonSummary
+    reviewedAt: String
+    reviewComment: String
+  }
+
+  type RuleApprovalRequestReview {
+    title: String!
+    subtitle: String!
+    actionBadgeLabel: String!
+    actionBadgeTone: String!
+    overview: RuleApprovalOverview!
+    changeSummary: [RuleApprovalChangeSummaryItem!]!
+    impact: RuleApprovalImpact!
+    appliedBenefits: [RuleReviewBenefit!]!
+    submissionDetails: RuleApprovalSubmissionDetails!
+    auditLog: [ApprovalRequestTimelineEntry!]!
+    decisionNoteRequiredOnReject: Boolean!
+    request: ApprovalRequest!
+  }
+
   type BenefitEligibilitySummary {
     benefitId: ID!
     benefitName: String!
@@ -445,14 +523,17 @@ export const typeDefs = /* GraphQL */ `
     allBenefits: [Benefit]
     approvalRequests(status: ApprovalRequestStatus, targetRole: ApprovalRole): [ApprovalRequest!]!
     approvalRequest(id: ID!): ApprovalRequest
+    ruleApprovalRequestReview(id: ID!): RuleApprovalRequestReview
     benefitRequests(targetRole: ApprovalRole, employeeId: ID, benefitId: ID): [BenefitRequest!]!
     ruleCategories: [RuleCategory!]!
     ruleDefinitions(categoryId: ID, ruleType: RuleType): [RuleDefinition!]!
     eligibilityRules(benefitId: ID): [EligibilityRule!]!
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+    employeeEligibilitySummaries: [EmployeeEligibilitySummary!]!
     benefitContract(benefitId: ID!): Contract
     benefitContractVersions(benefitId: ID!): [Contract!]!
+    activeBenefitContracts: [Contract!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
     contractSignedUrlByBenefit(benefitId: ID!): ContractSignedUrl!
     countPendingBenefitRequests: Int!

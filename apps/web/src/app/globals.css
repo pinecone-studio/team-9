@@ -37,6 +37,10 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+button:enabled {
+  cursor: pointer;
+}
+
 .top-nav-user-button .cl-userButtonTrigger,
 .top-nav-user-button .cl-userButtonAvatarBox,
 .top-nav-user-button .cl-avatarBox {
@@ -50,7 +54,21 @@ body::-webkit-scrollbar {
   scrollbar-color: transparent transparent;
 }
 
+.hidden-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
 .contracts-scrollbar-hidden::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+.hidden-scrollbar::-webkit-scrollbar {
   width: 0 !important;
   height: 0 !important;
   display: none !important;
@@ -63,7 +81,18 @@ body::-webkit-scrollbar {
   background: transparent;
 }
 
+.hidden-scrollbar::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent;
+}
+
 .contracts-scrollbar-hidden::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent;
+  border: 0;
+}
+
+.hidden-scrollbar::-webkit-scrollbar-thumb {
   display: none !important;
   background: transparent;
   border: 0;

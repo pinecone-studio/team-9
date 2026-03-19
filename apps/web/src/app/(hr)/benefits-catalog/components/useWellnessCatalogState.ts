@@ -35,6 +35,7 @@ export function useWellnessCatalogState({
   const { data: approvalRequestsData, refetch: refetchApprovalRequests } = useApprovalRequestsQuery({
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: true,
   });
   const {
     categoryIconKeys,

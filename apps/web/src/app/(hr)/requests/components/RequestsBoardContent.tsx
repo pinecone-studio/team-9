@@ -143,7 +143,7 @@ export default function RequestsBoardContent({
           overrideCount={counts.override}
         />
 
-        <section className="relative isolate h-[513px] overflow-hidden rounded-[14px] border border-[#E5E5E5] bg-white py-[23.8px] shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
+        <section className={`relative isolate overflow-hidden rounded-[14px] border border-[#E5E5E5] bg-white py-[23.8px] shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] ${activeTab === "override" ? "h-[408.4px]" : "h-[513px]"}`}>
           <div className="pointer-events-none absolute inset-0 bg-[rgba(255,255,255,0.002)]" />
           {activeError ? (
             <div className="relative z-[1] flex h-full items-center px-6 font-sans text-[14px] leading-6 text-[#B42318]">

@@ -11,6 +11,14 @@ function normalizeValue(value: string | null | undefined) {
 }
 
 export function isOverrideApprovalRequest(request: ApprovalRequestRecord) {
+  if (request.entity_type !== "benefit") {
+    return false;
+  }
+
+  if (request.action_type === "update") {
+    return true;
+  }
+
   const payload = parseApprovalPayload(request);
   return payload.entityType === "benefit" && Boolean(payload.employeeRequest);
 }

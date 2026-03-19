@@ -7,12 +7,10 @@ import {
   useHrBenefitRequestsQuery,
   useRequestsEmployeesDirectoryQuery,
 } from "@/shared/apollo/generated";
-import ApprovalRequestReviewDialog from "./ApprovalRequestReviewDialog";
-import BenefitRequestReviewDialog from "./BenefitRequestReviewDialog";
 import RequestsReviewToast from "./RequestsReviewToast";
 import RequestsBoardContent from "./RequestsBoardContent";
+import RequestsBoardDialogs from "./RequestsBoardDialogs";
 import { RequestPeopleProvider } from "./RequestPeopleContext";
-import RuleApprovalRequestReviewDialog from "./RuleApprovalRequestReviewDialog";
 import type { ApprovalRequestRecord } from "./approval-requests.graphql";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import {
@@ -126,43 +124,17 @@ export default function RequestsBoard({
         onConfigurationReview={setSelectedRequestId}
         overrideRequests={overrideRequests}
       />
-
-      {selectedApprovalRequest?.entity_type === "rule" ? (
-        selectedApprovalRequest.action_type === "update" ? (
-          <RuleApprovalRequestReviewDialog
-            currentUserIdentifier={currentUserIdentifier}
-            currentUserRole={currentUserRole}
-            onClose={() => setSelectedRequestId(null)}
-            onReviewed={refetchApprovalRequests}
-            onReviewSuccess={setReviewToastMessage}
-            requestId={selectedApprovalRequest.id}
-          />
-        ) : (
-          <ApprovalRequestReviewDialog
-            currentUserIdentifier={currentUserIdentifier}
-            onClose={() => setSelectedRequestId(null)}
-            onReviewed={refetchApprovalRequests}
-            requestId={selectedApprovalRequest.id}
-          />
-        )
-      ) : selectedRequestId ? (
-        <ApprovalRequestReviewDialog
-          currentUserIdentifier={currentUserIdentifier}
-          onClose={() => setSelectedRequestId(null)}
-          onReviewed={refetchApprovalRequests}
-          requestId={selectedRequestId}
-        />
-      ) : null}
-
-      {selectedBenefitRequest ? (
-        <BenefitRequestReviewDialog
-          currentUserIdentifier={currentUserIdentifier}
-          currentUserRole={currentUserRole}
-          onClose={() => setSelectedBenefitRequestId(null)}
-          onReviewed={refetchBenefitRequests}
-          request={selectedBenefitRequest}
-        />
-      ) : null}
+      <RequestsBoardDialogs
+        currentUserIdentifier={currentUserIdentifier}
+        currentUserRole={currentUserRole}
+        onBenefitClose={() => setSelectedBenefitRequestId(null)}
+        onConfigurationClose={() => setSelectedRequestId(null)}
+        onReviewedApproval={refetchApprovalRequests}
+        onReviewedBenefit={refetchBenefitRequests}
+        onReviewSuccess={setReviewToastMessage}
+        selectedApprovalRequest={selectedApprovalRequest}
+        selectedBenefitRequest={selectedBenefitRequest}
+      />
 
       <RequestsReviewToast message={reviewToastMessage} />
     </RequestPeopleProvider>

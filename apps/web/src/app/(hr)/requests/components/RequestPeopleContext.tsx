@@ -4,14 +4,19 @@ import { createContext, useContext } from "react";
 
 import { formatPersonLabel } from "./approval-request-utils";
 
-const RequestPeopleContext = createContext<Record<string, string>>({});
+export type RequestPerson = {
+  name: string;
+  position: string | null;
+};
+
+const RequestPeopleContext = createContext<Record<string, RequestPerson>>({});
 
 export function RequestPeopleProvider({
   children,
   value,
 }: {
   children: React.ReactNode;
-  value: Record<string, string>;
+  value: Record<string, RequestPerson>;
 }) {
   return (
     <RequestPeopleContext.Provider value={value}>
@@ -25,14 +30,35 @@ export function useRequestPeople() {
 }
 
 export function resolveRequestPersonName(
-  people: Record<string, string>,
+  people: Record<string, RequestPerson>,
   value: string | null | undefined,
 ) {
   if (!value) {
     return "-";
   }
 
-  return people[value.trim().toLowerCase()] ?? formatPersonLabel(value);
+  return people[value.trim().toLowerCase()]?.name ?? formatPersonLabel(value);
+}
+
+export function resolveRequestPerson(
+  people: Record<string, RequestPerson>,
+  value: string | null | undefined,
+) {
+  if (!value) {
+    return null;
+  }
+
+  const key = value.trim().toLowerCase();
+  const person = people[key];
+
+  if (person) {
+    return person;
+  }
+
+  return {
+    name: formatPersonLabel(value),
+    position: null,
+  };
 }
 
 export function useResolvedPersonName(value: string | null | undefined) {

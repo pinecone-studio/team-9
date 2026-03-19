@@ -3,57 +3,103 @@ import type {
   RequestsEmployeesDirectoryQuery,
 } from "./approval-requests.graphql";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
+import { parseApprovalPayload } from "./approval-request-parsers";
 import { isToday } from "./approval-request-time-formatters";
+
+function normalizeValue(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+export function isOverrideApprovalRequest(request: ApprovalRequestRecord) {
+  const payload = parseApprovalPayload(request);
+  return payload.entityType === "benefit" && Boolean(payload.employeeRequest);
+}
+
+function isPendingAssignedToCurrentRole(
+  request: ApprovalRequestRecord | BenefitRequestRecord,
+  normalizedUserIdentifier: string,
+  normalizedUserRole: string,
+) {
+  if ("approval_role" in request) {
+    return (
+      request.status === "pending" &&
+      normalizeValue(request.approval_role) === normalizedUserRole &&
+      normalizeValue(request.employee.email) !== normalizedUserIdentifier
+    );
+  }
+
+  return (
+    request.status === "pending" &&
+    normalizeValue(request.target_role) === normalizedUserRole &&
+    normalizeValue(request.requested_by) !== normalizedUserIdentifier
+  );
+}
+
+export function splitApprovalRequests(requests: ApprovalRequestRecord[]) {
+  const configurationRequests: ApprovalRequestRecord[] = [];
+  const overrideRequests: ApprovalRequestRecord[] = [];
+
+  for (const request of requests) {
+    if (isOverrideApprovalRequest(request)) {
+      overrideRequests.push(request);
+      continue;
+    }
+
+    configurationRequests.push(request);
+  }
+
+  return {
+    configurationRequests,
+    overrideRequests,
+  };
+}
 
 export function buildRequestsBoardMetrics({
   benefitRequests,
   configurationRequests,
   currentUserIdentifier,
-  requests,
-  roleScopedRequests,
+  currentUserRole,
+  overrideRequests,
 }: {
   benefitRequests: BenefitRequestRecord[];
   configurationRequests: ApprovalRequestRecord[];
   currentUserIdentifier: string;
-  requests: ApprovalRequestRecord[];
-  roleScopedRequests: ApprovalRequestRecord[];
+  currentUserRole: string;
+  overrideRequests: ApprovalRequestRecord[];
 }) {
+  const normalizedUserIdentifier = normalizeValue(currentUserIdentifier);
+  const normalizedUserRole = normalizeValue(currentUserRole);
+  const approvalRequests = [...configurationRequests, ...overrideRequests];
+
   return {
     approvedToday:
-      configurationRequests.filter(
+      approvalRequests.filter(
         (request) => request.status === "approved" && isToday(request.reviewed_at),
       ).length +
       benefitRequests.filter(
         (request) => request.status === "approved" && isToday(request.updated_at),
       ).length,
-    awaitingFinance:
-      requests.filter(
-        (request) => request.status === "pending" && request.target_role === "finance_manager",
-      ).length +
-      benefitRequests.filter(
-        (request) => request.status === "pending" && request.approval_role === "finance_manager",
-      ).length,
     awaitingYourApproval:
-      configurationRequests.filter(
-        (request) =>
-          request.status === "pending" &&
-          request.requested_by.trim().toLowerCase() !== currentUserIdentifier.trim().toLowerCase(),
+      approvalRequests.filter((request) =>
+        isPendingAssignedToCurrentRole(
+          request,
+          normalizedUserIdentifier,
+          normalizedUserRole,
+        ),
       ).length +
-      benefitRequests.filter(
-        (request) =>
-          request.status === "pending" &&
-          request.employee.email.trim().toLowerCase() !== currentUserIdentifier.trim().toLowerCase(),
+      benefitRequests.filter((request) =>
+        isPendingAssignedToCurrentRole(
+          request,
+          normalizedUserIdentifier,
+          normalizedUserRole,
+        ),
       ).length,
-    pendingOverrides: roleScopedRequests.filter(
-      (request) =>
-        request.status === "pending" &&
-        (request.action_type === "update" || request.action_type === "delete"),
-    ).length,
+    pendingOverrides: overrideRequests.filter((request) => request.status === "pending").length,
     pendingRequests:
-      configurationRequests.filter((request) => request.status === "pending").length +
+      approvalRequests.filter((request) => request.status === "pending").length +
       benefitRequests.filter((request) => request.status === "pending").length,
     rejectedToday:
-      configurationRequests.filter(
+      approvalRequests.filter(
         (request) => request.status === "rejected" && isToday(request.reviewed_at),
       ).length +
       benefitRequests.filter(
@@ -66,17 +112,22 @@ export function buildEmployeeDirectory(
   employees: RequestsEmployeesDirectoryQuery["employees"] | undefined,
 ) {
   const rows = employees ?? [];
-  const entries = rows.flatMap((employee) => {
-    const name = employee.name?.trim();
-    if (!name) {
-      return [];
-    }
 
-    return [
-      [employee.id.trim().toLowerCase(), name],
-      [employee.email.trim().toLowerCase(), name],
-    ] as const;
-  });
+  return Object.fromEntries(
+    rows.flatMap((employee) => {
+      if (!employee?.name?.trim()) {
+        return [];
+      }
 
-  return Object.fromEntries(entries);
+      const person = {
+        name: employee.name.trim(),
+        position: employee.position?.trim() || null,
+      };
+
+      return [
+        [employee.id.trim().toLowerCase(), person],
+        [employee.email.trim().toLowerCase(), person],
+      ] as const;
+    }),
+  );
 }

@@ -1,5 +1,4 @@
-import { useQuery } from "@apollo/client/react";
-
+import { useBenefitCreateRuleDetailsQuery } from "@/shared/apollo/generated";
 import type { ApprovalRequestQuery } from "./approval-requests.graphql";
 import {
   DetailSection,
@@ -18,10 +17,8 @@ import {
   parseApprovalPayload,
 } from "./approval-request-utils";
 import {
-  BENEFIT_CREATE_RULE_DETAILS_QUERY,
   type BenefitCreateContractUpload,
   type BenefitCreateRuleAssignment,
-  type BenefitCreateRuleDefinitionsQuery,
   type BenefitCreateShape,
   parseBenefitCreatePayloadRecord,
 } from "./approval-request-benefit-create-data";
@@ -52,10 +49,9 @@ export default function ApprovalRequestBenefitCreateDetails({
     parsedPayload.entityType === "benefit" && "contractUpload" in rawPayload
       ? (rawPayload.contractUpload as BenefitCreateContractUpload | null)
       : null;
-  const { data } = useQuery<BenefitCreateRuleDefinitionsQuery>(
-    BENEFIT_CREATE_RULE_DETAILS_QUERY,
-    { fetchPolicy: "cache-first" },
-  );
+  const { data } = useBenefitCreateRuleDetailsQuery({
+    fetchPolicy: "cache-first",
+  });
 
   const ruleNameMap = new Map((data?.ruleDefinitions ?? []).map((rule) => [rule.id, rule.name]));
   const attachedRuleNames = ruleAssignments.map((rule, index) => {

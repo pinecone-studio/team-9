@@ -3,7 +3,7 @@ import { isToday } from "./approval-request-time-formatters";
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import type { RequestsMetricKey } from "./RequestsBoardMetrics";
 
-export type RequestsBoardTab = "benefit" | "configuration";
+export type RequestsBoardTab = "benefit" | "configuration" | "override";
 
 export const METRIC_LABELS: Record<RequestsMetricKey, string> = {
   approvedToday: "Approved Today",
@@ -13,10 +13,15 @@ export const METRIC_LABELS: Record<RequestsMetricKey, string> = {
   rejectedToday: "Rejected Today",
 };
 
+function normalizeValue(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
 export function filterBenefitRequests(
   requests: BenefitRequestRecord[],
   activeMetric: RequestsMetricKey | null,
   normalizedUserIdentifier: string,
+  normalizedUserRole: string,
 ) {
   return requests.filter((request) => {
     switch (activeMetric) {
@@ -25,7 +30,8 @@ export function filterBenefitRequests(
       case "awaitingYourApproval":
         return (
           request.status === "pending" &&
-          request.employee.email.trim().toLowerCase() !== normalizedUserIdentifier
+          normalizeValue(request.approval_role) === normalizedUserRole &&
+          normalizeValue(request.employee.email) !== normalizedUserIdentifier
         );
       case "pendingOverrides":
         return false;
@@ -39,10 +45,11 @@ export function filterBenefitRequests(
   });
 }
 
-export function filterConfigurationRequests(
+export function filterApprovalRequests(
   requests: ApprovalRequestRecord[],
   activeMetric: RequestsMetricKey | null,
   normalizedUserIdentifier: string,
+  normalizedUserRole: string,
 ) {
   return requests.filter((request) => {
     switch (activeMetric) {
@@ -51,13 +58,11 @@ export function filterConfigurationRequests(
       case "awaitingYourApproval":
         return (
           request.status === "pending" &&
-          request.requested_by.trim().toLowerCase() !== normalizedUserIdentifier
+          normalizeValue(request.target_role) === normalizedUserRole &&
+          normalizeValue(request.requested_by) !== normalizedUserIdentifier
         );
       case "pendingOverrides":
-        return (
-          request.status === "pending" &&
-          (request.action_type === "update" || request.action_type === "delete")
-        );
+        return request.status === "pending";
       case "pendingRequests":
         return request.status === "pending";
       case "rejectedToday":
@@ -71,23 +76,21 @@ export function filterConfigurationRequests(
 export function getTabForMetric(
   activeMetric: RequestsMetricKey | null,
   currentTab: RequestsBoardTab,
-  benefitCount: number,
-  configurationCount: number,
+  counts: Record<RequestsBoardTab, number>,
 ) {
   if (!activeMetric) {
     return currentTab;
   }
 
-  if (activeMetric === "pendingOverrides") {
-    return "configuration";
-  }
+  const preferredTabs: RequestsBoardTab[] =
+    activeMetric === "pendingOverrides"
+      ? ["override", "benefit", "configuration"]
+      : [currentTab, "benefit", "configuration", "override"];
 
-  if (currentTab === "benefit" && benefitCount === 0 && configurationCount > 0) {
-    return "configuration";
-  }
-
-  if (currentTab === "configuration" && configurationCount === 0 && benefitCount > 0) {
-    return "benefit";
+  for (const tab of preferredTabs) {
+    if (counts[tab] > 0) {
+      return tab;
+    }
   }
 
   return currentTab;

@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import { Clock3, FileCheck2, HandHeart, Users } from "lucide-react";
 
+import HeroMetricCard from "./HeroMetricCard";
+
 type DashboardKpiCardsProps = {
   activeContracts: number;
   greeting: string;
@@ -16,23 +18,6 @@ type StatCard = {
   title: string;
   value: number;
 };
-
-function KpiCard({ icon: Icon, subtitle, title, value }: StatCard) {
-  return (
-    <article className="box-border flex h-[144px] w-full flex-col justify-center gap-4 rounded-[8px] border border-white/22 bg-[rgba(0,0,0,0.1)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-[4px]">
-      <div className="flex h-6 w-full items-center gap-1.5 text-white">
-        <Icon className="h-6 w-6" />
-        <p className="text-[14px] leading-5 font-medium text-white">{title}</p>
-      </div>
-      <div className="flex w-full flex-col items-start gap-1">
-        <p className="text-[40px] leading-[36px] font-bold text-white">
-          {value}
-        </p>
-        <p className="text-[12px] leading-4 font-medium text-white">{subtitle}</p>
-      </div>
-    </article>
-  );
-}
 
 export default function DashboardKpiCards({
   activeContracts,
@@ -91,7 +76,7 @@ export default function DashboardKpiCards({
 
       <div className="relative grid w-full grid-cols-1 gap-5 self-stretch md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <KpiCard key={card.title} {...card} />
+          <HeroMetricCard key={card.title} {...card} />
         ))}
       </div>
     </section>

@@ -16,6 +16,7 @@ export type RuleCardModel = {
   defaultValue?: string | null;
   description: string;
   id: string;
+  lastUpdatedAt?: string | null;
   linkedBenefits: Array<{ id: string; name: string }>;
   metricLabel?: string;
   metricSuffix?: string;

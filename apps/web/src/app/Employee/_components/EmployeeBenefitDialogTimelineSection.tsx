@@ -2,15 +2,17 @@ import type { BenefitTimelineItem } from "./employee-benefit-request.helpers";
 
 type EmployeeBenefitDialogTimelineSectionProps = {
   items: BenefitTimelineItem[];
+  title?: string;
 };
 
 export default function EmployeeBenefitDialogTimelineSection({
   items,
+  title = "Request Timeline",
 }: EmployeeBenefitDialogTimelineSectionProps) {
   return (
     <div className="flex flex-col gap-3">
       <h3 className="text-[14px] leading-5 font-medium text-[#0A0A0A]">
-        Request Timeline
+        {title}
       </h3>
       <div className="flex flex-col gap-4">
         {items.map((item, index) => {

@@ -3,13 +3,16 @@
 import { Geist } from "next/font/google";
 import { useState } from "react";
 import { BenefitsGroup } from "./BenefitsGroup";
-import { EmployeeDashboardAutoRefresh } from "./EmployeeDashboardAutoRefresh";
+import EmployeeDashboardSkeleton from "./EmployeeDashboardSkeleton";
 import EmployeeRequestDialog from "./EmployeeRequestDialog";
 import { EligibilitySignals } from "./EligibilitySignals";
 import { EmployeeNav } from "./EmployeeNav";
 import { RecentRequests } from "./RecentRequests";
 import { SummaryCards } from "./SummaryCards";
-import type { EmployeeDashboardViewData, EmployeeRequestItem } from "./employee-types";
+import type {
+  EmployeeDashboardViewData,
+  EmployeeRequestItem,
+} from "./employee-types";
 
 type EmployeeContentProps = {
   currentUserIdentifier: string;
@@ -17,6 +20,7 @@ type EmployeeContentProps = {
   employeeId: string;
   employeeName: string;
   errorMessage?: string | null;
+  isInitialLoading?: boolean;
   isLoading?: boolean;
 };
 
@@ -30,16 +34,20 @@ export function EmployeeContent({
   employeeId,
   employeeName,
   errorMessage,
+  isInitialLoading = false,
   isLoading = false,
 }: EmployeeContentProps) {
-  const [selectedRequest, setSelectedRequest] = useState<EmployeeRequestItem | null>(null);
-  const shouldAutoRefresh = dashboardData.requests.some(
-    (request) => request.status === "Pending",
-  );
+  const [selectedRequest, setSelectedRequest] =
+    useState<EmployeeRequestItem | null>(null);
+
+  if (isInitialLoading) {
+    return <EmployeeDashboardSkeleton />;
+  }
 
   return (
-    <main className={`${geist.className} min-h-screen bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8`}>
-      <EmployeeDashboardAutoRefresh enabled={shouldAutoRefresh} />
+    <main
+      className={`${geist.className} min-h-screen bg-[#f5f4f4] px-4 py-8 sm:px-6 lg:px-8`}
+    >
       <div className="mx-auto flex w-full max-w-[1300px] flex-col">
         <section className="relative mt-8 overflow-hidden rounded-[16px] border border-[#A9CDFF]/45 px-5 py-6 shadow-[0_28px_70px_rgba(99,121,255,0.18)] sm:mt-10 sm:px-[30px] sm:py-[50px] xl:h-[358px]">
           <div className="pointer-events-none absolute inset-[3px] rounded-[12px] border border-white/10" />
@@ -66,7 +74,8 @@ export function EmployeeContent({
                 Welcome back, {employeeName}
               </h1>
               <p className="flex w-full items-center justify-center text-center text-[14px] leading-[18px] text-white">
-                View your benefits, request new ones, and track your eligibility.
+                View your benefits, request new ones, and track your
+                eligibility.
               </p>
             </header>
 

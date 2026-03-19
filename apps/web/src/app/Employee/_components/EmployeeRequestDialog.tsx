@@ -4,9 +4,16 @@ import { useEmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
 
 import EmployeeActiveBenefitDialogContent from "./EmployeeActiveBenefitDialogContent";
 import EmployeeBenefitDialogLayout from "./EmployeeBenefitDialogLayout";
+import EmployeeLockedBenefitDialogContent from "./EmployeeLockedBenefitDialogContent";
 import EmployeePendingBenefitDialogContent from "./EmployeePendingBenefitDialogContent";
 import EmployeeResolvedBenefitDialogContent from "./EmployeeResolvedBenefitDialogContent";
-import { buildBenefitDialogRuleItems } from "./employee-benefit-dialog.helpers";
+import {
+  buildExpiredContractMessage,
+  isContractExpired,
+} from "./employee-benefit-contract.helpers";
+import {
+  buildBenefitDialogRuleItems,
+} from "./employee-benefit-dialog.helpers";
 import {
   buildContractAgreementNote,
   findBenefitRequestById,
@@ -33,12 +40,20 @@ export default function EmployeeRequestDialog({
   const card = request.dialogCard;
   const { data, error, loading } = useEmployeeBenefitDialogQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
     variables: { benefitId: card.id, employeeId },
   });
   const contract = data?.benefitContract ?? null;
   const currentRequest =
     findBenefitRequestById(data?.benefitRequests ?? [], request.id) ?? request.request;
   const requiresContract = card.requiresContract;
+  const hasExpiredContract =
+    request.status === "Accepted" &&
+    requiresContract &&
+    isContractExpired(contract?.expiryDate);
+  const contractStatusMessage = hasExpiredContract
+    ? buildExpiredContractMessage(contract?.expiryDate)
+    : null;
   const hasReusableAgreement =
     requiresContract &&
     Boolean(currentRequest.contractAcceptedAt) &&
@@ -83,7 +98,19 @@ export default function EmployeeRequestDialog({
       onClose={onClose}
       statusBadge={getRequestDialogBadge(request.status)}
     >
-      {request.status === "Accepted" ? (
+      {request.status === "Accepted" && hasExpiredContract ? (
+        <EmployeeLockedBenefitDialogContent
+          contract={contract}
+          contractLoading={contractLoading}
+          contractStatusMessage={contractStatusMessage}
+          errorMessage={resolvedErrorMessage}
+          loading={loading}
+          onViewContract={() => void handleViewContract()}
+          overrideMessage={overrideMessage}
+          requiresContract={requiresContract}
+          ruleItems={ruleItems}
+        />
+      ) : request.status === "Accepted" ? (
         <EmployeeActiveBenefitDialogContent
           contract={contract}
           contractLoading={contractLoading}

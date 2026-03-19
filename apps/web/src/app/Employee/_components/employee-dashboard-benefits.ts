@@ -72,7 +72,10 @@ export function mapBenefitSections(
       continue;
     }
 
-    const status = statusOverridesByBenefitId.get(eligibility.benefit.id) ?? baseStatus;
+    const status =
+      baseStatus === "Locked"
+        ? baseStatus
+        : statusOverridesByBenefitId.get(eligibility.benefit.id) ?? baseStatus;
     const stats = getRuleStats(eligibility.ruleEvaluationJson);
     const configuredRuleCount = benefitRuleCountByBenefitId.get(eligibility.benefit.id) ?? 0;
     const total = configuredRuleCount > 0 ? configuredRuleCount : stats.total;

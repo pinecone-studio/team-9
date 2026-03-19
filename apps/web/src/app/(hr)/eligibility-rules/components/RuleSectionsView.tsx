@@ -7,6 +7,7 @@ import type { RuleCardModel, RuleSectionView } from "../types";
 type RuleSectionsViewProps = {
   loading: boolean;
   onAddRule: (sectionTitle: string) => void;
+  onCancelRequest: (requestId: string) => void;
   onEditRule: (rule: RuleCardModel) => void;
   onOpenRequest: (requestId: string) => void;
   searchTerm: string;
@@ -16,6 +17,7 @@ type RuleSectionsViewProps = {
 export default function RuleSectionsView({
   loading,
   onAddRule,
+  onCancelRequest,
   onEditRule,
   onOpenRequest,
   searchTerm,
@@ -55,7 +57,12 @@ export default function RuleSectionsView({
             <div className="flex w-full flex-wrap items-start gap-5">
               {cards.map((card) => (
                 <div key={card.id} className="w-full lg:w-[calc(50%-10px)] xl:w-[420px]">
-                  <RuleCard {...card} onEdit={() => onEditRule(card)} onOpenRequest={onOpenRequest} />
+                  <RuleCard
+                    {...card}
+                    onCancelRequest={onCancelRequest}
+                    onEdit={() => onEditRule(card)}
+                    onOpenRequest={onOpenRequest}
+                  />
                 </div>
               ))}
               {!searchTerm.trim() && (

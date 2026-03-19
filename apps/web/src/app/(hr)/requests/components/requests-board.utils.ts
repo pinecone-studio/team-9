@@ -121,7 +121,7 @@ export function buildEmployeeDirectory(
 
       const person = {
         name: employee.name.trim(),
-        position: null,
+        position: employee.position.trim() || null,
       };
 
       return [

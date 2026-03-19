@@ -4,10 +4,12 @@ import yoga from './graphql';
 import { getDb } from './db';
 import { contracts } from './db/schema/contracts';
 import { eq } from 'drizzle-orm';
+import { getRealtimeHubStub } from './realtime/publish';
 
 type Bindings = {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
+	REALTIME_HUB: DurableObjectNamespace;
 	CLERK_SECRET_KEY?: string;
 	BREVO_API_KEY?: string;
 	BREVO_FROM_EMAIL?: string;
@@ -18,11 +20,13 @@ const app = new Hono<{ Bindings: Bindings }>();
 const authCors = cors({
 	origin: '*',
 	allowHeaders: ['Content-Type'],
-	allowMethods: ['POST', 'OPTIONS'],
+	allowMethods: ['GET', 'POST', 'OPTIONS'],
 });
 
 app.use('/auth/*', authCors);
 app.options('/auth/*', authCors);
+app.use('/realtime/*', authCors);
+app.options('/realtime/*', authCors);
 
 app.get('/', () => {
 	return new Response('EBMS backend running');
@@ -62,8 +66,15 @@ app.get('/contracts/:contractId', async (c) => {
 	});
 });
 
+app.get('/realtime/events', async (c) => {
+	const hub = getRealtimeHubStub(c.env);
+
+	return hub.fetch('https://realtime.internal/stream');
+});
+
 app.all('/graphql', (c) => {
 	return yoga.fetch(c.req.raw, c.env, c.executionCtx);
 });
 
+export { RealtimeHub } from './realtime/hub';
 export default app;

@@ -1,8 +1,11 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 
+import AuditLogBenefitRequestDecisionDialog from "./AuditLogBenefitRequestDecisionDialog";
+import AuditLogBenefitApprovalDialog from "./AuditLogBenefitApprovalDialog";
+import AuditLogRuleDecisionDialog from "./AuditLogRuleDecisionDialog";
 import AuditLogsFilters from "./AuditLogsFilters";
 import AuditLogsSkeleton from "./AuditLogsSkeleton";
 import AuditLogsSummaryCards from "./AuditLogsSummaryCards";
@@ -15,7 +18,7 @@ import {
   buildEventOptions,
   buildResultOptions,
 } from "./audit-log-utils";
-import type { AuditLogFilters } from "./audit-log-types";
+import type { AuditLogEntry, AuditLogFilters } from "./audit-log-types";
 
 const ACTOR_OPTIONS = [
   { label: "All Actors", value: "all" },
@@ -28,7 +31,9 @@ export default function AuditLogs() {
     actor: "all",
     event: "all",
     result: "all",
+    search: "",
   });
+  const [selectedDecisionEntry, setSelectedDecisionEntry] = useState<AuditLogEntry | null>(null);
   const { data, loading } = useQuery<AuditLogsPageDataQuery>(AUDIT_LOGS_PAGE_QUERY, {
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
@@ -36,9 +41,10 @@ export default function AuditLogs() {
   });
 
   const allEntries = useMemo(() => buildAuditLogEntries(data), [data]);
+  const deferredSearch = useDeferredValue(filters.search);
   const filteredEntries = useMemo(
-    () => applyAuditLogFilters(allEntries, filters),
-    [allEntries, filters],
+    () => applyAuditLogFilters(allEntries, { ...filters, search: deferredSearch }),
+    [allEntries, deferredSearch, filters],
   );
   const summary = useMemo(() => buildAuditLogSummary(filteredEntries), [filteredEntries]);
   const eventOptions = useMemo(
@@ -65,9 +71,44 @@ export default function AuditLogs() {
         onActorChange={(actor) => setFilters((current) => ({ ...current, actor }))}
         onEventChange={(event) => setFilters((current) => ({ ...current, event }))}
         onResultChange={(result) => setFilters((current) => ({ ...current, result }))}
+        onSearchChange={(search) => setFilters((current) => ({ ...current, search }))}
         resultOptions={resultOptions}
       />
-      <AuditLogsTable entries={filteredEntries} />
+      <AuditLogsTable
+        entries={filteredEntries}
+        onEntryClick={(entry) => {
+          if (
+            ((entry.result === "Approved" ||
+              entry.result === "Rejected" ||
+              entry.result === "Cancelled") &&
+              entry.benefitRequestDetail) ||
+            ((entry.result === "Approved" || entry.result === "Rejected") &&
+              entry.benefitApprovalDetail) ||
+            ((entry.result === "Approved" || entry.result === "Rejected") &&
+              entry.ruleApprovalDetail)
+          ) {
+            setSelectedDecisionEntry(entry);
+          }
+        }}
+      />
+      {selectedDecisionEntry ? (
+        selectedDecisionEntry.ruleApprovalDetail ? (
+          <AuditLogRuleDecisionDialog
+            entry={selectedDecisionEntry}
+            onClose={() => setSelectedDecisionEntry(null)}
+          />
+        ) : selectedDecisionEntry.benefitApprovalDetail ? (
+          <AuditLogBenefitApprovalDialog
+            entry={selectedDecisionEntry}
+            onClose={() => setSelectedDecisionEntry(null)}
+          />
+        ) : (
+          <AuditLogBenefitRequestDecisionDialog
+            entry={selectedDecisionEntry}
+            onClose={() => setSelectedDecisionEntry(null)}
+          />
+        )
+      ) : null}
     </div>
   );
 }

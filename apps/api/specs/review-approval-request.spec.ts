@@ -95,6 +95,16 @@ async function bootstrapReviewApprovalRequestFixtures() {
       reviewed_at text,
       is_active integer NOT NULL DEFAULT true
     )`,
+    `CREATE TABLE IF NOT EXISTS approval_request_events (
+      id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      approval_request_id text NOT NULL,
+      actor_identifier text,
+      actor_type text NOT NULL,
+      created_at text NOT NULL,
+      label text NOT NULL,
+      review_comment text
+    )`,
+    "DELETE FROM approval_request_events",
     "DELETE FROM approval_requests",
     "DELETE FROM benefit_eligibility",
     "DELETE FROM benefit_rules",
@@ -231,6 +241,19 @@ describe("reviewApprovalRequest", () => {
       status: "approved",
     });
 
+    const reviewEvents = await env.DB.prepare(`
+      SELECT label, actor_identifier
+      FROM approval_request_events
+      WHERE approval_request_id = 'approval-benefit-a'
+    `).all<{ actor_identifier: string | null; label: string }>();
+
+    expect(reviewEvents.results).toEqual([
+      {
+        actor_identifier: "reviewer@example.com",
+        label: "Request approved",
+      },
+    ]);
+
     const benefitAEligibility = await env.DB.prepare(`
       SELECT employee_id, status, computed_at
       FROM benefit_eligibility
@@ -268,5 +291,26 @@ describe("reviewApprovalRequest", () => {
         computed_at: "2026-03-11T00:00:00.000Z",
       },
     ]);
+  });
+
+  it("requires a review comment when rejecting an approval request", async () => {
+    await bootstrapReviewApprovalRequestFixtures();
+
+    await expect(
+      reviewApprovalRequest(
+        {
+          DB: env.DB,
+          CONTRACTS_BUCKET: {} as R2Bucket,
+        },
+        {
+          input: {
+            approved: false,
+            id: "approval-benefit-a",
+            reviewComment: "   ",
+            reviewedBy: "reviewer@example.com",
+          },
+        },
+      ),
+    ).rejects.toThrow("A review comment is required when rejecting a request");
   });
 });

@@ -24,7 +24,7 @@ export function EmployeeDashboardClient({
   employeeResponsibilityLevel,
   employmentStatus,
 }: EmployeeDashboardClientProps) {
-  const { dashboardData, errorMessage, isLoading } = useEmployeeDashboardViewData({
+  const { dashboardData, errorMessage, isInitialLoading, isLoading } = useEmployeeDashboardViewData({
     employeeEmail,
     employeeId,
     employeeLateArrivals30Days,
@@ -41,6 +41,7 @@ export function EmployeeDashboardClient({
       employeeId={employeeId}
       employeeName={employeeName}
       errorMessage={errorMessage}
+      isInitialLoading={isInitialLoading}
       isLoading={isLoading}
     />
   );

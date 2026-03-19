@@ -9,6 +9,7 @@ import {
 	type MutationSubmitRuleDefinitionUpdateRequestArgs,
 } from '../../generated/resolvers-types';
 import { mapApprovalRequest } from '../approval-request-mappers';
+import { createInitialApprovalRequestEvents } from '../approval-request-review-events';
 import { getRuleDefinitionSnapshot, prepareUpdateRuleDefinition } from './rule-definition-service';
 
 export async function submitRuleDefinitionUpdateRequest(
@@ -39,6 +40,12 @@ export async function submitRuleDefinitionUpdateRequest(
 		snapshotJson,
 		createdAt,
 		isActive: true,
+	});
+	await createInitialApprovalRequestEvents(DB, {
+		approvalRequestId: id,
+		createdAt,
+		requestedBy: input.requestedBy.trim(),
+		targetRole,
 	});
 
 	return mapApprovalRequest({

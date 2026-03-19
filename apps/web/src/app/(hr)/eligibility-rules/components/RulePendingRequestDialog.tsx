@@ -1,7 +1,8 @@
-import ApprovalRequestReviewDialog from "@/app/(hr)/requests/components/ApprovalRequestReviewDialog";
+import RuleApprovalRequestReviewDialog from "@/app/(hr)/requests/components/RuleApprovalRequestReviewDialog";
 
 type RulePendingRequestDialogProps = {
   currentUserIdentifier: string;
+  currentUserRole: string;
   onClose: () => void;
   onReviewed: () => Promise<unknown>;
   requestId: string | null;
@@ -9,6 +10,7 @@ type RulePendingRequestDialogProps = {
 
 export default function RulePendingRequestDialog({
   currentUserIdentifier,
+  currentUserRole,
   onClose,
   onReviewed,
   requestId,
@@ -18,10 +20,12 @@ export default function RulePendingRequestDialog({
   }
 
   return (
-    <ApprovalRequestReviewDialog
+    <RuleApprovalRequestReviewDialog
       currentUserIdentifier={currentUserIdentifier}
+      currentUserRole={currentUserRole}
       onClose={onClose}
       onReviewed={onReviewed}
+      onReviewSuccess={() => undefined}
       requestId={requestId}
     />
   );

@@ -15,6 +15,25 @@ import {
   toPendingRuleRequest,
 } from "./rule-section-list.pending";
 
+function getLatestRuleActivityAt(
+  approvalRequests: ApprovalRequestsQuery["approvalRequests"],
+  ruleId: string,
+) {
+  const latest = approvalRequests
+    .filter(
+      (request) =>
+        request.entity_type === ApprovalEntityType.Rule &&
+        request.entity_id === ruleId,
+    )
+    .sort((left, right) => {
+      const leftTimestamp = left.reviewed_at ?? left.created_at;
+      const rightTimestamp = right.reviewed_at ?? right.created_at;
+      return rightTimestamp.localeCompare(leftTimestamp);
+    })[0];
+
+  return latest ? latest.reviewed_at ?? latest.created_at : null;
+}
+
 export function toTitleCase(value?: string | null) {
   if (!value) return undefined;
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -126,6 +145,7 @@ export function buildSections(
 
     const card = buildDefinitionRuleCard(row);
     card.pendingRequest = pendingRequest ? toPendingRuleRequest(pendingRequest) : null;
+    card.lastUpdatedAt = getLatestRuleActivityAt(approvalRequests, row.id);
 
     grouped.get(grouped.has(row.category_name) ? row.category_name : "Threshold Rules")?.push(card);
   }

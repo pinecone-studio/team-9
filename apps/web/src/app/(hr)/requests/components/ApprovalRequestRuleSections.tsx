@@ -65,10 +65,14 @@ export function RuleOverviewSection({
 
 export function RuleImpactSection({
   affectedEmployees,
+  eligibilityEffect = "Restrictive",
   ruleUsageCount,
+  summary = "This rule will restrict eligibility for employees who do not meet the required condition.",
 }: {
   affectedEmployees: number | string;
+  eligibilityEffect?: string;
   ruleUsageCount: number;
+  summary?: string;
 }) {
   return (
     <DetailSection title="Impact Preview">
@@ -90,9 +94,17 @@ export function RuleImpactSection({
               valueClassName="text-[18px] leading-7 font-semibold text-[#0A0A0A]"
             />
           </div>
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-[#737373]" />
+            <LabeledValue
+              label="Eligibility Effect"
+              value={eligibilityEffect}
+              valueClassName="text-[18px] leading-7 font-semibold capitalize text-[#0A0A0A]"
+            />
+          </div>
         </div>
         <div className="mt-4 border-t border-[#E5E5E5] pt-3 text-[14px] leading-5 text-[#737373]">
-          This rule will restrict eligibility for employees who do not meet the required condition.
+          {summary}
         </div>
       </DetailCard>
     </DetailSection>

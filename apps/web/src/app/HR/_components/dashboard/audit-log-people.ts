@@ -6,9 +6,34 @@ import type {
 const EMPTY_VALUE = "—";
 
 export type AuditPayload = {
-  benefit?: { name?: string | null };
+  benefit?: {
+    approvalRole?: string;
+    category?: string;
+    description?: string | null;
+    id?: string;
+    linkedRules?: Array<{ name?: string | null } | string>;
+    monthlyAmount?: number | string | null;
+    monthlyCap?: number | string | null;
+    monthly_amount?: number | string | null;
+    monthly_cap?: number | string | null;
+    name?: string | null;
+    requiresContract?: boolean;
+    subsidyPercent?: number | string | null;
+    subsidyPercentage?: number | string | null;
+    vendorName?: string | null;
+  };
   employeeRequest?: { employeeEmail?: string | null; employeeId?: string; employeeName?: string };
-  rule?: { name?: string | null };
+  rule?: {
+    categoryId?: string;
+    defaultOperator?: string;
+    defaultUnit?: string | null;
+    defaultValue?: string | null;
+    description?: string | null;
+    linkedBenefits?: Array<{ name?: string | null }>;
+    name?: string | null;
+    optionsJson?: string | null;
+    ruleType?: string | null;
+  };
 };
 
 export function formatPersonLabel(value: string | null | undefined) {

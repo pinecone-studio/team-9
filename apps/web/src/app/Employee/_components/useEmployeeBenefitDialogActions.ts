@@ -11,12 +11,17 @@ import {
 } from "@/shared/apollo/generated";
 
 import { type PendingBenefitRequest } from "./employee-benefit-request.helpers";
-import { resolveSignedContractUrl } from "./employee-benefit-dialog.helpers";
+import {
+  buildExpiredContractMessage,
+  isContractExpired,
+  resolveSignedContractUrl,
+} from "./employee-benefit-contract.helpers";
 import type { EmployeeBenefitCard } from "./employee-types";
 
 type UseEmployeeBenefitDialogActionsInput = {
   card: EmployeeBenefitCard;
   contract: {
+    expiryDate?: string | null;
     version: string;
   } | null;
   currentUserIdentifier: string;
@@ -84,6 +89,10 @@ export function useEmployeeBenefitDialogActions({
     }
     if (card.requiresContract && !acceptedContract) {
       setErrorMessage("Please confirm the contract agreement before requesting.");
+      return;
+    }
+    if (card.requiresContract && contract && isContractExpired(contract.expiryDate)) {
+      setErrorMessage(buildExpiredContractMessage(contract.expiryDate));
       return;
     }
 

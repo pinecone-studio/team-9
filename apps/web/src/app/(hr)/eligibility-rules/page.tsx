@@ -15,6 +15,7 @@ export default async function EligibilityRulesPage({
   const access = await getCurrentUserAccess();
   const currentUserIdentifier =
     access.email ?? access.userId ?? "current_hr_admin";
+  const currentUserRole = access.role ?? "hr_admin";
   const resolvedSearchParams = (await searchParams) ?? {};
   const requestedDialog = Array.isArray(resolvedSearchParams.dialog)
     ? resolvedSearchParams.dialog[0]
@@ -26,6 +27,7 @@ export default async function EligibilityRulesPage({
   return (
     <EligibilityRulesPageContent
       currentUserIdentifier={currentUserIdentifier}
+      currentUserRole={currentUserRole}
       requestedCreateSection={requestedCreateSection}
       shouldAutoOpenCreateRule={requestedDialog === "create-rule"}
     />

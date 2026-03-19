@@ -54,123 +54,178 @@ import type {
 	MutationUpdateEligibilityRuleArgs,
 	MutationUpdateRuleDefinitionArgs,
 } from '../../generated/resolvers-types';
+import { publishRealtimeMutation } from '../../../realtime/publish';
 import { uploadContract, UploadContractInput } from './upload-contract';
 
 type GraphQLContext = {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
+	REALTIME_HUB: DurableObjectNamespace;
 	BREVO_API_KEY?: string;
 	BREVO_FROM_EMAIL?: string;
 	BREVO_FROM_NAME?: string;
 	waitUntil?: (promise: Promise<unknown>) => void;
 };
 
+type MutationResolver<Args, Result> = (
+	root: unknown,
+	args: Args,
+	context: GraphQLContext,
+) => Promise<Result> | Result;
+
+function withRealtimePublish<Args, Result>(
+	mutationName: string,
+	resolver: MutationResolver<Args, Result>,
+): MutationResolver<Args, Result> {
+	return async (root, args, context) => {
+		const result = await resolver(root, args, context);
+		const publishPromise = publishRealtimeMutation(context, mutationName).catch((error) => {
+			console.error('[realtime] failed to publish mutation event', {
+				error: error instanceof Error ? error.message : String(error),
+				mutationName,
+			});
+		});
+
+		if (context.waitUntil) {
+			context.waitUntil(publishPromise);
+		} else {
+			await publishPromise;
+		}
+
+		return result;
+	};
+}
+
 export const mutationResolvers = {
-	createEmployee: (_: unknown, args: MutationCreateEmployeeArgs, { DB }: GraphQLContext) => createEmployeeRecord(DB, args),
+	createEmployee: withRealtimePublish('createEmployee', (_: unknown, args: MutationCreateEmployeeArgs, { DB }: GraphQLContext) => createEmployeeRecord(DB, args)),
 
-	updateEmployee: (_: unknown, args: MutationUpdateEmployeeArgs, { DB }: GraphQLContext) =>
+	updateEmployee: withRealtimePublish('updateEmployee', (_: unknown, args: MutationUpdateEmployeeArgs, { DB }: GraphQLContext) =>
 		updateEmployeeRecord(DB, args),
+	),
 
-	deleteEmployee: (_: unknown, { id }: MutationDeleteEmployeeArgs, { DB }: GraphQLContext) =>
+	deleteEmployee: withRealtimePublish('deleteEmployee', (_: unknown, { id }: MutationDeleteEmployeeArgs, { DB }: GraphQLContext) =>
 		deleteEmployeeRecord(DB, id),
+	),
 
-	createApprovalRequest: (_: unknown, args: MutationCreateApprovalRequestArgs, context: GraphQLContext) =>
+	createApprovalRequest: withRealtimePublish('createApprovalRequest', (_: unknown, args: MutationCreateApprovalRequestArgs, context: GraphQLContext) =>
 		createApprovalRequest(context, args),
+	),
 
-	cancelEmployeeBenefitRequest: (
+	cancelEmployeeBenefitRequest: withRealtimePublish('cancelEmployeeBenefitRequest', (
 		_: unknown,
 		args: MutationCancelEmployeeBenefitRequestArgs,
 		{ DB }: GraphQLContext,
 	) => cancelEmployeeBenefitRequest(DB, args),
+	),
 
-	overrideEmployeeBenefitEligibility: (
+	overrideEmployeeBenefitEligibility: withRealtimePublish('overrideEmployeeBenefitEligibility', (
 		_: unknown,
 		args: MutationOverrideEmployeeBenefitEligibilityArgs,
 		{ DB }: GraphQLContext,
 	) => overrideEmployeeBenefitEligibility(DB, args),
+	),
 
-	submitBenefitCreateRequest: (
+	submitBenefitCreateRequest: withRealtimePublish('submitBenefitCreateRequest', (
 		_: unknown,
 		args: MutationSubmitBenefitCreateRequestArgs,
 		context: GraphQLContext,
 	) => submitBenefitCreateRequest(context, args),
+	),
 
-	submitBenefitUpdateRequest: (
+	submitBenefitUpdateRequest: withRealtimePublish('submitBenefitUpdateRequest', (
 		_: unknown,
 		args: MutationSubmitBenefitUpdateRequestArgs,
 		context: GraphQLContext,
 	) => submitBenefitUpdateRequest(context, args),
+	),
 
-	submitRuleDefinitionCreateRequest: (
+	submitRuleDefinitionCreateRequest: withRealtimePublish('submitRuleDefinitionCreateRequest', (
 		_: unknown,
 		args: MutationSubmitRuleDefinitionCreateRequestArgs,
 		{ DB }: GraphQLContext,
 	) => submitRuleDefinitionCreateRequest(DB, args),
+	),
 
-	submitRuleDefinitionUpdateRequest: (
+	submitRuleDefinitionUpdateRequest: withRealtimePublish('submitRuleDefinitionUpdateRequest', (
 		_: unknown,
 		args: MutationSubmitRuleDefinitionUpdateRequestArgs,
 		{ DB }: GraphQLContext,
 	) => submitRuleDefinitionUpdateRequest(DB, args),
+	),
 
-	createBenefit: (_: unknown, args: MutationCreateBenefitArgs, { DB }: GraphQLContext) => createBenefit(DB, args),
+	createBenefit: withRealtimePublish('createBenefit', (_: unknown, args: MutationCreateBenefitArgs, { DB }: GraphQLContext) => createBenefit(DB, args)),
 
-	updateBenefit: (_: unknown, args: MutationUpdateBenefitArgs, { DB }: GraphQLContext) => updateBenefit(DB, args),
+	updateBenefit: withRealtimePublish('updateBenefit', (_: unknown, args: MutationUpdateBenefitArgs, { DB }: GraphQLContext) => updateBenefit(DB, args)),
 
-	setBenefitStatus: (_: unknown, args: MutationSetBenefitStatusArgs, { DB }: GraphQLContext) =>
+	setBenefitStatus: withRealtimePublish('setBenefitStatus', (_: unknown, args: MutationSetBenefitStatusArgs, { DB }: GraphQLContext) =>
 		setBenefitStatus(DB, args),
+	),
 
-	createBenefitCategory: (_: unknown, args: MutationCreateBenefitCategoryArgs, { DB }: GraphQLContext) =>
+	createBenefitCategory: withRealtimePublish('createBenefitCategory', (_: unknown, args: MutationCreateBenefitCategoryArgs, { DB }: GraphQLContext) =>
 		createBenefitCategory(DB, args),
+	),
 
-	deleteBenefit: (_: unknown, { id }: MutationDeleteBenefitArgs, { DB }: GraphQLContext) => deleteBenefit(DB, id),
+	deleteBenefit: withRealtimePublish('deleteBenefit', (_: unknown, { id }: MutationDeleteBenefitArgs, { DB }: GraphQLContext) => deleteBenefit(DB, id)),
 
-	deleteBenefitCategory: (_: unknown, { id }: MutationDeleteBenefitCategoryArgs, { DB }: GraphQLContext) =>
+	deleteBenefitCategory: withRealtimePublish('deleteBenefitCategory', (_: unknown, { id }: MutationDeleteBenefitCategoryArgs, { DB }: GraphQLContext) =>
 		deleteBenefitCategory(DB, id),
+	),
 
-	createRuleCategory: (_: unknown, args: MutationCreateRuleCategoryArgs, { DB }: GraphQLContext) =>
+	createRuleCategory: withRealtimePublish('createRuleCategory', (_: unknown, args: MutationCreateRuleCategoryArgs, { DB }: GraphQLContext) =>
 		createRuleCategory(DB, args),
+	),
 
-	createRuleDefinition: (_: unknown, args: MutationCreateRuleDefinitionArgs, { DB }: GraphQLContext) =>
+	createRuleDefinition: withRealtimePublish('createRuleDefinition', (_: unknown, args: MutationCreateRuleDefinitionArgs, { DB }: GraphQLContext) =>
 		createRuleDefinition(DB, args),
+	),
 
-	updateRuleDefinition: (_: unknown, args: MutationUpdateRuleDefinitionArgs, { DB }: GraphQLContext) =>
+	updateRuleDefinition: withRealtimePublish('updateRuleDefinition', (_: unknown, args: MutationUpdateRuleDefinitionArgs, { DB }: GraphQLContext) =>
 		updateRuleDefinition(DB, args),
+	),
 
-	deleteRuleDefinition: (_: unknown, { id }: MutationDeleteRuleDefinitionArgs, { DB }: GraphQLContext) =>
+	deleteRuleDefinition: withRealtimePublish('deleteRuleDefinition', (_: unknown, { id }: MutationDeleteRuleDefinitionArgs, { DB }: GraphQLContext) =>
 		deleteRuleDefinition(DB, id),
+	),
 
-	createEligibilityRule: (_: unknown, args: MutationCreateEligibilityRuleArgs, { DB }: GraphQLContext) =>
+	createEligibilityRule: withRealtimePublish('createEligibilityRule', (_: unknown, args: MutationCreateEligibilityRuleArgs, { DB }: GraphQLContext) =>
 		createEligibilityRule(DB, args),
+	),
 
-	updateEligibilityRule: (_: unknown, args: MutationUpdateEligibilityRuleArgs, { DB }: GraphQLContext) =>
+	updateEligibilityRule: withRealtimePublish('updateEligibilityRule', (_: unknown, args: MutationUpdateEligibilityRuleArgs, { DB }: GraphQLContext) =>
 		updateEligibilityRule(DB, args),
+	),
 
-	deleteEligibilityRule: (_: unknown, { id }: MutationDeleteEligibilityRuleArgs, { DB }: GraphQLContext) =>
+	deleteEligibilityRule: withRealtimePublish('deleteEligibilityRule', (_: unknown, { id }: MutationDeleteEligibilityRuleArgs, { DB }: GraphQLContext) =>
 		deleteEligibilityRule(DB, id),
+	),
 
-	recalculateEmployeeEligibility: (
+	recalculateEmployeeEligibility: withRealtimePublish('recalculateEmployeeEligibility', (
 		_: unknown,
 		{ employeeId }: MutationRecalculateEmployeeEligibilityArgs,
 		{ DB }: GraphQLContext,
 	) =>
 		recalculateEmployeeEligibility(DB, employeeId),
+	),
 
-	reviewApprovalRequest: (
+	reviewApprovalRequest: withRealtimePublish('reviewApprovalRequest', (
 		_: unknown,
 		args: MutationReviewApprovalRequestArgs,
 		context: GraphQLContext,
 	) => reviewApprovalRequest(context, args),
+	),
 
-	reviewBenefitRequest: (_: unknown, args: MutationReviewBenefitRequestArgs, context: GraphQLContext) =>
+	reviewBenefitRequest: withRealtimePublish('reviewBenefitRequest', (_: unknown, args: MutationReviewBenefitRequestArgs, context: GraphQLContext) =>
 		reviewBenefitRequest(context, args),
+	),
 
-	submitEmployeeBenefitRequest: (
+	submitEmployeeBenefitRequest: withRealtimePublish('submitEmployeeBenefitRequest', (
 		_: unknown,
 		args: MutationSubmitEmployeeBenefitRequestArgs,
 		context: GraphQLContext,
 	) => submitEmployeeBenefitRequest(context, args),
+	),
 
-	uploadContract: (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
+	uploadContract: withRealtimePublish('uploadContract', (_: unknown, { input }: { input: UploadContractInput }, { CONTRACTS_BUCKET, DB }: GraphQLContext) =>
 		uploadContract({ DB, CONTRACTS_BUCKET }, input),
+	),
 };

@@ -16,6 +16,7 @@ type DashboardContentProps = {
 export default function DashboardContent({ greeting, subtitle }: DashboardContentProps) {
   const { data, loading } = useDashboardPageDataQuery({
     fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
   });
 
   const totalEmployees = (data?.employees ?? []).reduce(

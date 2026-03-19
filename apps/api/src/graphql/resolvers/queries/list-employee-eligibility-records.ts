@@ -1,11 +1,13 @@
-import { asc, eq, inArray } from 'drizzle-orm';
+import { asc, desc, eq, inArray } from 'drizzle-orm';
 
 import { getDb } from '../../../db';
 import { benefitEligibility } from '../../../db/schema/benefit-eligibility';
 import { benefitRules } from '../../../db/schema/benefit-rules';
 import { benefitCategories } from '../../../db/schema/benefit-categories';
 import { benefits } from '../../../db/schema/benefits';
+import { contracts } from '../../../db/schema/contracts';
 import { rules } from '../../../db/schema/rules';
+import { isContractExpired, selectCurrentBenefitContract } from '../../../utils/contract-validity';
 import { mapBenefitRecord } from '../../../utils/mappers';
 import type { BenefitEligibility } from '../../generated/resolvers-types';
 
@@ -63,6 +65,7 @@ export async function listEmployeeEligibilityRecords(DB: D1Database, employeeId:
 				requires_contract: benefits.requiresContract,
 				is_active: benefits.isActive,
 				is_core: benefits.isCore,
+				activeContractId: benefits.activeContractId,
 				subsidy_percent: benefits.subsidyPercent,
 				vendor_name: benefits.vendorName,
 				status: benefitEligibility.status,
@@ -103,32 +106,95 @@ export async function listEmployeeEligibilityRecords(DB: D1Database, employeeId:
 			ruleMetadataByBenefit.set(rule.benefitId, currentRules);
 		});
 
-		return rows.map((row) => ({
-			benefit: mapBenefitRecord({
-				id: String(row.id),
-				name: row.name,
-				description: row.description,
-				categoryId: row.categoryId,
-				category: row.category,
-				approval_role: row.approval_role,
-				requires_contract: row.requires_contract,
-				is_active: row.is_active,
-				is_core: row.is_core,
-				subsidy_percent: row.subsidy_percent,
-				vendor_name: row.vendor_name,
-			}),
-			status: row.status,
-			ruleEvaluationJson: row.ruleEvaluationJson,
-			computedAt: row.computedAt,
-			failedRuleMessages: getFailedRuleMessages(
+		const contractedBenefitIds = Array.from(
+			new Set(
+				rows
+					.filter((row) => row.requires_contract)
+					.map((row) => String(row.id)),
+			),
+		);
+		const contractRows =
+			contractedBenefitIds.length > 0
+				? await db
+						.select()
+						.from(contracts)
+						.where(inArray(contracts.benefitId, contractedBenefitIds))
+						.orderBy(
+							asc(contracts.benefitId),
+							desc(contracts.isActive),
+							desc(contracts.effectiveDate),
+							desc(contracts.version),
+						)
+				: [];
+		const contractsByBenefitId = new Map<string, typeof contracts.$inferSelect[]>();
+
+		contractRows.forEach((contract) => {
+			const currentContracts = contractsByBenefitId.get(contract.benefitId) ?? [];
+			currentContracts.push(contract);
+			contractsByBenefitId.set(contract.benefitId, currentContracts);
+		});
+
+		const currentContractByBenefitId = new Map<string, typeof contracts.$inferSelect | null>();
+
+		rows.forEach((row) => {
+			const benefitId = String(row.id);
+
+			if (!row.requires_contract || currentContractByBenefitId.has(benefitId)) {
+				return;
+			}
+
+			currentContractByBenefitId.set(
+				benefitId,
+				selectCurrentBenefitContract(
+					contractsByBenefitId.get(benefitId) ?? [],
+					row.activeContractId ?? null,
+				),
+			);
+		});
+
+		return rows.map((row) => {
+			const benefitId = String(row.id);
+			const currentContract = currentContractByBenefitId.get(benefitId) ?? null;
+			const contractExpired =
+				row.requires_contract &&
+				row.status !== 'pending' &&
+				Boolean(currentContract?.expiryDate) &&
+				isContractExpired(currentContract?.expiryDate);
+			const failedRuleMessages = getFailedRuleMessages(
 				row.isCore,
 				row.ruleEvaluationJson,
-				ruleMetadataByBenefit.get(String(row.id)) ?? [],
-			),
-			overrideBy: row.overrideBy,
-			overrideExpiresAt: row.overrideExpiresAt,
-			overrideReason: row.overrideReason,
-		}));
+				ruleMetadataByBenefit.get(benefitId) ?? [],
+			);
+			const lockedByContractMessage =
+				contractExpired && currentContract?.expiryDate
+					? `The current contract expired on ${currentContract.expiryDate}. This benefit is locked until a new contract is uploaded.`
+					: null;
+
+			return {
+				benefit: mapBenefitRecord({
+					id: benefitId,
+					name: row.name,
+					description: row.description,
+					categoryId: row.categoryId,
+					category: row.category,
+					approval_role: row.approval_role,
+					requires_contract: row.requires_contract,
+					is_active: row.is_active,
+					is_core: row.is_core,
+					subsidy_percent: row.subsidy_percent,
+					vendor_name: row.vendor_name,
+				}),
+				status: contractExpired ? 'locked' : row.status,
+				ruleEvaluationJson: row.ruleEvaluationJson,
+				computedAt: row.computedAt,
+				failedRuleMessages: lockedByContractMessage
+					? Array.from(new Set([lockedByContractMessage, ...failedRuleMessages]))
+					: failedRuleMessages,
+				overrideBy: row.overrideBy,
+				overrideExpiresAt: row.overrideExpiresAt,
+				overrideReason: row.overrideReason,
+			};
+		});
 	} catch (error) {
 		throw new Error(
 			`Failed to list employee eligibility records: ${error instanceof Error ? error.message : String(error)}`,

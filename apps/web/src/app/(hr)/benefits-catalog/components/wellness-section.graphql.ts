@@ -14,6 +14,15 @@ export type BenefitEligibilitySummaryRecord = {
 };
 
 export type BenefitCatalogQuery = {
+  activeBenefitContracts: Array<{
+    benefitId: string;
+    effectiveDate: string;
+    expiryDate: string;
+    id: string;
+    isActive: boolean;
+    vendorName: string;
+    version: string;
+  }>;
   allBenefits?: Array<BenefitCatalogRecord | null> | null;
   benefitCategories: BenefitCategoryRecord[];
   listBenefitEligibilitySummary: BenefitEligibilitySummaryRecord[];
@@ -58,6 +67,15 @@ export const BENEFIT_CATALOG_QUERY = gql`
       benefitId
       activeEmployees
       eligibleEmployees
+    }
+    activeBenefitContracts {
+      id
+      benefitId
+      vendorName
+      version
+      effectiveDate
+      expiryDate
+      isActive
     }
   }
 `;

@@ -1,4 +1,5 @@
 import { getEmployeeByEmail } from './get-employee-by-email';
+import { listActiveBenefitContracts } from './list-active-benefit-contracts';
 import { listBenefitRequests } from './list-benefit-requests';
 import { countActiveContracts } from './count-active-contracts';
 import { countPendingBenefitRequests } from './count-pending-benefit-requests';
@@ -7,6 +8,7 @@ import { getBenefitContract } from './get-benefit-contract';
 import { getContractSignedUrl } from './get-contract-signed-url';
 import { getContractSignedUrlByBenefit } from './get-contract-signed-url-by-benefit';
 import { getEmployeeById } from './get-employee-by-id';
+import { getRuleApprovalRequestReview } from './get-rule-approval-request-review';
 import { listAuditLogEntries } from './list-audit-log-entries';
 import { listBenefitAcceptedEmployees } from './list-benefit-accepted-employees';
 import { listApprovalRequests } from './list-approval-requests';
@@ -15,6 +17,7 @@ import { listBenefitCategories } from './list-benefit-categories';
 import { listBenefitContractVersions } from './list-benefit-contract-versions';
 import { listBenefitEligibilitySummary } from './list-benefit-eligibility-summary';
 import { listEmployeeEligibilityRecords } from './list-employee-eligibility-records';
+import { listEmployeeEligibilitySummaries } from './list-employee-eligibility-summaries';
 import { listEligibilityRules } from './list-eligibility-rules';
 import { listRuleCategories } from './list-rule-categories';
 import { listRuleDefinitions } from './list-rule-definitions';
@@ -23,6 +26,7 @@ import type {
 	QueryEligibilityRulesArgs,
 	QueryRuleDefinitionsArgs,
 	QueryApprovalRequestArgs,
+	QueryRuleApprovalRequestReviewArgs,
 	QueryEmployeeArgs,
 	QueryEmployeeByEmailArgs,
 	QueryEmployeeEligibilityArgs,
@@ -66,6 +70,12 @@ export const queryResolvers = {
 	approvalRequest: (_: unknown, { id }: QueryApprovalRequestArgs, { DB }: GraphQLContext) =>
 		getApprovalRequestById(DB, id),
 
+	ruleApprovalRequestReview: (
+		_: unknown,
+		args: QueryRuleApprovalRequestReviewArgs,
+		{ DB }: GraphQLContext,
+	) => getRuleApprovalRequestReview(DB, args),
+
 	benefitRequests: (_: unknown, args: QueryBenefitRequestsArgs, { DB }: GraphQLContext) =>
 		listBenefitRequests(DB, args),
 
@@ -80,11 +90,17 @@ export const queryResolvers = {
 	employeeEligibility: (_: unknown, { employeeId }: QueryEmployeeEligibilityArgs, { DB }: GraphQLContext) =>
 		listEmployeeEligibilityRecords(DB, employeeId),
 
+	employeeEligibilitySummaries: (_: unknown, __: unknown, { DB }: GraphQLContext) =>
+		listEmployeeEligibilitySummaries(DB),
+
 	benefitContract: (_: unknown, { benefitId }: QueryBenefitContractArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getBenefitContract({ DB, CONTRACTS_BUCKET }, benefitId),
 
 	benefitContractVersions: (_: unknown, { benefitId }: { benefitId: string }, { DB }: GraphQLContext) =>
 		listBenefitContractVersions(DB, benefitId),
+
+	activeBenefitContracts: (_: unknown, __: unknown, { DB }: GraphQLContext) =>
+		listActiveBenefitContracts(DB),
 
 	contractSignedUrl: (_: unknown, { contractId }: QueryContractSignedUrlArgs, { DB, CONTRACTS_BUCKET }: GraphQLContext) =>
 		getContractSignedUrl({ DB, CONTRACTS_BUCKET }, contractId),

@@ -134,31 +134,3 @@ export function buildBenefitDialogRuleItems(
       };
     });
 }
-
-export function formatContractPeriod(effectiveDate: string, expiryDate: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-
-  return `${formatter.format(new Date(effectiveDate))} - ${formatter.format(new Date(expiryDate))}`;
-}
-
-export function getContractFileName(r2ObjectKey: string) {
-  const parts = r2ObjectKey.split("/");
-  return parts[parts.length - 1] || "Benefit contract";
-}
-
-export function resolveSignedContractUrl(signedUrl: string) {
-  if (/^https?:\/\//i.test(signedUrl)) {
-    return signedUrl;
-  }
-
-  const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT;
-  if (endpoint) {
-    return new URL(signedUrl, new URL(endpoint).origin).toString();
-  }
-
-  return new URL(signedUrl, window.location.origin).toString();
-}

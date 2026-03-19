@@ -50,7 +50,14 @@ export default function EmployeeRecordDialogShell({
         }
       }}
     >
-      <div className="mx-auto flex min-h-full items-center justify-center">
+      <div
+        className="mx-auto flex min-h-full items-center justify-center"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div
           aria-modal="true"
           className={`relative flex w-full max-w-[510px] flex-col overflow-hidden rounded-[12px] border border-[#D4D4D8] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)] ${HR_DIALOG_MAX_HEIGHT_CLASS}`}

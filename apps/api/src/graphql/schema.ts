@@ -439,6 +439,7 @@ export const typeDefs = /* GraphQL */ `
     employees: [Employee]
     employee(id: ID!): Employee
     employeeByEmail(email: String!): Employee
+    benefitAcceptedEmployees(benefitId: ID!): [Employee!]!
     benefitCategories: [BenefitCategory!]!
     benefitCatalog: [Benefit]
     allBenefits: [Benefit]

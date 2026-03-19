@@ -43,6 +43,13 @@ export const typeDefs = /* GraphQL */ `
     overrideExpiresAt: String
   }
 
+  type EmployeeEligibilitySummary {
+    employeeId: ID!
+    active: Int!
+    eligible: Int!
+    locked: Int!
+  }
+
   type Contract {
     id: ID!
     benefitId: String!
@@ -451,8 +458,10 @@ export const typeDefs = /* GraphQL */ `
     eligibilityRules(benefitId: ID): [EligibilityRule!]!
     employeeEligibilityRecords(employeeId: ID!): [BenefitEligibility!]!
     employeeEligibility(employeeId: ID!): [BenefitEligibility!]!
+    employeeEligibilitySummaries: [EmployeeEligibilitySummary!]!
     benefitContract(benefitId: ID!): Contract
     benefitContractVersions(benefitId: ID!): [Contract!]!
+    activeBenefitContracts: [Contract!]!
     contractSignedUrl(contractId: ID!): ContractSignedUrl!
     contractSignedUrlByBenefit(benefitId: ID!): ContractSignedUrl!
     countPendingBenefitRequests: Int!

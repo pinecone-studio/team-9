@@ -20,5 +20,19 @@
       "bucket_name": "company-ebms-contracts",
       "preview_bucket_name": "company-ebms-contracts-preview"
     }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REALTIME_HUB",
+        "class_name": "RealtimeHub"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RealtimeHub"]
+    }
   ]
 }

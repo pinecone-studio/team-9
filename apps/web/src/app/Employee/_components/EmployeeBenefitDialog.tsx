@@ -39,6 +39,7 @@ export default function EmployeeBenefitDialog({
   const isPending = card.status === "Pending";
   const { data, error, loading } = useEmployeeBenefitDialogQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
     variables: { benefitId: card.id, employeeId },
   });
   const contract = data?.benefitContract ?? null;

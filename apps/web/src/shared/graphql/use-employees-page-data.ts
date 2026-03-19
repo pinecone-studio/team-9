@@ -1,11 +1,7 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useApolloClient } from "@apollo/client/react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
-  EmployeeEligibilityDocument,
-  type EmployeeEligibilityQuery,
-  type EmployeeEligibilityQueryVariables,
   useEmployeesPageQuery,
   useRecalculateEmployeeEligibilityMutation,
 } from "@/shared/apollo/generated";
@@ -18,10 +14,9 @@ import {
 export type StatusFilter = "all" | "active" | "probation" | "terminated";
 
 export function useEmployeesPageData() {
-  const [eligibilityByEmployee, setEligibilityByEmployee] = useState<
+  const [overriddenSummaries, setOverriddenSummaries] = useState<
     Record<string, EligibilitySummary>
   >({});
-  const [isEligibilityLoading, setIsEligibilityLoading] = useState(true);
   const [manualError, setManualError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -29,7 +24,6 @@ export function useEmployeesPageData() {
     string | null
   >(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
-  const client = useApolloClient();
 
   const {
     data: employeesData,
@@ -37,64 +31,35 @@ export function useEmployeesPageData() {
     loading: isEmployeesLoading,
   } = useEmployeesPageQuery({
     fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
   });
 
   const [recalculateEmployeeEligibility] =
     useRecalculateEmployeeEligibilityMutation();
 
-  // 1. useMemo ашиглан reference-ийг тогтвортой байлгах
   const employees = useMemo(
     () =>
       (employeesData?.employees ?? []).filter((e): e is Employee => e !== null),
     [employeesData],
   );
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function loadAll() {
-      if (isEmployeesLoading || employees.length === 0) {
-        if (!isEmployeesLoading) setIsEligibilityLoading(false);
-        return;
-      }
-
-      setIsEligibilityLoading(true);
-      setManualError(null);
-      try {
-        const results = await Promise.all(
-          employees.map(async (emp) => {
-            const res = await client.query<
-              EmployeeEligibilityQuery,
-              EmployeeEligibilityQueryVariables
-            >({
-              query: EmployeeEligibilityDocument,
-              variables: { employeeId: emp.id },
-              fetchPolicy: "network-only",
-            });
-
-            return { id: emp.id, data: res.data?.employeeEligibility ?? [] };
-          }),
-        );
-
-        if (isActive) {
-          const newMap: Record<string, EligibilitySummary> = {};
-          results.forEach((res) => {
-            newMap[res.id] = buildEligibilitySummary(res.data);
-          });
-          setEligibilityByEmployee(newMap);
-        }
-      } catch {
-        if (isActive) setManualError("Мэдээлэл авахад алдаа гарлаа.");
-      } finally {
-        if (isActive) setIsEligibilityLoading(false);
-      }
-    }
-
-    void loadAll();
-    return () => {
-      isActive = false;
-    };
-  }, [client, employees, isEmployeesLoading]);
+  const queriedSummaries = useMemo<Record<string, EligibilitySummary>>(
+    () =>
+      Object.fromEntries(
+        (employeesData?.employeeEligibilitySummaries ?? []).map((summary) => [
+          summary.employeeId,
+          {
+            active: summary.active,
+            eligible: summary.eligible,
+            locked: summary.locked,
+          },
+        ]),
+      ),
+    [employeesData?.employeeEligibilitySummaries],
+  );
+  const eligibilityByEmployee = useMemo(
+    () => ({ ...queriedSummaries, ...overriddenSummaries }),
+    [overriddenSummaries, queriedSummaries],
+  );
 
   async function handleRecalculate(employee: Employee) {
     setRefreshingEmployeeId(employee.id);
@@ -105,7 +70,7 @@ export function useEmployeesPageData() {
         variables: { employeeId: employee.id },
       });
 
-      setEligibilityByEmployee((current) => ({
+      setOverriddenSummaries((current) => ({
         ...current,
         [employee.id]: buildEligibilitySummary(
           result.data?.recalculateEmployeeEligibility ?? [],
@@ -139,7 +104,7 @@ export function useEmployeesPageData() {
   });
 
   const error = manualError ?? employeesQueryError?.message ?? null;
-  const loading = isEmployeesLoading || isEligibilityLoading;
+  const loading = isEmployeesLoading;
 
   return {
     eligibilityByEmployee,

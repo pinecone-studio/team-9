@@ -8,9 +8,11 @@ import EmployeeEligibleBenefitDialogContent from "./EmployeeEligibleBenefitDialo
 import EmployeeLockedBenefitDialogContent from "./EmployeeLockedBenefitDialogContent";
 import EmployeePendingBenefitDialogContent from "./EmployeePendingBenefitDialogContent";
 import {
-  buildBenefitDialogRuleItems,
   buildExpiredContractMessage,
   isContractExpired,
+} from "./employee-benefit-contract.helpers";
+import {
+  buildBenefitDialogRuleItems,
 } from "./employee-benefit-dialog.helpers";
 import {
   findApprovedBenefitRequest,

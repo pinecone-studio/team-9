@@ -15,7 +15,7 @@ import {
   buildExpiredContractMessage,
   isContractExpired,
   resolveSignedContractUrl,
-} from "./employee-benefit-dialog.helpers";
+} from "./employee-benefit-contract.helpers";
 import type { EmployeeBenefitCard } from "./employee-types";
 
 type UseEmployeeBenefitDialogActionsInput = {

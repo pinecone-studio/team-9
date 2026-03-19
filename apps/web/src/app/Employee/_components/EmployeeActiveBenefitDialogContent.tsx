@@ -3,15 +3,13 @@ import type { EmployeeBenefitDialogQuery } from "@/shared/apollo/generated";
 import EmployeeBenefitDialogContractSection from "./EmployeeBenefitDialogContractSection";
 import EmployeeBenefitDialogEligibilitySection from "./EmployeeBenefitDialogEligibilitySection";
 import EmployeeBenefitDialogTimelineSection from "./EmployeeBenefitDialogTimelineSection";
+import { buildContractDateItems } from "./employee-benefit-contract.helpers";
 import {
   buildActiveTimelineItems,
   buildContractAgreementNote,
   type ActiveBenefitRequest,
 } from "./employee-benefit-request.helpers";
-import {
-  buildContractDateItems,
-  type BenefitDialogRuleItem,
-} from "./employee-benefit-dialog.helpers";
+import type { BenefitDialogRuleItem } from "./employee-benefit-dialog.helpers";
 
 type BenefitContract = NonNullable<EmployeeBenefitDialogQuery["benefitContract"]>;
 

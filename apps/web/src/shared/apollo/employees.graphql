@@ -30,6 +30,8 @@ query EmployeeDashboardData($employeeId: ID!) {
     id
     employmentStatus
     responsibilityLevel
+    okrSubmitted
+    lateArrivalCount30Days: lateArrivalCount
   }
   employeeEligibility(employeeId: $employeeId) {
     status
@@ -68,6 +70,9 @@ query EmployeeBenefitRequests($employeeId: ID!) {
   benefitRequests(employeeId: $employeeId) {
     id
     status
+    reviewComment
+    eligibilityStatus
+    ruleEvaluationJson
     contractVersionAccepted
     contractAcceptedAt
     created_at
@@ -80,9 +85,17 @@ query EmployeeBenefitRequests($employeeId: ID!) {
       position
     }
     benefit {
+      approvalRole
+      categoryId
       id
+      isActive
+      isCore
+      requiresContract
       title
+      description
       category
+      subsidyPercent
+      vendorName
     }
     reviewed_by {
       id
@@ -117,6 +130,9 @@ query EmployeeBenefitDialog($benefitId: ID!, $employeeId: ID!) {
   benefitRequests(employeeId: $employeeId, benefitId: $benefitId) {
     id
     status
+    reviewComment
+    eligibilityStatus
+    ruleEvaluationJson
     contractVersionAccepted
     contractAcceptedAt
     created_at
@@ -129,9 +145,17 @@ query EmployeeBenefitDialog($benefitId: ID!, $employeeId: ID!) {
       position
     }
     benefit {
+      approvalRole
+      categoryId
       id
+      isActive
+      isCore
+      requiresContract
       title
+      description
       category
+      subsidyPercent
+      vendorName
     }
     reviewed_by {
       id

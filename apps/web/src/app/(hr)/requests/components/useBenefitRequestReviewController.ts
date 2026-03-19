@@ -1,42 +1,35 @@
-import { useLazyQuery, useMutation } from "@apollo/client/react";
 import { useState } from "react";
 
 import {
-  BENEFIT_REQUEST_CONTRACT_QUERY,
-  REVIEW_BENEFIT_REQUEST_MUTATION,
-  type BenefitRequestContractQuery,
-  type BenefitRequestContractVariables,
-  type BenefitRequestRecord,
-  type ReviewBenefitRequestMutation,
-  type ReviewBenefitRequestVariables,
-} from "./benefit-requests.graphql";
+  useHrBenefitRequestContractLazyQuery,
+  useHrReviewBenefitRequestMutation,
+} from "@/shared/apollo/generated";
+
+import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import { normalizeSignedBenefitUrl } from "./benefit-request-review-utils";
+
+type UseBenefitRequestReviewControllerInput = {
+  currentUserIdentifier: string;
+  onClose: () => void;
+  onReviewed: () => Promise<unknown> | void;
+  request: BenefitRequestRecord;
+};
 
 export function useBenefitRequestReviewController({
   currentUserIdentifier,
   onClose,
   onReviewed,
   request,
-}: {
-  currentUserIdentifier: string;
-  onClose: () => void;
-  onReviewed: () => Promise<unknown> | void;
-  request: BenefitRequestRecord;
-}) {
+}: UseBenefitRequestReviewControllerInput) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [contractError, setContractError] = useState<string | null>(null);
-  const [reviewBenefitRequest, { loading }] = useMutation<
-    ReviewBenefitRequestMutation,
-    ReviewBenefitRequestVariables
-  >(REVIEW_BENEFIT_REQUEST_MUTATION);
-  const [loadContract, { loading: contractLoading }] = useLazyQuery<
-    BenefitRequestContractQuery,
-    BenefitRequestContractVariables
-  >(BENEFIT_REQUEST_CONTRACT_QUERY, {
-    fetchPolicy: "network-only",
-  });
+  const [reviewBenefitRequest, { loading }] = useHrReviewBenefitRequestMutation();
+  const [loadContract, { loading: contractLoading }] =
+    useHrBenefitRequestContractLazyQuery({
+      fetchPolicy: "network-only",
+    });
 
-  async function handleReview(approved: boolean) {
+  async function handleReview(approved: boolean, reviewComment: string | null) {
     try {
       setErrorMessage(null);
       await reviewBenefitRequest({
@@ -44,6 +37,7 @@ export function useBenefitRequestReviewController({
           input: {
             approved,
             id: request.id,
+            reviewComment,
             reviewedBy: currentUserIdentifier,
           },
         },
@@ -65,8 +59,8 @@ export function useBenefitRequestReviewController({
           benefitId: request.benefit.id,
         },
       });
-
       const signedUrl = contractData?.contractSignedUrlByBenefit.signedUrl;
+
       if (!signedUrl) {
         throw new Error("Contract link is unavailable.");
       }

@@ -1,0 +1,103 @@
+query HrBenefitRequests($targetRole: ApprovalRole) {
+  benefitRequests(targetRole: $targetRole) {
+    id
+    status
+    reviewComment
+    eligibilityStatus
+    ruleEvaluationJson
+    created_at
+    updated_at
+    approval_role
+    employee {
+      id
+      name
+      email
+      position
+      department
+      employmentStatus
+      responsibilityLevel
+    }
+    benefit {
+      approvalRole
+      categoryId
+      id
+      isActive
+      isCore
+      title
+      category
+      description
+      requiresContract
+      subsidyPercent
+      vendorName
+    }
+    contractAcceptedAt
+    contractVersionAccepted
+    reviewed_by {
+      id
+      name
+      email
+      position
+    }
+    employeeDepartment
+    employeeEmploymentStatus
+    employeeResponsibilityLevel
+    employeeOkrSubmitted
+    employeeLateArrivalCount
+  }
+}
+
+mutation HrReviewBenefitRequest($input: ReviewBenefitRequestInput!) {
+  reviewBenefitRequest(input: $input) {
+    id
+    status
+    reviewComment
+    eligibilityStatus
+    ruleEvaluationJson
+    created_at
+    updated_at
+    approval_role
+    employee {
+      id
+      name
+      email
+      position
+      department
+      employmentStatus
+      responsibilityLevel
+    }
+    benefit {
+      approvalRole
+      categoryId
+      id
+      isActive
+      isCore
+      title
+      category
+      description
+      requiresContract
+      subsidyPercent
+      vendorName
+    }
+    contractAcceptedAt
+    contractVersionAccepted
+    reviewed_by {
+      id
+      name
+      email
+      position
+    }
+    employeeDepartment
+    employeeEmploymentStatus
+    employeeResponsibilityLevel
+    employeeOkrSubmitted
+    employeeLateArrivalCount
+  }
+}
+
+query HrBenefitRequestContract($benefitId: ID!) {
+  contractSignedUrlByBenefit(benefitId: $benefitId) {
+    contractId
+    expiresAt
+    signedUrl
+  }
+}

@@ -108,7 +108,12 @@ export function buildBenefitRequestAuditEntries(
       ? {
           actor: request.reviewed_by?.name ?? "Reviewer",
           id: "reviewed",
-          label: request.status === "approved" ? "Request approved" : "Request rejected",
+          label:
+            request.status === "approved"
+              ? "Request approved"
+              : request.status === "cancelled"
+                ? "Request cancelled"
+                : "Request rejected",
           timestamp: request.updated_at,
         }
       : null,

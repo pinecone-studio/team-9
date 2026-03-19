@@ -1,3 +1,5 @@
+import type { BenefitRequestsQueryResult } from "./employee-dashboard.graphql";
+
 export type SummaryCard = {
   label: string;
   value: string;
@@ -23,7 +25,9 @@ export type BenefitCard = {
 
 export type EmployeeRequestItem = {
   benefit: string;
+  dialogCard: EmployeeBenefitCard;
   id: string;
+  request: BenefitRequestsQueryResult["benefitRequests"][number];
   reviewedBy: string;
   status: "Accepted" | "Pending" | "Rejected" | "Cancelled";
   submittedAt: string;

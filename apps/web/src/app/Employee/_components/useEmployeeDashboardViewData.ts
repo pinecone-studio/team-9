@@ -113,17 +113,21 @@ export function useEmployeeDashboardViewData({
       : rawEligibility;
   const dashboardData = buildEmployeeDashboardViewData({
     approvalRequests: dashboardQuery.data?.approvalRequests ?? [],
-    benefitStatusOverrides: new Map(),
     employeeEligibility,
     employeeEmail,
-    employeeLateArrivals30Days,
+    employeeLateArrivals30Days:
+      typeof dashboardQuery.data?.employee?.lateArrivalCount30Days === "number"
+        ? dashboardQuery.data.employee.lateArrivalCount30Days
+        : employeeLateArrivals30Days,
     employeeName,
-    employeeOkrSubmitted,
+    employeeOkrSubmitted:
+      typeof dashboardQuery.data?.employee?.okrSubmitted === "boolean"
+        ? dashboardQuery.data.employee.okrSubmitted
+        : employeeOkrSubmitted,
     employeeResponsibilityLevel:
       dashboardQuery.data?.employee?.responsibilityLevel ?? employeeResponsibilityLevel,
     employmentStatus:
       dashboardQuery.data?.employee?.employmentStatus ?? employmentStatus,
-    rawEligibility,
     requestRows: benefitRequestsQuery.data?.benefitRequests ?? [],
     summaryRows: dashboardQuery.data?.listBenefitEligibilitySummary ?? [],
   });

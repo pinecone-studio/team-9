@@ -94,12 +94,16 @@ export function BenefitRequestOverviewSection({
 export function BenefitRequestEmployeeSnapshotSection({
   department,
   employmentStatus,
+  lateArrivalCount,
   level,
+  okrSubmitted,
   position,
 }: {
   department: string;
   employmentStatus: string;
+  lateArrivalCount: number;
   level: number | null;
+  okrSubmitted: boolean;
   position: string;
 }) {
   return (
@@ -110,8 +114,16 @@ export function BenefitRequestEmployeeSnapshotSection({
         <SnapshotItem icon={<Building2 className="h-4 w-4 text-[#737373]" />} label="Department" value={department} />
         <SnapshotItem icon={<UserRound className="h-4 w-4 text-[#737373]" />} label="Status" value={employmentStatus} />
         <SnapshotItem icon={<CalendarDays className="h-4 w-4 text-[#737373]" />} label="Level" value={`Level ${level ?? "-"}`} />
-        <SnapshotItem icon={<CheckCircle2 className="h-4 w-4 text-[#00C950]" />} label="OKR" value="Unknown" />
-        <SnapshotItem icon={<Timer className="h-4 w-4 text-[#737373]" />} label="Late Arrivals" value="-" />
+        <SnapshotItem
+          icon={<CheckCircle2 className="h-4 w-4 text-[#00C950]" />}
+          label="OKR"
+          value={okrSubmitted ? "Submitted" : "Not submitted"}
+        />
+        <SnapshotItem
+          icon={<Timer className="h-4 w-4 text-[#737373]" />}
+          label="Late Arrivals"
+          value={String(lateArrivalCount)}
+        />
       </div>
     </section>
   );
@@ -145,6 +157,21 @@ export function BenefitRequestEligibilitySection() {
         <span className="text-[14px] leading-5 text-[#737373]">
           Eligibility details will appear after the API schema is updated.
         </span>
+      </div>
+    </section>
+  );
+}
+
+export function BenefitRequestNotesSection({
+  reviewComment,
+}: {
+  reviewComment: string;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="text-[14px] leading-5 font-semibold text-[#0A0A0A]">Decision Notes</h3>
+      <div className="rounded-[10px] border border-[#E2E8F0] bg-white px-4 py-3 text-[14px] leading-6 text-[#0A0A0A]">
+        {reviewComment}
       </div>
     </section>
   );

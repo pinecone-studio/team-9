@@ -142,6 +142,8 @@ async function fetchEmployeeRecordFromGraphql(endpoint: string, email: string) {
           hireDate
           position
           responsibilityLevel
+          okrSubmitted
+          lateArrivalCount30Days: lateArrivalCount
         }
       }
     `,
@@ -172,6 +174,8 @@ async function fetchEmployeeRecordFromEmployeesQuery(
           hireDate
           position
           responsibilityLevel
+          okrSubmitted
+          lateArrivalCount30Days: lateArrivalCount
         }
       }
     `,

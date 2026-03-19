@@ -21,6 +21,7 @@ type UseEmployeeBenefitDialogActionsInput = {
   } | null;
   currentUserIdentifier: string;
   employeeId: string;
+  initialAcceptedContract?: boolean;
   onClose: () => void;
   onSubmitted: () => Promise<unknown> | void;
   pendingRequest: PendingBenefitRequest | null;
@@ -31,11 +32,12 @@ export function useEmployeeBenefitDialogActions({
   contract,
   currentUserIdentifier,
   employeeId,
+  initialAcceptedContract = false,
   onClose,
   onSubmitted,
   pendingRequest,
 }: UseEmployeeBenefitDialogActionsInput) {
-  const [acceptedContract, setAcceptedContract] = useState(false);
+  const [acceptedContract, setAcceptedContract] = useState(initialAcceptedContract);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fetchSignedUrl, { loading: contractLoading }] =
     useContractSignedUrlByBenefitLazyQuery({ fetchPolicy: "network-only" });
@@ -45,9 +47,9 @@ export function useEmployeeBenefitDialogActions({
     useCancelEmployeeBenefitRequestMutation();
 
   useEffect(() => {
-    setAcceptedContract(false);
+    setAcceptedContract(initialAcceptedContract);
     setErrorMessage(null);
-  }, [card.id]);
+  }, [card.id, initialAcceptedContract]);
 
   async function handleViewContract() {
     if (!contract) {

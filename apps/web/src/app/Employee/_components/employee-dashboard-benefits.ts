@@ -77,8 +77,8 @@ export function mapBenefitSections(
     const configuredRuleCount = benefitRuleCountByBenefitId.get(eligibility.benefit.id) ?? 0;
     const total = configuredRuleCount > 0 ? configuredRuleCount : stats.total;
     const passed = Math.min(stats.passed, total);
-    const overrideReason = eligibility.overrideReason?.trim() ?? null;
-    const hasOverride = Boolean(eligibility.overrideBy || overrideReason);
+    const hasOverride = Boolean(eligibility.overrideBy?.trim());
+    const overrideReason = hasOverride ? eligibility.overrideReason?.trim() ?? null : null;
     const isOverridden = hasOverride && status !== "Pending";
     const subsidy = eligibility.benefit.subsidyPercent;
     const vendorName = eligibility.benefit.vendorName?.trim() ?? "";

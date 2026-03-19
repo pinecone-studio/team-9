@@ -17,6 +17,7 @@ export const benefitRequests = sqliteTable("benefit_requests", {
   contractVersionAccepted: text("contract_version_accepted"),
   contractAcceptedAt: text("contract_accepted_at"),
   reviewedBy: text("reviewed_by").references(() => employees.id),
+  reviewComment: text("review_comment"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

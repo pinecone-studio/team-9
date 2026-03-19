@@ -22,9 +22,11 @@ export default function EmployeeBenefitDialogTimelineSection({
                 <span
                   className={[
                     "h-[10px] w-[10px] rounded-full",
-                    item.tone === "warning"
-                      ? "bg-[#EAB308]"
-                      : "bg-[rgba(115,115,115,0.4)]",
+                    item.tone === "danger"
+                      ? "bg-[#EF4444]"
+                      : item.tone === "success"
+                        ? "bg-[#22C55E]"
+                        : "bg-[rgba(115,115,115,0.4)]",
                   ].join(" ")}
                 />
                 {!isLast ? (

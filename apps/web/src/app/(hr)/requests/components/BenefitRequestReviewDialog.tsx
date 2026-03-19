@@ -1,16 +1,11 @@
 "use client";
 
-import { AuditLogSection } from "./ApprovalRequestDetailSections";
+import { useState } from "react";
+
+import BenefitRequestReviewBody from "./BenefitRequestReviewBody";
 import BenefitRequestReviewFooter from "./BenefitRequestReviewFooter";
 import BenefitRequestReviewHeader from "./BenefitRequestReviewHeader";
 import {
-  BenefitRequestEligibilitySection,
-  BenefitRequestEmployeeSnapshotSection,
-  BenefitRequestOverviewSection,
-} from "./BenefitRequestReviewSections";
-import {
-  BenefitRequestApprovalProgressSection,
-  BenefitRequestContractSection,
   BenefitRequestReviewedBanner,
 } from "./BenefitRequestReviewStatusSections";
 import {
@@ -28,7 +23,6 @@ import {
 } from "./benefit-request-review-utils";
 import {
   formatDetailDateTime,
-  formatDetailDateTimeWithAt,
 } from "./request-detail-formatters";
 import { useBenefitRequestReviewController } from "./useBenefitRequestReviewController";
 
@@ -47,6 +41,8 @@ export default function BenefitRequestReviewDialog({
   onReviewed,
   request,
 }: BenefitRequestReviewDialogProps) {
+  const [rejectMode, setRejectMode] = useState(false);
+  const [reviewComment, setReviewComment] = useState("");
   const {
     contractError,
     contractLoading,
@@ -94,6 +90,16 @@ export default function BenefitRequestReviewDialog({
   const reviewedBannerName = request.reviewed_by?.name ?? "the assigned reviewer";
   const contractStatusLabel = request.contractAcceptedAt ? "Accepted" : "Pending";
 
+  function handleApprove() {
+    setRejectMode(false);
+    setReviewComment("");
+    void handleReview(true, null);
+  }
+
+  function handleReject() {
+    void handleReview(false, reviewComment.trim() || null);
+  }
+
   return (
     <div
       className="fixed inset-0 z-[60] overflow-y-auto bg-black/50 px-4 py-6"
@@ -104,58 +110,24 @@ export default function BenefitRequestReviewDialog({
       <div className="mx-auto flex w-full max-w-[626px] flex-col overflow-hidden rounded-[12px] border border-[#CBD5E1] bg-white shadow-[0_24px_48px_rgba(15,23,42,0.18)]">
         <BenefitRequestReviewHeader isPending={isPending} onClose={onClose} />
 
-        <div className="flex max-h-[calc(100vh-220px)] flex-col gap-5 overflow-y-auto px-6 py-5">
-          <BenefitRequestOverviewSection
-            approvalRoute={approvalRoute}
-            benefitTitle={request.benefit.title}
-            employeeName={request.employee.name}
-            employeePosition={request.employee.position}
-            isPending={isPending}
-            primaryValue={primaryOverviewValue}
-            reviewedByLabel={reviewedByLabel}
-            secondaryValue={secondaryOverviewValue}
-            statusBadge={statusBadge}
-          />
-
-          <BenefitRequestEmployeeSnapshotSection
-            department={department}
-            employmentStatus={employmentStatus}
-            level={level}
-            position={request.employee.position}
-          />
-
-          <div className="h-px w-full bg-[#E5E5E5]" />
-
-          <BenefitRequestEligibilitySection />
-
-          <div className="h-px w-full bg-[#E5E5E5]" />
-
-          {isPending && request.benefit.requiresContract ? (
-            <>
-              <BenefitRequestContractSection
-                acceptedAt={formatDetailDateTime(request.contractAcceptedAt)}
-                contractError={contractError}
-                contractLoading={contractLoading}
-                contractVersion={request.contractVersionAccepted ?? "-"}
-                onViewContract={() => void handleViewContract()}
-                statusLabel={contractStatusLabel}
-              />
-
-              <div className="h-px w-full bg-[#E5E5E5]" />
-            </>
-          ) : null}
-
-          {isPending ? (
-            <>
-              <BenefitRequestApprovalProgressSection approvalRoute={approvalRoute} />
-
-              <div className="h-px w-full bg-[#E5E5E5]" />
-            </>
-          ) : null}
-
-          <AuditLogSection entries={auditEntries} formatTimestamp={formatDetailDateTimeWithAt} />
-
-        </div>
+        <BenefitRequestReviewBody
+          approvalRoute={approvalRoute}
+          auditEntries={auditEntries}
+          contractError={contractError}
+          contractLoading={contractLoading}
+          contractStatusLabel={contractStatusLabel}
+          department={department}
+          employmentStatus={employmentStatus}
+          isPending={isPending}
+          level={level}
+          onViewContract={() => void handleViewContract()}
+          position={request.employee.position}
+          request={request}
+          reviewedByLabel={reviewedByLabel}
+          reviewedPrimaryValue={primaryOverviewValue}
+          reviewSecondaryValue={secondaryOverviewValue}
+          statusBadge={statusBadge}
+        />
 
         <BenefitRequestReviewFooter
           canReview={canReview}
@@ -163,9 +135,15 @@ export default function BenefitRequestReviewDialog({
           helperMessage={helperMessage}
           isPending={isPending}
           loading={loading}
-          onApprove={() => void handleReview(true)}
+          onApprove={handleApprove}
           onClose={onClose}
-          onReject={() => void handleReview(false)}
+          onRejectClick={() => {
+            setRejectMode(true);
+          }}
+          onRejectConfirm={handleReject}
+          onReviewCommentChange={setReviewComment}
+          rejectMode={rejectMode}
+          reviewComment={reviewComment}
         />
         {!isPending ? (
           <BenefitRequestReviewedBanner reviewedBy={reviewedBannerName} status={request.status} />

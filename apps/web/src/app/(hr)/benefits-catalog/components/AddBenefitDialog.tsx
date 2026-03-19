@@ -2,7 +2,6 @@
 
 import { useQuery } from "@apollo/client/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-
 import AddBenefitDialogFooter from "./AddBenefitDialogFooter";
 import AddBenefitDialogForm from "./AddBenefitDialogForm";
 import {
@@ -63,10 +62,7 @@ export default function AddBenefitDialog({
     handleDeleteRule,
     selectedRuleId,
     setSelectedRuleId,
-  } = useBenefitRuleAssignments({
-    initialRules: [],
-    ruleDefinitions: data?.ruleDefinitions,
-  });
+  } = useBenefitRuleAssignments({ initialRules: [], ruleDefinitions: data?.ruleDefinitions });
   const { handleCloseWithDraft, handleSave, saving } = useAddBenefitDialogActions({
     approvalRole: resolvedApprovalRole,
     assignedRules,
@@ -89,10 +85,7 @@ export default function AddBenefitDialog({
   });
   useEffect(() => {
     if (!errorMessage) return;
-    errorMessageRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+    errorMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [errorMessage]);
   const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
   const saveDisabled =
@@ -127,8 +120,7 @@ export default function AddBenefitDialog({
         if (event.target === event.currentTarget) {
           handleCloseWithDraft();
         }
-      }}
-    >
+      }}>
       <div className="mx-auto flex h-[760px] w-full max-w-[540px] flex-col overflow-hidden rounded-[8px] border border-[#CBD5E1] bg-white p-6">
         <AddBenefitDialogForm
           approvalRole={resolvedApprovalRole}

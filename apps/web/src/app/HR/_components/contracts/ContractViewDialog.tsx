@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "@apollo/client/react";
 import { useContractSignedUrlByBenefitLazyQuery } from "@/shared/apollo/generated";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import ContractDialogFooter from "./ContractDialogFooter";
 import ContractDialogShell from "./ContractDialogShell";
 import {
@@ -13,18 +12,14 @@ import {
 } from "./ContractViewSections";
 import {
   buildContractFileName,
-  buildHistoryRows,
-  buildHistoryRowsFromContracts,
   deriveNextVersion,
   resolveSignedContractUrl,
   toEditableDate,
   type ContractViewContract,
 } from "./contract-view-utils";
-import {
-  BenefitContractVersionsDocument,
-  type BenefitContractVersionsQuery,
-} from "./contracts-helpers";
 import { normalizeDateInput } from "./contract-dialog-utils";
+import { useCloseOnEscape } from "./useCloseOnEscape";
+import { useContractVersionHistory } from "./useContractVersionHistory";
 
 type ContractViewDialogProps = {
   contract: ContractViewContract;
@@ -61,37 +56,13 @@ export default function ContractViewDialog({
   const [fetchSignedUrl, { loading: downloading }] = useContractSignedUrlByBenefitLazyQuery({
     fetchPolicy: "network-only",
   });
-  const { data: historyData, error: historyError } = useQuery<BenefitContractVersionsQuery>(
-    BenefitContractVersionsDocument,
-    {
-      fetchPolicy: "cache-and-network",
-      variables: { benefitId: contract.benefitId },
-    },
-  );
-
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
-  const historyRows = useMemo(() => {
-    const historyContracts = historyData?.benefitContractVersions ?? [];
-    if (historyContracts.length > 0) {
-      return buildHistoryRowsFromContracts(historyContracts);
-    }
-
-    return buildHistoryRows(contract);
-  }, [contract, historyData?.benefitContractVersions]);
+  const { historyError, historyRows } = useContractVersionHistory(contract);
+  useCloseOnEscape(onClose);
   const fileName = useMemo(
     () => selectedFile?.name ?? buildContractFileName(contract.vendor || contract.benefit, contract.version),
     [contract.benefit, contract.vendor, contract.version, selectedFile?.name],
   );
-  const uploadSummary = selectedFile
-    ? "New contract file selected for this version."
-    : `Uploaded for ${contract.version} and active since ${contract.effectiveDate}.`;
+  const uploadSummary = selectedFile ? "New contract file selected for this version." : `Uploaded for ${contract.version} and active since ${contract.effectiveDate}.`;
 
   function openFilePicker() {
     setEditMode(true);
@@ -106,8 +77,7 @@ export default function ContractViewDialog({
   function handleDatePickerValue(value: string, kind: "effective" | "expiry") {
     if (!value) return;
     const formatted = value.replace(/-/g, ".");
-    if (kind === "effective") return setDraftEffectiveDate(formatted);
-    setDraftExpiryDate(formatted);
+    return kind === "effective" ? setDraftEffectiveDate(formatted) : setDraftExpiryDate(formatted);
   }
 
   async function handleDownload() {

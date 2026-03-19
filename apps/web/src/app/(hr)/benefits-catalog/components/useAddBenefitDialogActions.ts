@@ -1,5 +1,4 @@
 import { useMutation } from "@apollo/client/react";
-import type { ApprovalRoleValue } from "./add-benefit-dialog.graphql";
 import {
   CREATE_BENEFIT_MUTATION,
   type CreateBenefitMutation,
@@ -9,35 +8,13 @@ import {
   areBenefitDraftsEqual,
   buildBenefitDraft,
   hasBenefitDraftContent,
-  type BenefitDraft,
 } from "./benefit-draft";
 import { getBenefitRequestNoticeMessage } from "./benefit-request-notice";
+import { buildContractUploadInput } from "./contract-upload-client";
 import {
-  buildContractUploadInput,
-  isEditableDateComplete,
-  toIsoEditableDate,
-} from "./contract-upload-client";
-import type { AssignedBenefitRule } from "./edit-benefit-dialog.types";
-type UseAddBenefitDialogActionsProps = {
-  approvalRole: ApprovalRoleValue;
-  assignedRules: AssignedBenefitRule[];
-  categoryId: string;
-  contractFile: File | null;
-  contractEffectiveDate: string;
-  contractExpiryDate: string;
-  coreBenefitEnabled: boolean;
-  currentUserIdentifier: string;
-  description: string;
-  initialDraft?: BenefitDraft | null;
-  name: string;
-  onClose: () => void;
-  onCreated?: () => void | Promise<unknown>;
-  onDraftChange?: (draft: BenefitDraft | null) => void;
-  onSubmitted?: (message: string) => void;
-  requiresContract: boolean;
-  subsidyPercent: string;
-  vendorName: string;
-};
+  type UseAddBenefitDialogActionsProps,
+  validateAddBenefitSaveInput,
+} from "./useAddBenefitDialogActions.helpers";
 
 export function useAddBenefitDialogActions({
   approvalRole,
@@ -100,64 +77,20 @@ export function useAddBenefitDialogActions({
   }
 
   async function handleSave(setErrorMessage: (value: string | null) => void) {
-    const trimmedName = name.trim();
-    const trimmedDescription = description.trim();
-    const trimmedVendorName = vendorName.trim();
-    const parsedSubsidy = Number.parseInt(subsidyPercent, 10);
+    const validation = validateAddBenefitSaveInput({
+      categoryId,
+      contractEffectiveDate,
+      contractExpiryDate,
+      contractFile,
+      description,
+      name,
+      requiresContract,
+      subsidyPercent,
+      vendorName,
+    });
 
-    if (!trimmedName) {
-      setErrorMessage("Benefit name is required.");
-      return;
-    }
-
-    if (!categoryId) {
-      setErrorMessage("Category is missing. Please add from a category section.");
-      return;
-    }
-
-    if (!trimmedDescription) {
-      setErrorMessage("Description is required.");
-      return;
-    }
-
-    if (requiresContract && !trimmedVendorName) {
-      setErrorMessage("Vendor name is required when contract is enabled.");
-      return;
-    }
-
-    if (!Number.isInteger(parsedSubsidy) || parsedSubsidy < 0 || parsedSubsidy > 100) {
-      setErrorMessage("Subsidy percent must be a whole number between 0 and 100.");
-      return;
-    }
-
-    if (requiresContract && !contractFile) {
-      setErrorMessage("Please upload a contract file.");
-      return;
-    }
-
-    if (requiresContract && !contractEffectiveDate.trim()) {
-      setErrorMessage("Effective date is required when contract is enabled.");
-      return;
-    }
-
-    if (requiresContract && !contractExpiryDate.trim()) {
-      setErrorMessage("Expiry date is required when contract is enabled.");
-      return;
-    }
-
-    if (
-      requiresContract &&
-      (!isEditableDateComplete(contractEffectiveDate) || !isEditableDateComplete(contractExpiryDate))
-    ) {
-      setErrorMessage("Contract dates must use the yyyy.mm.dd format.");
-      return;
-    }
-
-    if (
-      requiresContract &&
-      toIsoEditableDate(contractExpiryDate) < toIsoEditableDate(contractEffectiveDate)
-    ) {
-      setErrorMessage("Expiry date must be on or after the effective date.");
+    if ("errorMessage" in validation) {
+      setErrorMessage(validation.errorMessage);
       return;
     }
 
@@ -177,11 +110,11 @@ export function useAddBenefitDialogActions({
           input: {
             requestedBy: currentUserIdentifier,
             benefit: {
-              name: trimmedName,
-              description: trimmedDescription,
+              name: validation.trimmedName,
+              description: validation.trimmedDescription,
               categoryId,
-              subsidyPercent: parsedSubsidy,
-              vendorName: trimmedVendorName || null,
+              subsidyPercent: validation.parsedSubsidy,
+              vendorName: validation.trimmedVendorName || null,
               requiresContract,
               isCore: coreBenefitEnabled,
               approvalRole,

@@ -60,7 +60,14 @@ function hasActiveOverride(record: Pick<EmployeeEligibilityRow, 'overrideBy' | '
 	return Number.isFinite(expiresAt) && expiresAt > Date.now();
 }
 
-function shouldPreserveEligibilityStatus(record: EmployeeEligibilityRow | undefined) {
+function shouldPreserveEligibilityStatus(
+	record: EmployeeEligibilityRow | undefined,
+	employmentStatus: string,
+) {
+	if (employmentStatus.trim().toLowerCase() === 'terminated') {
+		return record?.status === 'pending' || hasActiveOverride(record);
+	}
+
 	return record?.status === 'active' || record?.status === 'pending' || hasActiveOverride(record);
 }
 
@@ -206,7 +213,7 @@ export async function recomputeBenefitEligibilityForAllEmployees(
 
 	for (const employee of employeeRows) {
 		const existingEligibility = existingEligibilityByEmployee.get(employee.id);
-		if (shouldPreserveEligibilityStatus(existingEligibility)) {
+		if (shouldPreserveEligibilityStatus(existingEligibility, employee.employmentStatus)) {
 			preservedCount += 1;
 			continue;
 		}

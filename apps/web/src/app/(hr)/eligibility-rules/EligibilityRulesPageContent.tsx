@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import HrPageShell from "../../HR/_components/HrPageShell";
-import EligibilityRulesHeader from "./components/EligibilityRulesHeader";
 import RuleSectionList from "./components/RuleSectionList";
 
 type EligibilityRulesPageContentProps = {
@@ -26,12 +25,9 @@ export default function EligibilityRulesPageContent({
       subtitle="Control who qualifies for benefits and validate rule changes."
       title="Eligibility Rules"
     >
-      <EligibilityRulesHeader
-        onSearchChange={setSearchTerm}
-        searchValue={searchTerm}
-      />
       <RuleSectionList
         currentUserIdentifier={currentUserIdentifier}
+        onSearchChange={setSearchTerm}
         requestedCreateSection={requestedCreateSection}
         searchTerm={searchTerm}
         shouldAutoOpenCreateRule={shouldAutoOpenCreateRule}

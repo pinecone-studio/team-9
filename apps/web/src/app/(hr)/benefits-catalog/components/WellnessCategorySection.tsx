@@ -99,7 +99,7 @@ export default function WellnessCategorySection({
       <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <BenefitCard
-            key={`${title}-${card.title}`}
+            key={card.id}
             {...card}
             onCancelRequest={onCancelRequest}
             onEdit={onEditBenefit}

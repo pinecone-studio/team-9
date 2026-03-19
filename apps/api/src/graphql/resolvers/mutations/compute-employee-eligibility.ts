@@ -31,6 +31,17 @@ function hasActiveOverride(record: ExistingEligibilityRow | undefined) {
 	return Number.isFinite(expiresAt) && expiresAt > Date.now();
 }
 
+function shouldPreserveEligibilityStatus(
+	record: ExistingEligibilityRow | undefined,
+	employmentStatus: string,
+) {
+	if (employmentStatus.trim().toLowerCase() === 'terminated') {
+		return record?.status === 'pending' || hasActiveOverride(record);
+	}
+
+	return record?.status === 'active' || record?.status === 'pending' || hasActiveOverride(record);
+}
+
 export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string): Promise<void> => {
 	try {
 		const db = getDb(env);
@@ -66,10 +77,10 @@ export const computeEmployeeEligibility = async (env: DbEnv, employeeId: string)
 
 		for (const benefit of benefitList) {
 			const existingEligibility = existingEligibilityByBenefit.get(benefit.id);
-			const shouldPreserveStatus =
-				existingEligibility?.status === 'active' ||
-				existingEligibility?.status === 'pending' ||
-				hasActiveOverride(existingEligibility);
+			const shouldPreserveStatus = shouldPreserveEligibilityStatus(
+				existingEligibility,
+				employee.employmentStatus,
+			);
 
 			if (shouldPreserveStatus) {
 				continue;

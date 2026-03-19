@@ -59,6 +59,7 @@ export type BenefitCatalogRecord = {
   id: string;
   isActive: boolean;
   isCore: boolean;
+  pendingRequest?: PendingBenefitRequest | null;
   requiresContract: boolean;
   subsidyPercent?: number | null;
   title: string;

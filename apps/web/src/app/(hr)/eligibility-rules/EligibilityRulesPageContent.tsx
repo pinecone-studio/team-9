@@ -8,10 +8,14 @@ import RuleSectionList from "./components/RuleSectionList";
 
 type EligibilityRulesPageContentProps = {
   currentUserIdentifier: string;
+  requestedCreateSection?: string | null;
+  shouldAutoOpenCreateRule?: boolean;
 };
 
 export default function EligibilityRulesPageContent({
   currentUserIdentifier,
+  requestedCreateSection,
+  shouldAutoOpenCreateRule = false,
 }: EligibilityRulesPageContentProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -28,7 +32,9 @@ export default function EligibilityRulesPageContent({
       />
       <RuleSectionList
         currentUserIdentifier={currentUserIdentifier}
+        requestedCreateSection={requestedCreateSection}
         searchTerm={searchTerm}
+        shouldAutoOpenCreateRule={shouldAutoOpenCreateRule}
       />
     </HrPageShell>
   );

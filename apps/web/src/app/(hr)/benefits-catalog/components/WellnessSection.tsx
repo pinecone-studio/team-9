@@ -6,6 +6,7 @@ import AddBenefitCard from "./AddBenefitCard";
 import BenefitRequestNotice from "./BenefitRequestNotice";
 import BenefitsCatalogSkeleton from "./BenefitsCatalogSkeleton";
 import DraftBenefitCard from "./DraftBenefitCard";
+import { useAutoOpenBenefitDialog } from "./useAutoOpenBenefitDialog";
 import WellnessCategorySection from "./WellnessCategorySection";
 import WellnessSectionDialogs from "./WellnessSectionDialogs";
 import WellnessSectionNotice from "./WellnessSectionNotice";
@@ -13,6 +14,7 @@ import { useWellnessCatalogState } from "./useWellnessCatalogState";
 
 type WellnessSectionProps = {
   currentUserIdentifier: string;
+  requestedBenefitId?: string | null;
   searchQuery?: string;
 };
 
@@ -26,6 +28,7 @@ function formatCategoryLabel(value: string) {
 
 export default function WellnessSection({
   currentUserIdentifier,
+  requestedBenefitId,
   searchQuery = "",
 }: WellnessSectionProps) {
   const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] = useState(false);
@@ -52,6 +55,13 @@ export default function WellnessSection({
     setSelectedBenefit,
     shouldShowDraftCard,
   } = useWellnessCatalogState({ searchQuery });
+  const allBenefitCards = benefitSections.flatMap((section) => section.cards);
+
+  useAutoOpenBenefitDialog({
+    benefits: allBenefitCards,
+    requestedBenefitId,
+    setSelectedBenefit,
+  });
   const showSkeleton =
     loading && !error && benefitSections.length === 0 && !shouldShowDraftCard;
   const showEmptyState =

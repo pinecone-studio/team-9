@@ -26,8 +26,7 @@ export default function DashboardContent({ greeting, subtitle }: DashboardConten
     (count, benefit) => count + (benefit ? 1 : 0),
     0,
   );
-  const benefitRows = (data?.listBenefitEligibilitySummary ?? []).slice(0, 4);
-  const activityEntries = data?.listAuditLogEntries ?? [];
+  const benefitRows = data?.listBenefitEligibilitySummary ?? [];
   const ruleDefinitions = data?.ruleDefinitions ?? [];
 
   if (loading && !data) {
@@ -47,7 +46,7 @@ export default function DashboardContent({ greeting, subtitle }: DashboardConten
       <DashboardBenefitsTable rows={benefitRows} />
       <DashboardEligibilityOverview rows={benefitRows} />
       <div className="grid w-full grid-cols-1 gap-5 xl:grid-cols-2">
-        <DashboardRecentActivity entries={activityEntries} />
+        <DashboardRecentActivity />
         <DashboardRulesPanel rules={ruleDefinitions} />
       </div>
     </div>

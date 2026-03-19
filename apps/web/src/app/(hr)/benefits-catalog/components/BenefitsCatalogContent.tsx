@@ -7,10 +7,12 @@ import WellnessSection from "./WellnessSection";
 
 type BenefitsCatalogContentProps = {
   currentUserIdentifier: string;
+  requestedBenefitId?: string | null;
 };
 
 export default function BenefitsCatalogContent({
   currentUserIdentifier,
+  requestedBenefitId,
 }: BenefitsCatalogContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -22,6 +24,7 @@ export default function BenefitsCatalogContent({
       />
       <WellnessSection
         currentUserIdentifier={currentUserIdentifier}
+        requestedBenefitId={requestedBenefitId}
         searchQuery={searchQuery}
       />
     </>

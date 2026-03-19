@@ -119,11 +119,7 @@ async function fetchEmployeeRecordFromD1(email: string) {
       )
       .bind(email)
       .first<EmployeeRecord>();
-  } catch (error) {
-    console.warn("[auth] D1 lookup unavailable, falling back to GraphQL.", {
-      email,
-      error: error instanceof Error ? error.message : String(error),
-    });
+  } catch {
     return null;
   }
 }

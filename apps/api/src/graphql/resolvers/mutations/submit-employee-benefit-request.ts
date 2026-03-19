@@ -211,9 +211,16 @@ export async function submitEmployeeBenefitRequest(
       throw new Error("Submitted benefit request could not be loaded");
     }
 
+    console.info("[notifications] Queueing employee benefit request notification.", {
+      approvalRole: "hr_admin",
+      employeeId: createdRequest.employee.id,
+      kind: "employee_benefit_request_submitted",
+      requestId: createdRequest.id,
+    });
+
     scheduleNotification(env, "employee_benefit_request_submitted", () =>
       sendEmployeeBenefitRequestSubmittedNotification(env, {
-        approvalRole: createdRequest.approval_role,
+        approvalRole: "hr_admin",
         benefitTitle: createdRequest.benefit.title,
         employeeId: createdRequest.employee.id,
         employeeName: createdRequest.employee.name,

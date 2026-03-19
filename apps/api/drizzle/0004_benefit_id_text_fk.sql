@@ -35,15 +35,16 @@ CREATE TABLE `__new_eligibility_rules` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`benefit_id` text NOT NULL,
 	`rule_type` text NOT NULL,
-	`rule_config` text NOT NULL,
+	`operator` text NOT NULL,
+	`value` text NOT NULL,
+	`error_message` text NOT NULL,
 	`priority` integer DEFAULT 1 NOT NULL,
 	`is_active` integer DEFAULT true NOT NULL,
-	`created_at` integer NOT NULL,
 	FOREIGN KEY (`benefit_id`) REFERENCES `benefits`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-INSERT INTO `__new_eligibility_rules`("id", "benefit_id", "rule_type", "rule_config", "priority", "is_active", "created_at")
-SELECT "id", CAST("benefit_id" AS text), "rule_type", "rule_config", "priority", "is_active", "created_at" FROM `eligibility_rules`;--> statement-breakpoint
+INSERT INTO `__new_eligibility_rules`("id", "benefit_id", "rule_type", "operator", "value", "error_message", "priority", "is_active")
+SELECT "id", CAST("benefit_id" AS text), "rule_type", "operator", "value", "error_message", "priority", "is_active" FROM `eligibility_rules`;--> statement-breakpoint
 DROP TABLE `eligibility_rules`;--> statement-breakpoint
 ALTER TABLE `__new_eligibility_rules` RENAME TO `eligibility_rules`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;

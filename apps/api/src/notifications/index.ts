@@ -4,7 +4,7 @@ import { getDb } from "../db";
 import { employees } from "../db/schema/employees";
 
 const DEFAULT_FROM_NAME = "EBMS";
-const RESEND_API_URL = "https://api.resend.com/emails";
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 type ApprovalRole = "finance_manager" | "hr_admin";
 
@@ -17,9 +17,9 @@ type EmployeeNotificationTarget = {
 
 export type NotificationRuntime = {
   DB: D1Database;
-  RESEND_API_KEY?: string;
-  RESEND_FROM_EMAIL?: string;
-  RESEND_FROM_NAME?: string;
+  BREVO_API_KEY?: string;
+  BREVO_FROM_EMAIL?: string;
+  BREVO_FROM_NAME?: string;
   waitUntil?: (promise: Promise<unknown>) => void;
 };
 
@@ -128,14 +128,17 @@ function buildHtml(paragraphs: string[]) {
   return paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("");
 }
 
-function buildFromAddress(runtime: NotificationRuntime) {
-  const fromEmail = normalizeEmail(runtime.RESEND_FROM_EMAIL);
+function buildSender(runtime: NotificationRuntime) {
+  const fromEmail = normalizeEmail(runtime.BREVO_FROM_EMAIL);
   if (!fromEmail) {
     return null;
   }
 
-  const fromName = runtime.RESEND_FROM_NAME?.trim() || DEFAULT_FROM_NAME;
-  return `${fromName} <${fromEmail}>`;
+  const fromName = runtime.BREVO_FROM_NAME?.trim() || DEFAULT_FROM_NAME;
+  return {
+    email: fromEmail,
+    name: fromName,
+  };
 }
 
 async function resolveEmployeeByIdentifier(
@@ -194,8 +197,14 @@ export function scheduleNotification(
   kind: string,
   operation: () => Promise<unknown>,
 ) {
+  console.info("[notifications] Scheduling notification.", {
+    kind,
+    mode: runtime.waitUntil ? "waitUntil" : "async",
+  });
+
   const task = (async () => {
     try {
+      console.info("[notifications] Running notification task.", { kind });
       await operation();
     } catch (error) {
       console.error("[notifications] Notification task failed.", {
@@ -206,8 +215,15 @@ export function scheduleNotification(
   })();
 
   if (runtime.waitUntil) {
-    runtime.waitUntil(task);
-    return;
+    try {
+      runtime.waitUntil(task);
+      return;
+    } catch (error) {
+      console.error("[notifications] waitUntil failed, continuing async.", {
+        error: error instanceof Error ? error.message : String(error),
+        kind,
+      });
+    }
   }
 
   void task;
@@ -217,7 +233,8 @@ export async function sendEmail(
   runtime: NotificationRuntime,
   input: SendEmailInput,
 ): Promise<EmailSendResult> {
-  if (!runtime.RESEND_API_KEY?.trim()) {
+  const apiKey = runtime.BREVO_API_KEY?.trim();
+  if (!apiKey) {
     console.warn("[notifications] Email skipped.", {
       kind: input.kind,
       reason: "missing_api_key",
@@ -229,8 +246,8 @@ export async function sendEmail(
     };
   }
 
-  const from = buildFromAddress(runtime);
-  if (!from) {
+  const sender = buildSender(runtime);
+  if (!sender) {
     console.warn("[notifications] Email skipped.", {
       kind: input.kind,
       reason: "missing_from_email",
@@ -256,16 +273,30 @@ export async function sendEmail(
   }
 
   try {
-    const response = await fetch(RESEND_API_URL, {
-      body: JSON.stringify({
-        from,
-        html: input.html,
-        subject: input.subject,
-        text: input.text,
-        to: recipients,
-      }),
+    console.info("[notifications] Sending email.", {
+      kind: input.kind,
+      recipientCount: recipients.length,
+    });
+
+    const response = await fetch(BREVO_API_URL, {
+      body: JSON.stringify(
+        input.html
+          ? {
+              htmlContent: input.html,
+              sender,
+              subject: input.subject,
+              to: recipients.map((email) => ({ email })),
+            }
+          : {
+              sender,
+              subject: input.subject,
+              textContent: input.text,
+              to: recipients.map((email) => ({ email })),
+            },
+      ),
       headers: {
-        "Authorization": `Bearer ${runtime.RESEND_API_KEY.trim()}`,
+        "accept": "application/json",
+        "api-key": apiKey,
         "Content-Type": "application/json",
       },
       method: "POST",
@@ -434,6 +465,13 @@ export async function sendEmployeeBenefitRequestSubmittedNotification(
     input.approvalRole,
     input.employeeId,
   );
+  console.info("[notifications] Resolved employee benefit request recipients.", {
+    approvalRole: input.approvalRole,
+    employeeId: input.employeeId,
+    kind: "employee_benefit_request_submitted",
+    recipientCount: recipients.length,
+    requestId: input.requestId,
+  });
   const reviewerGroupLabel = formatRoleLabel(input.approvalRole);
   const textLines = [
     `A new employee benefit request is pending review in EBMS.`,

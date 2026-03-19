@@ -59,9 +59,9 @@ import { uploadContract, UploadContractInput } from './upload-contract';
 type GraphQLContext = {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
-	RESEND_API_KEY?: string;
-	RESEND_FROM_EMAIL?: string;
-	RESEND_FROM_NAME?: string;
+	BREVO_API_KEY?: string;
+	BREVO_FROM_EMAIL?: string;
+	BREVO_FROM_NAME?: string;
 	waitUntil?: (promise: Promise<unknown>) => void;
 };
 

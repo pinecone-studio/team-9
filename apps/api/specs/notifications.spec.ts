@@ -8,11 +8,11 @@ describe("notifications/sendEmail", () => {
     vi.unstubAllGlobals();
   });
 
-  it("skips when the Resend API key is missing", async () => {
+  it("skips when the Brevo API key is missing", async () => {
     const result = await sendEmail(
       {
         DB: {} as D1Database,
-        RESEND_FROM_EMAIL: "noreply@example.com",
+        BREVO_FROM_EMAIL: "noreply@example.com",
       },
       {
         kind: "test_notification",
@@ -29,9 +29,9 @@ describe("notifications/sendEmail", () => {
     });
   });
 
-  it("sends a Resend request with a sanitized payload", async () => {
+  it("sends a Brevo request with a sanitized payload", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ id: "email_123" }), {
+      new Response(JSON.stringify({ messageId: "<123@example.com>" }), {
         status: 200,
       }),
     );
@@ -40,9 +40,9 @@ describe("notifications/sendEmail", () => {
     const result = await sendEmail(
       {
         DB: {} as D1Database,
-        RESEND_API_KEY: "test_api_key",
-        RESEND_FROM_EMAIL: "noreply@example.com",
-        RESEND_FROM_NAME: "EBMS Notifications",
+        BREVO_API_KEY: "test_api_key",
+        BREVO_FROM_EMAIL: "noreply@example.com",
+        BREVO_FROM_NAME: "EBMS Notifications",
       },
       {
         html: "<p>Hello</p>",
@@ -60,20 +60,23 @@ describe("notifications/sendEmail", () => {
       string,
       RequestInit,
     ];
-    expect(url).toBe("https://api.resend.com/emails");
+    expect(url).toBe("https://api.brevo.com/v3/smtp/email");
     expect(requestInit.method).toBe("POST");
     expect(requestInit.headers).toEqual({
-      "Authorization": "Bearer test_api_key",
+      "accept": "application/json",
+      "api-key": "test_api_key",
       "Content-Type": "application/json",
     });
 
     const payload = JSON.parse(String(requestInit.body));
     expect(payload).toEqual({
-      from: "EBMS Notifications <noreply@example.com>",
-      html: "<p>Hello</p>",
+      htmlContent: "<p>Hello</p>",
+      sender: {
+        email: "noreply@example.com",
+        name: "EBMS Notifications",
+      },
       subject: "Test subject",
-      text: "Hello",
-      to: ["person@example.com"],
+      to: [{ email: "person@example.com" }],
     });
   });
 });

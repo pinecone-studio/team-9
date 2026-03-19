@@ -9,9 +9,9 @@ type Bindings = {
 	DB: D1Database;
 	CONTRACTS_BUCKET: R2Bucket;
 	CLERK_SECRET_KEY?: string;
-	RESEND_API_KEY?: string;
-	RESEND_FROM_EMAIL?: string;
-	RESEND_FROM_NAME?: string;
+	BREVO_API_KEY?: string;
+	BREVO_FROM_EMAIL?: string;
+	BREVO_FROM_NAME?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();

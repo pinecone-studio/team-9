@@ -5,21 +5,22 @@
   "compatibility_date": "2026-03-14",
   "compatibility_flags": [
     "nodejs_compat",
-    "nodejs_compat_populate_process_env"
+    "nodejs_compat_populate_process_env",
+    "global_fetch_strictly_public",
   ],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "team-9-pinequest-ebms",
       "database_id": "9e1100e7-18c0-4047-b3fc-3dfd2c8ea6c4",
-      "migrations_dir": "../api/drizzle"
-    }
+      "migrations_dir": "../api/drizzle",
+    },
   ],
   "observability": {
-    "enabled": true
-  }
+    "enabled": true,
+  },
 }

@@ -8,6 +8,7 @@ import {
   type ApprovalRequestQueryVariables,
   type ApprovalRequestRecord,
 } from "./approval-requests.graphql";
+import { removePendingApprovalRequestFromNavCache } from "./pending-requests-count-cache";
 
 export function updateApprovalRequestReviewCache(
   cache: ApolloCache,
@@ -41,4 +42,8 @@ export function updateApprovalRequestReviewCache(
       };
     },
   );
+
+  if (reviewedRequest.status !== "pending") {
+    removePendingApprovalRequestFromNavCache(cache, reviewedRequest.id);
+  }
 }

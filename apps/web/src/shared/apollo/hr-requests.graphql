@@ -1,3 +1,10 @@
+query RequestsNavBadge {
+  approvalRequests(status: pending) {
+    id
+  }
+  countPendingBenefitRequests
+}
+
 query ApprovalRequests {
   approvalRequests {
     id

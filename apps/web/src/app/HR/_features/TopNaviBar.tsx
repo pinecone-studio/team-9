@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Show } from "@clerk/nextjs";
-import type { LucideIcon } from "lucide-react";
 import {
   FilePenLine,
   FileText,
@@ -12,8 +11,10 @@ import {
   Users,
   Waypoints,
 } from "lucide-react";
+import { useRequestsNavBadgeQuery } from "@/shared/apollo/generated";
 import { SignOutAvatarButton } from "@/shared/auth/SignOutAvatarButton";
 import BmsLogo from "../_icons/BmsLogo";
+import TopNavLinkItem, { type NavigationItem } from "./TopNavLinkItem";
 
 export type HrNavKey =
   | "dashboard"
@@ -23,13 +24,6 @@ export type HrNavKey =
   | "eligibility-rules"
   | "audit-logs"
   | "contracts";
-
-type NavigationItem = {
-  href: string;
-  icon: LucideIcon;
-  key: HrNavKey;
-  label: string;
-};
 
 const navigationItems = [
   {
@@ -93,6 +87,15 @@ function TopNavLogo() {
 }
 
 export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
+  const { data } = useRequestsNavBadgeQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: true,
+  });
+  const pendingRequestsCount =
+    (data?.approvalRequests.length ?? 0) +
+    (data?.countPendingBenefitRequests ?? 0);
+
   return (
     <div className="relative z-[2] w-full max-w-[1120px] rounded-[16px] border border-[rgba(229,229,229,0.6)] bg-[rgba(255,255,255,0.95)] px-5 py-3 font-sans shadow-[0_67px_27px_rgba(0,0,0,0.01),0_37px_22px_rgba(0,0,0,0.04),0_17px_17px_rgba(0,0,0,0.06),0_4px_9px_rgba(0,0,0,0.07)] backdrop-blur-[4px]">
       <div className="flex h-[44px] items-center gap-4">
@@ -100,37 +103,19 @@ export default function TopNaviBar({ activeKey }: TopNaviBarProps) {
           <TopNavLogo />
         </div>
 
-        <nav aria-label="HR sections" className="min-w-0 flex-1 overflow-hidden">
-          <ul className="flex h-9 w-full items-center justify-center gap-[2px]">
-            {navigationItems.map(({ href, icon: Icon, key, label }) => {
-              const isActive = activeKey === key;
-
-              return (
-                <li key={key} className="flex min-w-0 items-center">
-                  <Link
-                    aria-current={isActive ? "page" : undefined}
-                    className={`group relative isolate inline-flex h-9 items-center justify-center gap-2 rounded-[8px] px-[14px] text-[14px] leading-5 font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "text-[#737373] hover:text-[#171717]"
-                    }`}
-                    href={href}
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center">
-                      <Icon
-                        className={`transition-colors ${
-                          isActive
-                            ? "h-5 w-5 text-white"
-                            : "h-5 w-5 text-[#737373] group-hover:text-[#171717]"
-                        }`}
-                        strokeWidth={2}
-                      />
-                    </span>
-                    <span>{label}</span>
-                  </Link>
-                </li>
-              );
-            })}
+        <nav aria-label="HR sections" className="min-w-0 flex-1 overflow-visible">
+          <ul className="flex h-9 w-full items-center justify-center gap-[2px] overflow-visible">
+            {navigationItems.map((item) => (
+              <TopNavLinkItem
+                key={item.key}
+                activeKey={activeKey}
+                item={
+                  item.key === "requests"
+                    ? { ...item, notificationCount: pendingRequestsCount }
+                    : item
+                }
+              />
+            ))}
           </ul>
         </nav>
 

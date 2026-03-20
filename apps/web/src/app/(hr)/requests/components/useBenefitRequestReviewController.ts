@@ -7,6 +7,7 @@ import {
 
 import type { BenefitRequestRecord } from "./benefit-requests.graphql";
 import { normalizeSignedBenefitUrl } from "./benefit-request-review-utils";
+import { decrementPendingBenefitRequestsInNavCache } from "./pending-requests-count-cache";
 
 type UseBenefitRequestReviewControllerInput = {
   currentUserIdentifier: string;
@@ -40,6 +41,14 @@ export function useBenefitRequestReviewController({
             reviewComment,
             reviewedBy: currentUserIdentifier,
           },
+        },
+        update(cache, { data }) {
+          if (
+            request.status === "pending" &&
+            data?.reviewBenefitRequest.status !== "pending"
+          ) {
+            decrementPendingBenefitRequestsInNavCache(cache);
+          }
         },
       });
       await onReviewed();
